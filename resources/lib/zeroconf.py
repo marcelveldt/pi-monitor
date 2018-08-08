@@ -36,6 +36,9 @@ import time
 from functools import reduce
 
 import netifaces
+
+from resources.lib.utils import import_or_install
+import_or_install("six")
 from six import binary_type, indexbytes, int2byte, iteritems, text_type
 from six.moves import xrange
 

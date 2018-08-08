@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+    <head>
+        <title>Pi Streamer configuration</title>
+       <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+ 
+    </head>
+    <body>
+
+  <!-- alert messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              {% for message in messages %}
+                  {% if "Error" not in message[1]: %}
+                      <div class="alert alert-success" data-auto-dismiss role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <strong>Success!</strong> {{ message[1] }}
+                      </div>
+                  {% endif %}
+                  {% if "Error" in message[1]: %}
+                      <div class="alert alert-warning" data-auto-dismiss role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        {{ message[1] }}
+                      </div>
+                  {% endif %}
+              {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+ <form  action="" method="post" role="form">
+   {{ form.csrf }}
+  
+
+  <nav class="navbar navbar-expand-lg sticky-top navbar-light bg-light">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Pi Streamer</a>
+    </div>
+    <ul class="nav nav-pills" data-tab data-options="deep_linking: true">
+      <li class="nav-item active"><a class="nav-link active" href="#home" data-toggle="pill">Home</a></li>
+      <li class="nav-item"><a class="nav-link" href="#mqttconfig" data-toggle="pill">MQTT Config</a></li>
+      <li class="nav-item"><a class="nav-link" href="#gpioconfig" data-toggle="pill">GPIO Config</a></li>
+      <li class="nav-item"><a class="nav-link" href="#otherconfig" data-toggle="pill">Other settings</a></li>
+    </ul>
+    <span class="navbar-text">
+      <button type="submit" class="btn btn-outline-success my-2 my-sm-0">Save configuration</button>
+    </span>
+  </div>
+</nav>
+<br><br>
+
+  <div class="container">
+
+  
+  <div class="tab-content">
+
+        <!-- Status page -->
+        <div id="home" class="tab-pane fade show active">
+          <div class="card-deck" style="max-height: 100%%">
+            <div class="card" style="max-width: 50%; max-height: 80%">
+              <div class="card-header"><h3 class="card-title">Mediaplayer</h3></div>
+              <img class="card-img-top img-responsive" src="/player_image" alt="Card image cap" style="width: 100%; object-fit: cover" id="player_image"/>
+              <div class="card-body">
+                <h5 class="card-title" id="player_state"></h5>
+                <p class="card-text" id="player_artist"></p>
+                <p class="card-text" id="player_title"></p>
+                <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;" onClick="command('player', 'toggleplaypause');">Play</a><br><br>
+                <a href="#" class="btn btn-secondary" id="btn_next" style="width: 100%;" onClick="command('player', 'next');">Next</a>
+              </div>
+            </div>
+            <div class="card" style="max-width: 50%;">
+              <div class="card-header"><h3 class="card-title">Status</h3></div>
+              <div class="card-body">
+                <h5 class="card-title">Power state: </h5><h5 class="card-title" id="power_state"></h5>
+                <p class="card-text"></p>Last updated: <p class="card-text" id="last_updated"></p>
+<!--                 <p class="card-text" id="player_title"></p>
+                <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;">Play</a><br><br>
+                <a href="#" class="btn btn-secondary" id="btn_next" style="width: 100%;">Next</a> -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MQTT Config -->
+        <div id="mqttconfig" class="tab-pane fade">
+          <h3>MQTT Configuration</h3>
+          <br>
+            <div class="form-group">
+              {% for field in form %}
+                {% if field.id.startswith("MQTT"): %}
+                  <label for="{{ field.id }}">{{ field.label }}</label>
+                  {{ field(class_="form-control") }}
+                  <br>
+                {% endif %}
+              {% endfor %}
+            </div>
+        </div>
+        <!-- GPIO Config -->
+        <div id="gpioconfig" class="tab-pane fade">
+          <h3>GPIO Configuration</h3>
+          <br>
+            <div class="form-group">
+              {% for field in form %}
+                {% if field.id.startswith("GPIO"): %}
+                  <label for="{{ field.id }}">{{ field.label }}</label>
+                  {{ field(class_="form-control") }}
+                  <br>
+                {% endif %}
+              {% endfor %}
+            </div>
+        </div>
+        <!-- Other Config -->
+        <div id="otherconfig" class="tab-pane fade">
+          <h3>Other Configuration</h3>
+          <br>
+            <div class="form-group">
+              {% for field in form %}
+                {% if not field.id.startswith("GPIO") and not field.id.startswith("MQTT"): %}
+                  {% if field.id != "csrf_token": %}
+                  <label for="{{ field.id }}">{{ field.label }}</label>
+                  {% endif %}
+                  {{ field(class_="form-control") }}
+                  <br>
+                {% endif %}
+              {% endfor %}
+            </div>
+        </div>
+
+    </form>
+  </div>
+ 
+</div>
+<br>            
+</div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+<script src="static/js/bootstrap-auto-dismiss-alert.js"></script>
+<script>
+  setInterval(function(){ // load the data from your endpoint into the div
+      var url = '/player_info.json';
+      var data = {
+        q: 'search',
+        text: 'my text'
+      };
+      $.getJSON(url, data, function (data, status) {
+        if (status === 'success') {
+          //only update if the timestamp changed
+          if ($("#last_updated").html() != data.last_updated) {
+              console.log("data changed!")
+              $("#player_state").html(data.playername + ' is ' + data.state);
+              $("#player_artist").html('Artist: ' + data.artist);
+              $("#player_title").html('Title: ' + data.title);
+              $("#player_image").attr( 'src', '/player_image?cache='+data.last_updated );
+              $("#last_updated").html(data.last_updated);
+              if (data.power)
+                $("#power_state").html("ON");
+              else
+                $("#power_state").html("OFF");
+              if (data.state == "playing"){
+                $("#btn_play").html("Pause");
+              }
+              else {
+                $("#btn_play").html("Play");
+              }
+            }
+        }
+      });
+  },500);
+
+  function command(target, command) {
+    $.getJSON('/command', {
+          command: command,
+          target: target,
+          format: "json"
+      }, function (data) {
+          alert(data);
+      });
+      return false;
+    }
+
+//   $(document).ready(function () {
+//     $('#btn_play').on('click', function () {
+//         $.getJSON('/command', {
+//             command: "toggleplaypause",
+//             target: "player",
+//             format: "json"
+//         }, function (data) {
+//             alert(data);
+//         });
+//         return false;
+//     });
+//     $('#btn_next').on('click', function () {
+//         $.getJSON('/command', {
+//             command: "next",
+//             target: "player",
+//             format: "json"
+//         }, function (data) {
+//             alert(data);
+//         });
+//         return false;
+//     });
+// });
+
+
+</script>
+
+
+</body>
+</html>

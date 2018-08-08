@@ -22,8 +22,8 @@ def setup(monitor):
         return False
 
     import_or_install("DictObject")
-    import_or_install("magic", installpip="enum python-magic")
-    import_or_install("zeroconf", installpip="zeroconf")
+    import_or_install("magic", installpip="python-magic")
+    import_or_install("zeroconf", ["ServiceBrowser", "Zeroconf"], True, installpip="zeroconf")
     global_import("resources.lib.shairportdecoder.remote", "AirplayRemote", True)
     global_import("resources.lib.shairportdecoder.decoder", ["Processor", "VOLUME", "COVERART", "META", "CLIENT_REMOTE_AVAILABLE"], True)
     global_import("resources.lib.shairportdecoder.metadata", "Infos", True)

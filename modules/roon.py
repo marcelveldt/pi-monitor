@@ -28,11 +28,10 @@ def setup(monitor):
     if "armv6" in PLATFORM and not enable_squeezelite:
         LOGGER.warning("unsupported platform! %s" % PLATFORM)
         return False
-    if enable_squeezelite:
-        is_installed = check_software(dietpi_id="36", bin_path="/usr/bin/squeezelite", installapt="squeezelite")
-    else:
-        is_installed = check_software(dietpi_id="121", bin_path="/opt/RoonBridge/RoonBridge")
-    if not is_installed:
+    if enable_squeezelite and not check_software(dietpi_id="36", bin_path="/usr/bin/squeezelite", installapt="squeezelite"):
+        LOGGER.warning("Squeezelite is not installed, please install manually.")
+        return False
+    elif not enable_squeezelite and not check_software(dietpi_id="121", bin_path="/opt/RoonBridge/RoonBridge"):
         LOGGER.warning("RoonBridge is not installed, please install manually.")
         return False
     if enable_squeezelite and monitor.config.get("ENABLE_MODULE_SQUEEZELITE", False):

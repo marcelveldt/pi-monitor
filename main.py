@@ -17,7 +17,7 @@ MODULES_PATH = os.path.join(BASE_DIR, "modules")
 logformat = logging.Formatter('%(asctime)-15s %(levelname)-5s  %(module)s -- %(message)s')
 LOGGER = logging.getLogger(APPNAME)
 
-filehandler = logging.FileHandler(filename='/tmp/pi-monitor.log', filemode='w')
+filehandler = logging.FileHandler('/tmp/pi-monitor.log', 'w')
 filehandler.setFormatter(logformat)
 LOGGER.addHandler(filehandler)
 consolehandler = logging.StreamHandler()

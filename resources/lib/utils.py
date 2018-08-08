@@ -99,6 +99,8 @@ def import_or_install(modulename, shortname=None, asfunction=False, installpip="
     try:
         global_import(modulename, shortname, asfunction, calling_module)
     except ImportError, NameError:
+        if not installapt and not installpip:
+            installpip = modulename
         if installapt or installpip:
             # install with apt-get
             LOGGER.info("Installing %s with apt-get..." % installapt)
@@ -140,7 +142,7 @@ def global_import(modulename, shortname = None, asfunction = False, calling_modu
             setattr(calling_module, name, getattr(__import__(modulename, fromlist=['']), name))
 
 import_or_install("requests")
-import_or_install("simplejson", "json", installpip="simplejson")
+import_or_install("simplejson", "json")
 import_or_install("collections", ["OrderedDict", "defaultdict"], True)
 
 

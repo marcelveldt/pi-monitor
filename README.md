@@ -12,4 +12,4 @@ Full HOWTO will follow asap!
 Status: Functional first Alpha version ;-)
 
 
-curl -L https://github.com/marcelveldt/pi-monitor/raw/master/install.sh | bash
+curl -s -L https://github.com/marcelveldt/pi-monitor/raw/master/install.sh | bash -s

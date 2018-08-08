@@ -14,10 +14,17 @@ from resources.lib.utils import DEVNULL, PlayerMetaData, StatesDict, ConfigDict,
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODULES_PATH = os.path.join(BASE_DIR, "modules")
-logformat = '%(asctime)-15s %(levelname)-5s  %(module)s -- %(message)s'
-logging.basicConfig(filename='/tmp/pi-monitor.log', filemode='w', format=logformat, level=logging.INFO)
+logformat = logging.Formatter('%(asctime)-15s %(levelname)-5s  %(module)s -- %(message)s')
 LOGGER = logging.getLogger(APPNAME)
-LOGGER.addHandler(logging.StreamHandler())
+
+filehandler = logging.FileHandler(filename='/tmp/pi-monitor.log', filemode='w')
+filehandler.setFormatter(logformat)
+LOGGER.addHandler(filehandler)
+consolehandler = logging.StreamHandler()
+consolehandler.setFormatter(logformat)
+LOGGER.addHandler(consolehandler)
+LOGGER.setLevel(logging.INFO)
+
 CONFIG_FILE = '/etc/pi-monitor.json'
 
 import_or_install("alsaaudio", installapt="libasound2-dev", installpip="pyalsaaudio")

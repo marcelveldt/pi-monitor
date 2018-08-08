@@ -7,8 +7,7 @@ import requests
 import os
 import threading
 import time 
-
-from zeroconf import ServiceBrowser, Zeroconf
+from resources.lib.zeroconf import ServiceBrowser, Zeroconf
 
 airplay_zeroconf_service = "_dacp._tcp.local."  # local?
 airplay_prefix = "iTunes_Ctrl_{dacp_id}"

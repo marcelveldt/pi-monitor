@@ -23,17 +23,11 @@ def setup(monitor):
 
     import_or_install("DictObject")
     import_or_install("magic", installpip="python-magic")
-    import_or_install("zeroconf", ["ServiceBrowser", "Zeroconf"], True, installpip="aenum zeroconf")
     global_import("resources.lib.shairportdecoder.remote", "AirplayRemote", True)
     global_import("resources.lib.shairportdecoder.decoder", ["Processor", "VOLUME", "COVERART", "META", "CLIENT_REMOTE_AVAILABLE"], True)
     global_import("resources.lib.shairportdecoder.metadata", "Infos", True)
 
     return AirPlayPlayer(monitor)
-
-# from resources.lib.shairportdecoder.remote import AirplayRemote
-# from resources.lib.shairportdecoder.decoder import Processor, VOLUME, COVERART, META, CLIENT_REMOTE_AVAILABLE
-# from resources.lib.shairportdecoder.metadata import Infos
-
 
 
 class AirPlayPlayer(threading.Thread):

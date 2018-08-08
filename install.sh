@@ -26,10 +26,12 @@ sudo systemctl start pi-monitor.service
 
 if [ -d "/mnt/dietpi_userdata/" ]; then
     ROOT_DIR="/mnt/dietpi_userdata/"
-    IS_DIETPI=1
+    IS_DIETPI="1"
+    echo "detected Dietpi"
 else
     ROOT_DIR="~/"
-    IS_DIETPI=0
+    IS_DIETPI="0"
+    echo "DietPi not detected, assuming some other Debian based distro"
 fi
 
 INSTALL_DIR="$ROOT_DIRpi-monitor"
@@ -37,7 +39,7 @@ INSTALL_DIR="$ROOT_DIRpi-monitor"
 
 if [ ! -d "$INSTALL_DIR" ]; then
         echo "Installing Pi Monitor to $INSTALL_DIR"
-        if [ $IS_DIETPI == "1 "]; then
+        if [ "$IS_DIETPI" == "1" ]; then
             dietpi-software install 16
             dietpi-software install 17
             dietpi-software install 130

@@ -526,7 +526,7 @@ class StatesWatcher(threading.Thread):
 
     def deregister_state_callback(self, callback, keyfilter=None):
         item = (callback, keyfilter)
-        try
+        try:
             self._state_listeners.remove(item)
         except Exception:
             LOGGER.exception("error while deregistering callback")

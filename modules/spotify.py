@@ -146,9 +146,11 @@ class SpotifyPlayer(threading.Thread):
             exec_dir = os.path.dirname(os.path.abspath(self.exec_path))
         mod_file = os.path.join(exec_dir, "utils.py")
         key_file_dest = os.path.join(exec_dir, "spotify_appkey.key")
-        key_file_dest = os.path.join(exec_dir, "spotify_appkey.key")
+        key_file_org = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","resources", "spotify_appkey.key")
         # copy the key file
-
+        if not os.path.isfile(key_file_dest):
+            from shutil import copyfile
+            copyfile(key_file_org, key_file_dest)
 
         # fix for image size (HACK!!)
         if os.path.isfile(mod_file):

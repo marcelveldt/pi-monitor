@@ -15,7 +15,7 @@ from resources.lib.utils import DEVNULL, PlayerMetaData, StatesDict, ConfigDict,
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODULES_PATH = os.path.join(BASE_DIR, "modules")
 logformat = '%(asctime)-15s %(levelname)-5s  %(module)s -- %(message)s'
-logging.basicConfig(format=logformat, level=logging.INFO)
+logging.basicConfig(filename='/tmp/pi-monitor.log', filemode='w', format=logformat, level=logging.INFO)
 LOGGER = logging.getLogger(APPNAME)
 CONFIG_FILE = '/etc/pi-monitor.json'
 

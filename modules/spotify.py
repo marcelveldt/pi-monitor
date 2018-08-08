@@ -143,7 +143,7 @@ class SpotifyPlayer(threading.Thread):
         # launch the spotify-connect-web executable
         # fix some stuff if needed
         if "chroot" in self.exec_path:
-            exec_dir = os.path.join(os.path.dirname(os.path.abspath(self.exec_path)), "spotify-web-chroot", "usr", "src", "app")
+            exec_dir = os.path.join("~/", "spotify-web-chroot", "usr", "src", "app")
         else:
             exec_dir = os.path.dirname(os.path.abspath(self.exec_path))
         mod_file = os.path.join(exec_dir, "utils.py")

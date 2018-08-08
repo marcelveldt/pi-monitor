@@ -23,9 +23,10 @@ def setup(monitor):
         LOGGER.error("avahi-utils is not installed! Please install manually")
         return False
 
-    if os.path.isfile('/mnt/dietpi_userdata/spotify-connect-web/spotify-connect-web'):
+    if "armv7" in PLATFORM and check_software(dietpi_id="141", bin_path="/mnt/dietpi_userdata/spotify-connect-web/spotify-connect-web'"):
         exec_path = '/mnt/dietpi_userdata/spotify-connect-web/spotify-connect-web'
     else:
+        # chroot version
         base_dir = os.path.dirname(os.path.abspath(__file__))
         exec_path = os.path.join(base_dir, "..","resources", "spotify-connect-web-chroot.sh")
     return SpotifyPlayer(monitor, exec_path)
@@ -163,7 +164,9 @@ class SpotifyPlayer(threading.Thread):
             args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["--playback_device", self.monitor.config["ALSA_SOUND_DEVICE"]]
-        self._spotify_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
+        #self._spotify_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
+        LOGGER.debug("Starting spotify-connect-web with exec: %s" % self.exec_path)
+        self._spotify_proc = subprocess.Popen(args)
 
         while not self._exit.isSet():
             cur_state = self._get_state()

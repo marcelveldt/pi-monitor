@@ -146,10 +146,9 @@ class Monitor():
                 self._cleanup(2, 2, True)
             elif cmd == "reload":
                 LOGGER.info("Restart of service requested!")
-                run_proc("service pi-monitor restart")
                 self.cleanup(2, 2)
             elif cmd == "shutdown":
-                self._cleanup(2, 2, False)
+                self._cleanup(0, 2, False)
         elif target and cmd:
             # direct command to module
             mod = self.get_module(target)
@@ -381,7 +380,7 @@ class Monitor():
             except Exception as exc:
                 LOGGER.exception("Error while unloading module %s" % mod_name)
 
-    def _cleanup(self, signum, frame, restart=False):
+    def _cleanup(self, signum, frame):
         """
         Signal handler to ensure we disconnect cleanly
         in the event of a SIGTERM or SIGINT.
@@ -397,8 +396,6 @@ class Monitor():
         self._set_power(False)
         
         # Exit from our application
-        if restart:
-            signum = 5
         LOGGER.info("Exiting on signal %d" % (signum))
         sys.exit(signum)
 

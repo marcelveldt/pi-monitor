@@ -145,12 +145,9 @@ class Monitor():
             elif cmd == "restart":
                 self._cleanup(2, 2, True)
             elif cmd == "reload":
-                if self.config["ENABLE_DEBUG"]:
-                    LOGGER.setLevel(logging.DEBUG)
-                else:
-                    LOGGER.setLevel(logging.INFO)
-                self._unload_modules()
-                self._setup_modules()
+                LOGGER.info("Restart of service requested!")
+                run_proc("service pi-monitor restart")
+                self.cleanup(2, 2)
             elif cmd == "shutdown":
                 self._cleanup(2, 2, False)
         elif target and cmd:
@@ -381,17 +378,6 @@ class Monitor():
                 cls_name = module.__class__.__name__
                 LOGGER.debug("Stopping module %s" % mod_name)
                 module.stop()
-            except Exception as exc:
-                LOGGER.exception("Error while unloading module %s" % mod_name)
-        for module in self._loaded_modules:
-            try:
-                mod_name = module.__class__.__module__.replace("modules.","")
-                cls_name = module.__class__.__name__
-                LOGGER.debug("Unloading module %s" % mod_name)
-                self._loaded_modules.remove(module)
-                self.states["modules"].remove(cls_name)
-                if "Player" in cls_name:
-                    self.states["player"]["players"].remove(mod_name)
             except Exception as exc:
                 LOGGER.exception("Error while unloading module %s" % mod_name)
 

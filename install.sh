@@ -10,7 +10,7 @@ After=multi-user.target
 
 [Service]
 Type=idle
-ExecStart=python $1/main.py
+ExecStart=/usr/bin/python $1/main.py
 Restart=always
 RestartSec=3
 

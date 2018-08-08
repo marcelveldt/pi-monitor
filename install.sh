@@ -44,7 +44,7 @@ if [ ! -d "$INSTALL_DIR" ]; then
             /DietPi/dietpi/dietpi-software install 17
             /DietPi/dietpi/dietpi-software install 130
         else
-            apt-get install -y build-essential git python-pip
+            apt-get install -y build-essential git python python-pip
         fi
         cd $ROOT_DIR
         git clone https://github.com/marcelveldt/pi-monitor

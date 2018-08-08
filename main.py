@@ -17,6 +17,7 @@ MODULES_PATH = os.path.join(BASE_DIR, "modules")
 logformat = '%(asctime)-15s %(levelname)-5s  %(module)s -- %(message)s'
 logging.basicConfig(filename='/tmp/pi-monitor.log', filemode='w', format=logformat, level=logging.INFO)
 LOGGER = logging.getLogger(APPNAME)
+LOGGER.addHandler(logging.StreamHandler())
 CONFIG_FILE = '/etc/pi-monitor.json'
 
 import_or_install("alsaaudio", installapt="libasound2-dev", installpip="pyalsaaudio")

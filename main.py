@@ -146,7 +146,7 @@ class Monitor():
                 self._cleanup(2, 2, True)
             elif cmd == "reload":
                 LOGGER.info("Restart of service requested!")
-                self.cleanup(2, 2)
+                self._cleanup(2, 2)
             elif cmd == "shutdown":
                 self._cleanup(0, 2, False)
         elif target and cmd:

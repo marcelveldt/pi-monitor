@@ -150,7 +150,7 @@ class SpotifyPlayer(threading.Thread):
         key_file_dest = os.path.join(exec_dir, "spotify_appkey.key")
         key_file_org = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","resources", "spotify_appkey.key")
         # copy the key file
-        if not os.path.isfile(key_file_dest):
+        if not os.path.isfile(key_file_dest) and not "chroot" in exec_dir:
             from shutil import copyfile
             copyfile(key_file_org, key_file_dest)
 

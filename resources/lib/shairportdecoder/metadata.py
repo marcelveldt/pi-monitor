@@ -167,8 +167,8 @@ class Item(object):
 		if isinstance(e, str):
 			try:
 				e = xml.fromstring(e)
-			except xml.ParseError:
-				LOGGER.debug("Skipping malformed line: {line}".format(line=e), exc_info=True)
+			except Exception:
+				LOGGER.exception("Skipping malformed line")
 				return
 		if isinstance(e, xml.Element):
 			e = etree_to_dict(e)

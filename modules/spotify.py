@@ -139,32 +139,31 @@ class SpotifyPlayer(threading.Thread):
         args = ["/usr/bin/avahi-publish-service", HOSTNAME, 
                 "_spotify-connect._tcp", "4000", "VERSION=1.0", "CPath=/login/_zeroconf"]
         self._avahi_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
-
-        # launch the spotify-connect-web executable
         # fix some stuff if needed
         if "chroot" in self.exec_path:
             exec_dir = os.path.join("~/", "spotify-web-chroot", "usr", "src", "app")
-            if not os.path.exists(exec_dir):
-                exec_dir = None
         else:
             exec_dir = os.path.dirname(os.path.abspath(self.exec_path))
-        mod_file = os.path.join(exec_dir, "utils.py")
-        key_file_dest = os.path.join(exec_dir, "spotify_appkey.key")
-        key_file_org = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","resources", "spotify_appkey.key")
-        # copy the key file
-        if not os.path.isfile(key_file_dest) and not "chroot" in exec_dir:
-            from shutil import copyfile
-            copyfile(key_file_org, key_file_dest)
-
-        # fix for image size (HACK!!)
-        if os.path.isfile(mod_file):
-            with open(mod_file) as f:
-                cur_contents = f.read()
-            if "lib.kSpImageSizeSmall" in cur_contents:
-                with open(mod_file, "w") as f:
-                    cur_contents = cur_contents.replace("lib.kSpImageSizeSmall", "lib.kSpImageSizeLarge")
-                    f.write(cur_contents)
-
+        if os.path.exists(exec_dir):
+            exec_dir = None
+            mod_file = os.path.join(exec_dir, "utils.py")
+            key_file_dest = os.path.join(exec_dir, "spotify_appkey.key")
+            key_file_org = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","resources", "spotify_appkey.key")
+            # copy the key file
+            if not os.path.isfile(key_file_dest) and not "chroot" in exec_dir:
+                from shutil import copyfile
+                copyfile(key_file_org, key_file_dest)
+            # fix for image size (HACK!!)
+            if os.path.isfile(mod_file):
+                with open(mod_file) as f:
+                    cur_contents = f.read()
+                if "lib.kSpImageSizeSmall" in cur_contents:
+                    with open(mod_file, "w") as f:
+                        cur_contents = cur_contents.replace("lib.kSpImageSizeSmall", "lib.kSpImageSizeLarge")
+                        f.write(cur_contents)
+        else:
+            exec_dir = None
+        # finally start the spotify executable
         args = [self.exec_path, "--bitrate", "320", "--name", HOSTNAME]
         if self.monitor.config["ALSA_VOLUME_CONTROL"]:
             args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]

@@ -40,9 +40,9 @@ INSTALL_DIR="$ROOT_DIRpi-monitor"
 if [ ! -d "$INSTALL_DIR" ]; then
         echo "Installing Pi Monitor to $INSTALL_DIR"
         if [ "$IS_DIETPI" == "1" ]; then
-            dietpi-software install 16
-            dietpi-software install 17
-            dietpi-software install 130
+            /DietPi/dietpi/dietpi-software install 16
+            /DietPi/dietpi/dietpi-software install 17
+            /DietPi/dietpi/dietpi-software install 130
         else
             apt-get install -y build-essential git python-pip
         fi

@@ -619,13 +619,13 @@ class StatesWatcher(threading.Thread):
         ''' check if volume_level is higher than the allowed setting '''
         cur_vol = self.states["player"]["volume_level"]
         now = datetime.datetime.now()
-        if self.config["VOLUME_LIMITER_MORNING"] and (now.hour > 0 and now.hour < 8):
-            if cur_vol > self.config["VOLUME_LIMITER_MORNING"]:
-                self.monitor.command("volume_set", self.config["VOLUME_LIMITER_MORNING"])
+        if self.monitor.config["VOLUME_LIMITER_MORNING"] and (now.hour > 0 and now.hour < 8):
+            if cur_vol > self.monitor.config["VOLUME_LIMITER_MORNING"]:
+                self.monitor.command("volume_set", self.monitor.config["VOLUME_LIMITER_MORNING"])
                 LOGGER.warning("volume limiter is active!")
-        elif self.config["VOLUME_LIMITER"]:
+        elif self.monitor.config["VOLUME_LIMITER"]:
             if cur_vol > self.config["VOLUME_LIMITER"]:
-                self.monitor.command("volume_set", self.config["VOLUME_LIMITER"])
+                self.monitor.command("volume_set", self.monitor.config["VOLUME_LIMITER"])
                 LOGGER.warning("volume limiter is active!")
 
 # main entry point

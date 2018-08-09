@@ -202,31 +202,28 @@ class GoogleAssistantPlayer(threading.Thread):
         with open(self.credentialsfile, 'r') as f:
             self.credentials = Credentials(token=None, **json.load(f))
 
-        try:
-            with Assistant(self.credentials, self.device_model_id) as assistant:
-                events = assistant.start()
-                assistant.set_mic_mute(self.mic_muted)
-                assistant.send_text_query("set volume to 100%")
-                device_id = assistant.device_id
-                print('device_model_id:', self.device_model_id)
-                print('device_id:', device_id + '\n')
-                self._assistant = assistant
+        with Assistant(self.credentials, self.device_model_id) as assistant:
+            events = assistant.start()
+            #assistant.set_mic_mute(self.mic_muted)
+            #assistant.send_text_query("set volume to 100%")
+            device_id = assistant.device_id
+            LOGGER.info('device_model_id:', self.device_model_id)
+            LOGGER.info('device_id:', device_id + '\n')
+            #self._assistant = assistant
 
-                # Re-register if "device_id" is different from the last "device_id":
-                if self.should_register or (device_id != self.last_device_id):
-                    if self.project_id:
-                        register_device(self.project_id, self.credentials,
-                                        self.device_model_id, device_id)
-                        pathlib.Path(os.path.dirname(self.devconfig_file)).mkdir(exist_ok=True)
-                        with open(self.devconfig_file, 'w') as f:
-                            json.dump({
-                                'last_device_id': device_id,
-                                'model_id': self.device_model_id,
-                            }, f)
-                    else:
-                        LOGGER.error("Device is not registered!")
-                    if self._exit.is_set():
-                        return
-                    self.process_event(event)
-        except Exception as exc:
-            LOGGER.exception(str(exc))
+            # Re-register if "device_id" is different from the last "device_id":
+            if self.should_register or (device_id != self.last_device_id):
+                if self.project_id:
+                    register_device(self.project_id, self.credentials,
+                                    self.device_model_id, device_id)
+                    pathlib.Path(os.path.dirname(self.devconfig_file)).mkdir(exist_ok=True)
+                    with open(self.devconfig_file, 'w') as f:
+                        json.dump({
+                            'last_device_id': device_id,
+                            'model_id': self.device_model_id,
+                        }, f)
+                else:
+                    LOGGER.error("Device is not registered!")
+                if self._exit.is_set():
+                    return
+                self.process_event(event)

@@ -86,10 +86,10 @@ class MQTT(threading.Thread):
         """
         if result_code == 0:
             LOGGER.info("Connected to %s:%s" % (self.config["MQTT_HOST"], self.config["MQTT_PORT"]))
-            # Subscribe to our incoming topics
-            _topic = self.config["MQTT_TOPIC_COMMAND"]
+            # Subscribe only to command topic
+            _topic = self.config["MQTT_TOPIC_COMMAND"] + "/#"
             LOGGER.info("subscribe to command topic: %s" % _topic)
-            self._mqttc.subscribe(_topic, qos=self.config["MQTT_QOS"])
+            self._mqttc.message_callback_add(_topic, self._on_message)
 
             # Publish retained LWT as per http://stackoverflow.com/questions/19057835/how-to-find-connected-mqtt-client-details/19071979#19071979
             self._mqttc.publish(self.config["MQTT_LWT"], "1", qos=0, retain=True)
@@ -158,7 +158,6 @@ class MQTT(threading.Thread):
         # Add the callbacks
         self._mqttc.on_connect = self._on_connect
         self._mqttc.on_disconnect = self._on_disconnect
-        self._mqttc.on_message = self._on_message
 
         # Set the login details
         if self.config["MQTT_USERNAME"]:

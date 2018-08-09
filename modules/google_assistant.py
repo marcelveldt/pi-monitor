@@ -42,11 +42,10 @@ def setup(monitor):
     mute_mic = monitor.config.get("GOOGLE_ASSISTANT_MUTE_MIC", dummy_mic)
 
     import_or_install("pathlib2", "pathlib", installpip="pathlib2")
-    import_or_install("google.assistant.library", "Assistant", True, installpip="google-assistant-library google-assistant-sdk[samples]", installapt="portaudio19-dev libffi-dev libssl-dev")
+    #import_or_install("google.assistant.library", "Assistant", True, installpip="google-assistant-library google-assistant-sdk[samples]", installapt="portaudio19-dev libffi-dev libssl-dev")
     import_or_install("google.assistant.library.event", "EventType", True, installpip="google-assistant-sdk[samples]")
-    import_or_install("google.assistant.library.file_helpers", "existing_file", True, installpip="google-assistant-sdk[samples]")
-    import_or_install("google.assistant.library.device_helpers", "register_device", True, installpip="google-assistant-sdk[samples]")
-    import_or_install("google.oauth2.credentials", "Credentials", True, installpip="google-auth-oauthlib[tool]")
+    #import_or_install("google.assistant.library.device_helpers", "register_device", True, installpip="google-assistant-sdk[samples]")
+    #import_or_install("google.oauth2.credentials", "Credentials", True, installpip="google-auth-oauthlib[tool]")
     
     model_id="voice-kit-208321-voice-kit-kftedd"
     project_id="voice-kit-208321"
@@ -58,7 +57,6 @@ def setup(monitor):
 
 class GoogleAssistantPlayer(threading.Thread):
     _exit = threading.Event()
-    _assistant = None
 
     def process_event(self, event):
         """Pretty prints events.
@@ -71,42 +69,42 @@ class GoogleAssistantPlayer(threading.Thread):
         """
         LOGGER.debug("Google received event: %s" % event)
 
-        # if event.type in [EventType.ON_CONVERSATION_TURN_STARTED, EventType.ON_ALERT_STARTED]:
-        #     cur_player = self.monitor.states["player"]["current_player"]
-        #     if cur_player and self.monitor.states[cur_player]["state"] in PLAYING_STATES:
-        #         self.monitor.states["player"]["interrupted_player"] = cur_player
-        #         self.monitor.command("player", "stop")
-        #     self.monitor.states["google_assistant"]["state"] = NOTIFY_STATE
-        #     self.monitor.command("player", "ping")
-        #     self.monitor.states["player"]["interrupted_volume"] = self.monitor.states["player"]["volume_level"]
-        #     self.monitor.command("player", "volume_set", self.monitor.config["NOTIFY_VOLUME"])
+        if event.type in [EventType.ON_CONVERSATION_TURN_STARTED, EventType.ON_ALERT_STARTED]:
+            cur_player = self.monitor.states["player"]["current_player"]
+            if cur_player and self.monitor.states[cur_player]["state"] in PLAYING_STATES:
+                self.monitor.states["player"]["interrupted_player"] = cur_player
+                self.monitor.command("player", "stop")
+            self.monitor.states["google_assistant"]["state"] = NOTIFY_STATE
+            self.monitor.command("player", "ping")
+            self.monitor.states["player"]["interrupted_volume"] = self.monitor.states["player"]["volume_level"]
+            self.monitor.command("player", "volume_set", self.monitor.config["NOTIFY_VOLUME"])
 
-        # elif event.type in [EventType.ON_RESPONDING_STARTED, EventType.ON_MEDIA_TRACK_PLAY]:
-        #     self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
+        elif event.type in [EventType.ON_RESPONDING_STARTED, EventType.ON_MEDIA_TRACK_PLAY]:
+            self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
 
-        # elif event.type in [EventType.ON_ALERT_FINISHED, 
-        #                         EventType.ON_CONVERSATION_TURN_TIMEOUT, 
-        #                         EventType.ON_RESPONDING_FINISHED, 
-        #                         EventType.ON_MEDIA_TRACK_STOP,
-        #                         EventType.ON_CONVERSATION_TURN_FINISHED]:
-        #     # check for follow-up
-        #     if event.type == EventType.ON_CONVERSATION_TURN_FINISHED:
-        #         if event.args and event.args['with_follow_on_turn']:
-        #             # the mic is listening again for follow-up
-        #             self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
-        #             return
-        #     # return to idle - restore volume - send play command if player was interrupted
-        #     self.monitor.states["google_assistant"]["state"] = IDLE_STATE
-        #     if self.monitor.states["player"].get("interrupted_volume"):
-        #         self.monitor.command("player", "volume_set", self.monitor.states["player"]["interrupted_volume"])
-        #     if self.monitor.states["player"].get("interrupted_player"):
-        #         self.monitor.command(self.monitor.states["player"]["interrupted_player"], "play")
-        #         self.monitor.states["player"]["interrupted_player"] = ""
+        elif event.type in [EventType.ON_ALERT_FINISHED, 
+                                EventType.ON_CONVERSATION_TURN_TIMEOUT, 
+                                EventType.ON_RESPONDING_FINISHED, 
+                                EventType.ON_MEDIA_TRACK_STOP,
+                                EventType.ON_CONVERSATION_TURN_FINISHED]:
+            # check for follow-up
+            if event.type == EventType.ON_CONVERSATION_TURN_FINISHED:
+                if event.args and event.args['with_follow_on_turn']:
+                    # the mic is listening again for follow-up
+                    self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
+                    return
+            # return to idle - restore volume - send play command if player was interrupted
+            self.monitor.states["google_assistant"]["state"] = IDLE_STATE
+            if self.monitor.states["player"].get("interrupted_volume"):
+                self.monitor.command("player", "volume_set", self.monitor.states["player"]["interrupted_volume"])
+            if self.monitor.states["player"].get("interrupted_player"):
+                self.monitor.command(self.monitor.states["player"]["interrupted_player"], "play")
+                self.monitor.states["player"]["interrupted_player"] = ""
 
         
-        # elif event.type == EventType.ON_DEVICE_ACTION:
-        #     for command, params in event.actions:
-        #         LOGGER.info('Do command', command, 'with params', str(params))
+        elif event.type == EventType.ON_DEVICE_ACTION:
+            for command, params in event.actions:
+                LOGGER.info('Do command', command, 'with params', str(params))
 
     def authenticate_device(self):
         import google_auth_oauthlib.flow
@@ -194,6 +192,10 @@ class GoogleAssistantPlayer(threading.Thread):
         threading.Thread.join(self, 10)
 
     def run(self):
+        from google.oauth2.credentials import Credentials
+        from google.assistant.library.device_helpers import register_device
+        from google.assistant.library import Assistant
+
         if not os.path.isfile(self.credentialsfile):
             # we should authenticate
             self.authenticate_device()

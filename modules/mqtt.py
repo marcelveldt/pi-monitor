@@ -89,6 +89,7 @@ class MQTT(threading.Thread):
             # Subscribe only to command topic
             _topic = self.config["MQTT_TOPIC_COMMAND"] + "/#"
             LOGGER.info("subscribe to command topic: %s" % _topic)
+            self._mqttc.subscribe(_topic)
             self._mqttc.message_callback_add(_topic, self._on_message)
 
             # Publish retained LWT as per http://stackoverflow.com/questions/19057835/how-to-find-connected-mqtt-client-details/19071979#19071979

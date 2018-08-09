@@ -8,7 +8,7 @@ import threading
 from resources.lib.utils import PlayerMetaData, json, requests, PLATFORM, check_software, run_proc, subprocess, DEVNULL, PLAYING_STATE
 
 
-LOOP_WAIT = 2
+LOOP_WAIT = 4
 
 
 def setup(monitor):
@@ -103,9 +103,11 @@ class RoonPlayer(threading.Thread):
             self._squeezelite_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
 
 
-        # some players need to be unmutes when freshly started
+        # some players need to be unmuted when freshly started
         if self.output_id:
             self._api_execute("mute", {"how":"unmute", "output": self.output_id})
+        # loop: poll for player changes
+        # TODO: use pure websockets implementation to access Roon
         while not self._exit.isSet():
             cur_state = self._get_state()
             if cur_state != self._last_state:

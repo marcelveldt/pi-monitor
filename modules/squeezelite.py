@@ -26,7 +26,7 @@ def setup(monitor):
 TAGS_FULL = "aAcCdegGijJKlostuxyRwk"  # full track/album details
 TAGS_BASIC = "acdgjKluNxy"  # basic track details for initial listings
 TAGS_ALBUM = "yjtiqwaal"
-LOOP_WAIT = 2
+LOOP_WAIT = 5
 
 class SqueezelitePlayer(threading.Thread):
     ''' LMS Class containing our helper methods'''

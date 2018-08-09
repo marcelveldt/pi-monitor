@@ -152,6 +152,8 @@ class AirPlayPlayer(threading.Thread):
         temp_line = ""
         while not self._exit.isSet():
             line = self._fifo_buffer.readline()
+            if not line:
+                self._exit.wait(0.5)
             if len(line) == 0 or "STOP" in line:
                 break
             if not line.strip().endswith("</item>"):
@@ -161,5 +163,4 @@ class AirPlayPlayer(threading.Thread):
             temp_line = ""
             if not self._exit.isSet():
                 self._processor.process_line(line)
-            self._exit.wait(0.5)
         

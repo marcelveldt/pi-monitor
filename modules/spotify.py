@@ -8,7 +8,7 @@ import threading
 import subprocess
 from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, RESOURCES_FOLDER
 
-LOOP_WAIT = 2
+LOOP_WAIT = 5
 
 
 def setup(monitor):
@@ -178,7 +178,7 @@ class SpotifyPlayer(threading.Thread):
                 self._update_metadata()
             if cur_state == "playing":
                 self._update_metadata()
-                LOOP_WAIT = 1
+                LOOP_WAIT = 0.5
             else:
                 LOOP_WAIT = 3
             if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:

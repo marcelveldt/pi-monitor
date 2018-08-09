@@ -228,9 +228,8 @@ class GoogleAssistantPlayer(threading.Thread):
                                 'model_id': self.device_model_id,
                             }, f)
                     else:
-                        LOGGER.error("Device is not registered!"):
-                    # if self._exit.is_set():
-                    #     assistant.send_text_query("exit")
+                        LOGGER.error("Device is not registered!")
+                    if self._exit.is_set():
                         return
                     self.process_event(event)
         except Exception as exc:

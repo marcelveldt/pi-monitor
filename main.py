@@ -624,7 +624,7 @@ class StatesWatcher(threading.Thread):
                 self.monitor.command("volume_set", self.monitor.config["VOLUME_LIMITER_MORNING"])
                 LOGGER.warning("volume limiter is active!")
         elif self.monitor.config["VOLUME_LIMITER"]:
-            if cur_vol > self.config["VOLUME_LIMITER"]:
+            if cur_vol > self.monitor.config["VOLUME_LIMITER"]:
                 self.monitor.command("volume_set", self.monitor.config["VOLUME_LIMITER"])
                 LOGGER.warning("volume limiter is active!")
 

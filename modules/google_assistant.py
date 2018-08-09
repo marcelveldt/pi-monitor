@@ -18,7 +18,7 @@
 from __future__ import print_function
 
 import os.path
-from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM, PLAYING_STATES, PLAYING_STATE, LISTENING_STATE, IDLE_STATE, NOTIFY_STATE
+from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM, PLAYING_STATES, PLAYING_STATE, LISTENING_STATE, IDLE_STATE, NOTIFY_STATE, RESOURCES_FOLDER
 import threading
 import sys
 

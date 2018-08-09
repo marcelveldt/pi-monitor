@@ -207,13 +207,14 @@ class GoogleAssistantPlayer(threading.Thread):
             self.credentials = Credentials(token=None, **json.load(f))
 
         try:
-            with Assistant(self.credentials, self.device_model_id) as self._assistant:
-                self._assistant.send_text_query("set volume to 100%")
-                events = self._assistant.start()
-                self._assistant.set_mic_mute(self.mic_muted)
-                device_id = self._assistant.device_id
+            with Assistant(self.credentials, self.device_model_id) as assistant:
+                events = assistant.start()
+                assistant.set_mic_mute(self.mic_muted)
+                assistant.send_text_query("set volume to 100%")
+                device_id = assistant.device_id
                 print('device_model_id:', self.device_model_id)
                 print('device_id:', device_id + '\n')
+                self._assistant = assistant
 
                 # Re-register if "device_id" is different from the last "device_id":
                 if self.should_register or (device_id != self.last_device_id):
@@ -227,10 +228,9 @@ class GoogleAssistantPlayer(threading.Thread):
                                 'model_id': self.device_model_id,
                             }, f)
                     else:
-                        LOGGER.error("Device is not registered!")
-
-                for event in events:
-                    if self._exit.is_set():
+                        LOGGER.error("Device is not registered!"):
+                    # if self._exit.is_set():
+                    #     assistant.send_text_query("exit")
                         return
                     self.process_event(event)
         except Exception as exc:

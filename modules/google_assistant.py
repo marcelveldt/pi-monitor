@@ -38,10 +38,8 @@ def setup(monitor):
     if not enabled:
         LOGGER.debug("Google Assistant module is not enabled!")
         return False
-    dummy_mic = monitor.config.get("GOOGLE_ASSISTANT_USE_DUMMY_MIC", False)
-    if not dummy_mic and not monitor.states["alsa_capture_devices"]:
-        LOGGER.warning("There are no capture devices! Consider using the dummy_mic option for testing purposes")
-        return False
+    dummy_mic = "Dummy" in monitor.config["ALSA_CAPTURE_DEVICE"]
+    mute_mic = monitor.config.get("GOOGLE_ASSISTANT_MUTE_MIC", dummy_mic)
 
     import_or_install("pathlib2", "pathlib", installpip="pathlib2")
     import_or_install("google.assistant.library", "Assistant", True, installpip="google-assistant-library google-assistant-sdk[samples]", installapt="portaudio19-dev libffi-dev libssl-dev")
@@ -55,9 +53,7 @@ def setup(monitor):
     client_secrets = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","resources", "googlecreds.json")
     credentialsfile = None
     devconfig_file = None
-    if dummy_mic:
-        os.system("modprobe snd-dummy fake_buffer=0")
-    return GoogleAssistantPlayer(credentialsfile, model_id, project_id, devconfig_file, client_secrets, monitor, dummy_mic)
+    return GoogleAssistantPlayer(credentialsfile, model_id, project_id, devconfig_file, client_secrets, monitor, mute_mic)
 
 
 class GoogleAssistantPlayer(threading.Thread):

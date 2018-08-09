@@ -112,7 +112,6 @@ class AirPlayPlayer(threading.Thread):
 
     def _create_config(self):
         # create shairport sync config
-        output_device = self.monitor.config["ALSA_SOUND_DEVICE"].replace("CARD=","").replace(",DEV=0","")
         config_text = '''
         general =
         {
@@ -132,7 +131,7 @@ class AirPlayPlayer(threading.Thread):
             output_device = "%s";
             mixer_control_name = "%s";
         };
-        ''' % (HOSTNAME, EXEC_FIFO, output_device, self.monitor.config["ALSA_VOLUME_CONTROL"])
+        ''' % (HOSTNAME, EXEC_FIFO, self.monitor.config["ALSA_SOUND_DEVICE"], self.monitor.config["ALSA_VOLUME_CONTROL"])
         with open(EXEC_CONF, "w") as f:
             f.write(config_text)
 

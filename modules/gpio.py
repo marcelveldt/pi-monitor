@@ -57,6 +57,8 @@ class GPIO(object):
         self.states["gpio"] = {}
         # store GPIO object
         self._gpio = gpio
+        self._pins_out = self.config["GPIO_PINS_OUT"]
+        self._pins_in = self.config["GPIO_PINS_IN"]
         self._gpio.setwarnings(False)
         LOGGER.debug("Monitoring gpio INPUT: %s -- OUTPUT: %s" % (self.config["GPIO_PINS_IN"], self.config["GPIO_PINS_OUT"]))
         LOGGER.debug("Initialised gpio using physical pin numbering")
@@ -65,11 +67,11 @@ class GPIO(object):
         '''process command received from the command bus'''
         pin = int(cmd)
         if opt_data in ["on", "ON", "1", "true", "True"]:
-            value = True
+            value = 1
         elif opt_data in ["off", "OFF", "0", "false", "False"]:
-            value = False
+            value = 0
         else:
-            value = bool(opt_data)
+            value = int(opt_data)
         self.set(pin, value)
            
     def start(self):
@@ -81,26 +83,28 @@ class GPIO(object):
         else:
             self._gpio.setmode(self._gpio.BOARD)
 
-        for pin in self.config["GPIO_PINS_IN"]:
+        for pin in self._pins_in:
             LOGGER.debug("Initialising gpio input pin %s..." % (pin))
             try:
                 self._gpio.setup(pin, self._gpio.IN, pull_up_down=self._gpio.PUD_UP)
             except:
                 self._gpio.setup(pin, self._gpio.IN)
+            self._update_state(pin)
             self._gpio.add_event_detect(pin, self._gpio.FALLING, callback=self._gpio_event, bouncetime=200)
 
-        if self.config["GPIO_AUDIO_RELAY_PIN"]:
-            self.config["GPIO_PINS_OUT"].append(self.config["GPIO_AUDIO_RELAY_PIN"])
-            self.monitor.register_state_callback(self.state_changed_event, "player")
-        pins_out = self.config["GPIO_PINS_OUT"]
         if self.config["GPIO_BUZZER_PIN"]:
-            pins_out.append(self.config["GPIO_BUZZER_PIN"])
-        for pin in pins_out:
+            self._pins_out.append(self.config["GPIO_BUZZER_PIN"])
+        if self.config["GPIO_AUDIO_RELAY_PIN"]:
+            self._pins_out.append(self.config["GPIO_AUDIO_RELAY_PIN"])
+            self.monitor.register_state_callback(self.state_changed_event, "player")
+
+        for pin in self._pins_out:
             LOGGER.debug("Initialising gpio output pin %s..." % (pin))
             if pin not in self.config["GPIO_NEGATIVE_PINS"]:
                 self._gpio.setup(pin, self._gpio.OUT)
                 if pin in self.config["GPIO_INVERTED_PINS"]:
                     self._gpio.output(pin, 1)
+            self._update_state(pin)
 
     def state_changed_event(self, key, value=None, subkey=None):
         if key == "player" and subkey == "power":
@@ -147,8 +151,9 @@ class GPIO(object):
 
     def set(self, pin, new_state):
         '''sets new state for gpgio state'''
-        self.states["gpio"][pin] = new_state
-        if not pin in self.config["GPIO_PINS_OUT"]:
+        pin = int(pin)
+        new_state = bool(new_state)
+        if not pin in self._pins_out:
             LOGGER.warning("pin %s is not monitored!" % pin)
             return
         if pin in self.config["GPIO_INVERTED_PINS"] and new_state:
@@ -162,12 +167,16 @@ class GPIO(object):
             self._gpio.cleanup(pin)
         else:
             self._gpio.output(pin, new_state)
+        self._update_state(pin)
 
     def _gpio_event(self, pin):
         ''' publish state of gpio pin'''
-        newstate = "ON" if self.get(pin) else "OFF"
+        self._update_state(pin)
+        
+    def _update_state(self, pin):
+        newstate = self.get(pin)
         LOGGER.info("Pin %s changed to %s" % (pin, newstate))
-        self.states["gpio"][pin] = newstate
+        self.states["gpio"][int(pin)] = newstate
 
 
 

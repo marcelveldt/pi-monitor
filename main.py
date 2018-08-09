@@ -328,9 +328,7 @@ class Monitor():
     def _play_ping(self, alt_sound=False):
         ''' play ping or buzz sound'''
         if "GPIO_BUZZER_PIN" in self.config and self.config["GPIO_BUZZER_PIN"]:
-            self.set_gpio(self.config["GPIO_BUZZER_PIN"], 1)
-            time.sleep(0.2)
-            self.set_gpio(self.config["GPIO_BUZZER_PIN"], 0)
+            self.command("gpio", "beep", alt_sound, True)
         else:
             filename = os.path.join(BASE_DIR, 'resources', 'ding.wav')
             if alt_sound:

@@ -64,6 +64,8 @@ class GPIO(object):
 
     def command(self, cmd, opt_data=None):
         '''process command received from the command bus'''
+        if str(cmd) == "beep":
+            return self.buzz(opt_data)
         pin = int(cmd)
         if opt_data in ["on", "ON", "1", "true", "True"]:
             value = 1
@@ -168,6 +170,19 @@ class GPIO(object):
         newstate = self.get_gpio(pin)
         self.states["gpio"][int(pin)] = newstate
 
-
+    def beep(self, alt=False, duration=0.2):
+        ''' play beep through connected buzzer on gpio pin for x duration'''
+        if alt:
+            self.set_gpio(self.monitor.config["GPIO_BUZZER_PIN"], 1)
+            sleep(duration/2)
+            self.set_gpio(self.monitor.config["GPIO_BUZZER_PIN"], 0)
+            sleep(duration/2)
+            self.set_gpio(self.monitor.config["GPIO_BUZZER_PIN"], 1)
+            sleep(duration/2)
+            self.set_gpio(self.monitor.config["GPIO_BUZZER_PIN"], 0)
+        else:
+            self.set_gpio(self.monitor.config["GPIO_BUZZER_PIN"], 1)
+            sleep(duration)
+            self.set_gpio(self.monitor.config["GPIO_BUZZER_PIN"], 0)
 
 

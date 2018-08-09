@@ -6,7 +6,7 @@ import os
 import time
 import threading
 import subprocess
-from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software
+from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, RESOURCES_FOLDER
 
 LOOP_WAIT = 2
 
@@ -24,12 +24,10 @@ def setup(monitor):
         return False
 
     if "armv7" in PLATFORM and check_software(dietpi_id="141", bin_path="/mnt/dietpi_userdata/spotify-connect-web/spotify-connect-web'"):
-        exec_path = '/mnt/dietpi_userdata/spotify-connect-web/spotify-connect-web'
+        use_chroot = False
     else:
-        # chroot version
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        exec_path = os.path.join(base_dir, "..","resources", "spotify-connect-web-chroot.sh")
-    return SpotifyPlayer(monitor, exec_path)
+        use_chroot = True
+    return SpotifyPlayer(monitor, use_chroot)
 
 
 
@@ -39,9 +37,9 @@ class SpotifyPlayer(threading.Thread):
     _spotify_proc = None
     _avahi_proc = None
 
-    def __init__(self, monitor, exec_path):
+    def __init__(self, monitor, use_chroot):
         self.monitor = monitor
-        self.exec_path = exec_path
+        self.use_chroot = use_chroot
         self.monitor.states["spotify"] = PlayerMetaData("Spotify")
         run_proc("service spotify-connect-web stop", check_result=True, ignore_error=True) # make sure that the original service is stopped
         run_proc("service raspotify stop", check_result=True, ignore_error=True) # make sure that the original service is stopped
@@ -139,21 +137,13 @@ class SpotifyPlayer(threading.Thread):
         args = ["/usr/bin/avahi-publish-service", HOSTNAME, 
                 "_spotify-connect._tcp", "4000", "VERSION=1.0", "CPath=/login/_zeroconf"]
         self._avahi_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
-        # fix some stuff if needed
-        if "chroot" in self.exec_path:
-            exec_dir = os.path.join("~/", "spotify-web-chroot", "usr", "src", "app")
-        else:
-            exec_dir = os.path.dirname(os.path.abspath(self.exec_path))
-        if os.path.isdir(exec_dir):
-            exec_dir = None
-            mod_file = os.path.join(exec_dir, "utils.py")
-            key_file_dest = os.path.join(exec_dir, "spotify_appkey.key")
-            key_file_org = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","resources", "spotify_appkey.key")
-            # copy the key file
-            if not os.path.isfile(key_file_dest) and not "chroot" in exec_dir:
-                from shutil import copyfile
-                copyfile(key_file_org, key_file_dest)
+        exec_dir = None
+        for item in ["/mnt/dietpi_userdata/spotify-connect-web", "/mnt/dietpi_userdata/spotify-web-chroot/usr/src/app", "/root/spotify-web-chroot/usr/src/app"]:
+            if os.path.isdir(item):
+                exec_dir = item
+        if exec_dir:
             # fix for image size (HACK!!)
+            mod_file = os.path.join(exec_dir, "utils.py")
             if os.path.isfile(mod_file):
                 with open(mod_file) as f:
                     cur_contents = f.read()
@@ -161,16 +151,21 @@ class SpotifyPlayer(threading.Thread):
                     with open(mod_file, "w") as f:
                         cur_contents = cur_contents.replace("lib.kSpImageSizeSmall", "lib.kSpImageSizeLarge")
                         f.write(cur_contents)
-        else:
-            exec_dir = None
+
         # finally start the spotify executable
+        if self.use_chroot:
+            exec_path = os.path.join(RESOURCES_FOLDER, "spotify-connect-web-chroot.sh")
+        else:
+            exec_path = '/mnt/dietpi_userdata/spotify-connect-web/spotify-connect-web'
         args = [self.exec_path, "--bitrate", "320", "--name", HOSTNAME]
         if self.monitor.config["ALSA_VOLUME_CONTROL"]:
             args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["--playback_device", self.monitor.config["ALSA_SOUND_DEVICE"]]
+        if not self.use_chroot:
+            args += ["--key", os.path.join(RESOURCES_FOLDER, "spotify_appkey.key")]
         if self.monitor.config["ENABLE_DEBUG"]:
-            LOGGER.debug("Starting spotify-connect-web with exec: %s" % self.exec_path)
+            LOGGER.debug("Starting spotify-connect-web: %s" % " ".join(args))
             self._spotify_proc = subprocess.Popen(args, cwd=exec_dir)
         else:
             self._spotify_proc = subprocess.Popen(args, cwd=exec_dir, stdout=DEVNULL, stderr=subprocess.STDOUT)

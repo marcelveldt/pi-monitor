@@ -30,6 +30,11 @@ STOPPED_STATE = "stopped"
 IDLE_STATES = ["stoppped", "idle", "off", "paused"]
 PLAYING_STATES = ["playing", "listening", "loading"]
 
+LIBS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+RESOURCES_FOLDER = os.path.abspath(os.path.join(LIBS_FOLDER, os.pardir))
+MODULES_FOLDER = os.path.join(os.path.abspath(os.path.join(RESOURCES_FOLDER, os.pardir)), "modules")
+
+
 
 def check_software(dietpi_id="", bin_path="", installapt=""):
     ''' check is software is installed, if not try to install it'''

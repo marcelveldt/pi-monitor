@@ -7,7 +7,7 @@ if [ -d "/mnt/dietpi_userdata/" ]; then
     IS_DIETPI=1
     echo "detected Dietpi"
 else
-    ROOT_DIR="~/"
+    ROOT_DIR="/root/"
     IS_DIETPI=0
     echo "DietPi not detected, assuming some other Debian based distro"
 fi

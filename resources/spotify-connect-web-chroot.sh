@@ -3,7 +3,19 @@ set -e
 
 THIS_FILE=$(readlink -f "$0")
 THIS_DIR=$(dirname "$THIS_FILE")
-INSTALL_DIR="~/spotify-web-chroot"
+
+if [ -d "/mnt/dietpi_userdata/" ]; then
+    ROOT_DIR="/mnt/dietpi_userdata/"
+    IS_DIETPI=1
+    echo "detected Dietpi"
+else
+    ROOT_DIR="/root/"
+    IS_DIETPI=0
+    echo "DietPi not detected, assuming some other Debian based distro"
+fi
+
+APP_NAME="spotify-web-chroot"
+INSTALL_DIR="$ROOT_DIR$APP_NAME"
 INSTALL_COMPLETE="$INSTALL_DIR/.install_complete"
 
 if [ ! -f "$INSTALL_COMPLETE" ]; then

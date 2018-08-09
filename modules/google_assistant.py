@@ -18,7 +18,7 @@
 from __future__ import print_function
 
 import os.path
-from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM
+from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM, PLAYING_STATES, PLAYING_STATE, LISTENING_STATE, IDLE_STATE
 import threading
 import sys
 
@@ -76,34 +76,34 @@ class GoogleAssistantPlayer(threading.Thread):
 
         if event.type == EventType.ON_CONVERSATION_TURN_STARTED:
             cur_player = self.monitor.states["player"]["current_player"]
-            if cur_player and self.states[cur_player]["state"] in ["playing", "loading"]:
-                self.states["player"]["interrupted_player"] = cur_player
+            if cur_player and self.monitor.states[cur_player]["state"] in PLAYING_STATES:
+                self.monitor.states["player"]["interrupted_player"] = cur_player
                 self.monitor.command("player", "stop")
-            self.monitor.states["google_assistant"]["state"] = "listening"
+            self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
             self.monitor.command("player", "ping")
             # TODO: increase volume while assistant is speaking
 
         elif event.type == EventType.ON_RESPONDING_STARTED:
             LOGGER.debug("ON_RESPONDING_STARTED")
-            self.monitor.states["google_assistant"]["state"] = "playing"
+            self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
 
         elif event.type == EventType.ON_ALERT_STARTED:
-            self.monitor.states["google_assistant"]["state"] = "playing"
+            self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
         elif event.type in [EventType.ON_ALERT_FINISHED, 
                                 EventType.ON_CONVERSATION_TURN_TIMEOUT, 
                                 EventType.ON_RESPONDING_FINISHED, 
                                 EventType.ON_MEDIA_TRACK_STOP]:
-            self.monitor.states["google_assistant"]["state"] = "idle"
+            self.monitor.states["google_assistant"]["state"] = IDLE_STATE
 
         elif event.type == EventType.ON_MEDIA_TRACK_PLAY:
-            self.monitor.states["google_assistant"]["state"] = "playing"
+            self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
 
         elif event.type == EventType.ON_CONVERSATION_TURN_FINISHED:
             if event.args and event.args['with_follow_on_turn']:
-                self.monitor.states["google_assistant"]["state"] = "listening"
+                self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
             else:
-                self.monitor.states["google_assistant"]["state"] = "idle"
-                if self.states["player"].get("interrupted_player"):
+                self.monitor.states["google_assistant"]["state"] = IDLE_STATE
+                if self.monitor.states["player"].get("interrupted_player"):
                     self.monitor.command(self.monitor.states["player"]["interrupted_player"], "command", "play")
                     self.monitor.states["player"]["interrupted_player"] = ""
 

@@ -22,19 +22,18 @@ def setup(monitor):
 
 
 
-class RotaryEncoder:
+class RotaryEncoder
     """
     A class to decode mechanical rotary encoder pulses.
     """
     
     def __init__(self, monitor, gpio):
         self.gpio = gpio.gpio_mod
-        self.config = monitor.config
-        self.command = monitor.command
+        self.monitor = monitor
         self.last_pin = None
-        self.pin_a = self.config["GPIO_ROTARY_ENCODER_UP_PIN"]
-        self.pin_b = self.config["GPIO_ROTARY_ENCODER_DOWN_PIN"]
-        self.pin_button = self.config["GPIO_ROTARY_ENCODER_SWITCH_PIN"]
+        self.pin_a = self.monitor.config["GPIO_ROTARY_ENCODER_UP_PIN"]
+        self.pin_b = self.monitor.config["GPIO_ROTARY_ENCODER_DOWN_PIN"]
+        self.pin_button = self.monitor.config["GPIO_ROTARY_ENCODER_SWITCH_PIN"]
         self.lev_a = 0
         self.lev_b = 0
         self.callback_busy = False
@@ -64,25 +63,25 @@ class RotaryEncoder:
         ''' rotary encoder event callback puts events in queue'''
         if event == 1:
             # rotary turned clockwise
-            if not self.config["ALSA_VOLUME_CONTROL"]:
-                self.command("player", "next")
+            if not self.monitor.config["ALSA_VOLUME_CONTROL"]:
+                self.monitor.command("player", "next")
             else:
-                self.command("player", "volup")
+                self.monitor.command("player", "volup")
         elif event == 2:
             # rotary turned counter clockwise
-            if not self.config["ALSA_VOLUME_CONTROL"]:
-                self.command("player", "previous")
+            if not self.monitor.config["ALSA_VOLUME_CONTROL"]:
+                self.monitor.command("player", "previous")
             else:
-                self.command("player", "voldown")
+                self.monitor.command("player", "voldown")
         elif event == 3:
             # fired when button is pressed shortly
-            if self.is_playing:
-                self.command("player", "next")
+            if self.monitor.is_playing:
+                self.monitor.command("player", "next")
             else:
-                self.command("player", "play")
+                self.monitor.command("player", "play")
         elif event == 4:
             # fired when button is held for 1 second
-            self.command("player", "stop")
+            self.monitor.command("player", "stop")
 
         
     def _btn_callback(self, channel):

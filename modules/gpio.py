@@ -56,8 +56,8 @@ class GPIO(object):
         self.states["gpio"] = {}
         # store GPIO object
         self._gpio = gpio
-        self._pins_out = self.config["GPIO_PINS_OUT"]
-        self._pins_in = self.config["GPIO_PINS_IN"]
+        self._pins_out = copy.copy(self.config["GPIO_PINS_OUT"])
+        self._pins_in = copy.copy(self.config["GPIO_PINS_IN"])
         self._gpio.setwarnings(False)
         LOGGER.debug("Monitoring gpio INPUT: %s -- OUTPUT: %s" % (self.config["GPIO_PINS_IN"], self.config["GPIO_PINS_OUT"]))
         LOGGER.debug("Initialised gpio using physical pin numbering")

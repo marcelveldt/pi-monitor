@@ -209,7 +209,7 @@ class GoogleAssistantPlayer(threading.Thread):
         try:
             with Assistant(self.credentials, self.device_model_id) as self._assistant:
                 self._assistant.send_text_query("set volume to 100%")
-                events = assistant.start()
+                events = self._assistant.start()
                 self._assistant.set_mic_mute(self.mic_muted)
                 device_id = self._assistant.device_id
                 print('device_model_id:', self.device_model_id)

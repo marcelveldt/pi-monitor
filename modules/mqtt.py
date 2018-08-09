@@ -15,17 +15,17 @@ def setup(monitor):
         return False
     # default config entries init
     mqtt_topic_base = u"%hostname%"
-    mqtt_client = monitor.config.get("MQTT_CLIENT_ID", u"pi_monitor-%hostname%")
+    mqtt_client = monitor.config.get("MQTT_CLIENT_ID", u"pimonitor-%hostname%")
     monitor.config.get("MQTT_HOST", u"192.168.1.1")
     monitor.config.get("MQTT_PORT", 1883)
     monitor.config.get("MQTT_USERNAME", u"")
     monitor.config.get("MQTT_PASSWORD", u"")
     monitor.config.get("MQTT_TOPIC_COMMAND", u"%s/cmd" % mqtt_topic_base)
     monitor.config.get("MQTT_TOPIC_STAT", u"%s/stat" % mqtt_topic_base)
+    monitor.config.get("MQTT_TOPIC_AVAILABILITY", u"clients/%s" % mqtt_client)
     monitor.config.get("MQTT_QOS", 1)
     monitor.config.get("MQTT_RETAIN", False)
     monitor.config.get("MQTT_CLEAN_SESSION", False)
-    monitor.config.get("MQTT_LWT", u"clients/%s" % mqtt_client)
     # conditional import of globals
     import_or_install("paho.mqtt.client", "Client", True, installpip="paho-mqtt")
     return MQTT(monitor)
@@ -120,7 +120,6 @@ class MQTT(threading.Thread):
         """
         Handle incoming messages
         """
-        LOGGER.debug("Received MQTT message --> topic: %s - payload: %s" % (msg.topic, msg.payload.decode("utf-8")))
         topicparts = msg.topic.split("/")
         # some magic to found out the target and command
         if "/".join(topicparts[:-1]) == self.config["MQTT_TOPIC_COMMAND"]:
@@ -134,14 +133,14 @@ class MQTT(threading.Thread):
             target = None
             command = None
         if not target or not command:
-            LOGGER.warning("received command in invalid format !")
+            LOGGER.debug("Received MQTT message in invalid format --> topic: %s - payload: %s" % (msg.topic, msg.payload))
         else:
-            opt_data = msg.payload
+            opt_data = msg.payload.decode("utf-8")
             try:
                 opt_data = eval(opt_data)
             except:
                 pass
-            LOGGER.debug("Processing command --> target: %s - command: %s - opt_data: %s" % (target, command, opt_data))
+            LOGGER.debug("Received command --> target: %s - command: %s - opt_data: %s" % (target, command, opt_data))
             self.monitor.command(target, command, opt_data)
 
 

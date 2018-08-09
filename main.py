@@ -122,12 +122,8 @@ class Monitor():
         while not self._exit:
             # process commands queue
             while not self._cmd_queue.empty():
-                data = self._cmd_queue.get()
-                target = data[0]
-                cmd = data[1]
-                cmd_data = data[2] if len(data) > 2 else None
                 try:
-                    self._process_command(target, cmd, cmd_data)
+                    self._process_command(*data)
                 except Exception:
                     LOGGER.exception("Error while processing command in Queue - %s" % str(data))
             # wait for events in the queue

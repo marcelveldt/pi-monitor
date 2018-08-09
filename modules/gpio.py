@@ -65,7 +65,7 @@ class GPIO(object):
     def command(self, cmd, opt_data=None):
         '''process command received from the command bus'''
         if str(cmd) == "beep":
-            return self.buzz(opt_data)
+            return self.beep(opt_data)
         pin = int(cmd)
         if opt_data in ["on", "ON", "1", "true", "True"]:
             value = 1

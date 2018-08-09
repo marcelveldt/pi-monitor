@@ -62,6 +62,7 @@ def setup(monitor):
 
 class GoogleAssistantPlayer(threading.Thread):
     _exit = threading.Event()
+    _assistant = None
 
     def process_event(self, event):
         """Pretty prints events.
@@ -192,8 +193,8 @@ class GoogleAssistantPlayer(threading.Thread):
 
     def stop(self):
         self._exit.set()
-        if not os.path.isfile(self.credentialsfile):
-            return
+        if self._assistant:
+            self._assistant.send_text_query("exit")
         threading.Thread.join(self, 10)
 
     def run(self):
@@ -206,11 +207,11 @@ class GoogleAssistantPlayer(threading.Thread):
             self.credentials = Credentials(token=None, **json.load(f))
 
         try:
-            with Assistant(self.credentials, self.device_model_id) as assistant:
-                assistant.send_text_query("set volume to 100%")
+            with Assistant(self.credentials, self.device_model_id) as self._assistant:
+                self._assistant.send_text_query("set volume to 100%")
                 events = assistant.start()
-                assistant.set_mic_mute(self.mic_muted)
-                device_id = assistant.device_id
+                self._assistant.set_mic_mute(self.mic_muted)
+                device_id = self._assistant.device_id
                 print('device_model_id:', self.device_model_id)
                 print('device_id:', device_id + '\n')
 
@@ -230,7 +231,6 @@ class GoogleAssistantPlayer(threading.Thread):
 
                 for event in events:
                     if self._exit.is_set():
-                        assistant.send_text_query("exit")
                         return
                     self.process_event(event)
         except Exception as exc:

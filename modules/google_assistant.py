@@ -127,7 +127,7 @@ class GoogleAssistantPlayer(threading.Thread):
         
         elif event.type == EventType.ON_DEVICE_ACTION:
             for command, params in event.actions:
-                LOGGER.debug('Do command', command, 'with params', str(params))
+                LOGGER.info('Do command', command, 'with params', str(params))
 
     def authenticate_device(self):
         import google_auth_oauthlib.flow
@@ -145,9 +145,9 @@ class GoogleAssistantPlayer(threading.Thread):
         LOGGER.info('#        paste the resulting code in the web configuration                           #')
         LOGGER.info('#        There will be a new setting added, called "GOOGLE ASSISTANT AUTH CODE"      #')
         LOGGER.info('#                                                                                    #')
-        LOGGER.INFO(' ')
+        LOGGER.info(' ')
         LOGGER.info(' %s' % auth_url)
-        LOGGER.INFO(' ')
+        LOGGER.info(' ')
         LOGGER.info("######################################################################################")
 
         code = None

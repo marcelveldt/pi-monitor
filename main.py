@@ -474,7 +474,8 @@ class Monitor():
             ("NOTIFY_VOLUME", config.get("NOTIFY_VOLUME", 60)),
             ("VOLUME_LIMITER", config.get("VOLUME_LIMITER",0)),
             ("VOLUME_LIMITER_MORNING", config.get("VOLUME_LIMITER_MORNING",0)),            
-            ("ENABLE_DEBUG", config.get("ENABLE_DEBUG", False))
+            ("ENABLE_DEBUG", config.get("ENABLE_DEBUG", False)),
+            ("AUTO_UPDATE_ON_STARTUP", config.get("AUTO_UPDATE_ON_STARTUP", True))
         ])
         # append other config keys which are set by modules
         for key, value in config.items():

@@ -24,7 +24,8 @@ After=multi-user.target
 
 [Service]
 Type=idle
-ExecStart=/usr/bin/python $INSTALL_DIR/main.py
+WorkingDirectory=$INSTALL_DIR
+ExecStart=$INSTALL_DIR/run.sh
 Restart=always
 RestartSec=3
 
@@ -72,5 +73,5 @@ else
     cd $INSTALL_DIR
     git fetch --all
     git reset --hard origin/master
-    sudo systemctl start $APP_NAME.service
+    install_service
 fi

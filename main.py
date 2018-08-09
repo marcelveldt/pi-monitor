@@ -454,6 +454,24 @@ class Monitor():
             alsa_devices.remove('null')
         self.states["alsa_capture_devices"] = alsa_devices
         LOGGER.debug("alsa capture devices: %s" % str(alsa_devices))
+        # write default asound file - is needed for volume control and google assistant to work properly
+        # TODO: check if hardware id's actually match with the selected device
+        with open("/etc/asound.conf", "w") as f:
+            text = """
+                defaults.ctl.card 0
+                pcm.!default {
+                    type asym
+                     playback.pcm {
+                       type plug
+                       slave.pcm "hw:0,0"
+                     }
+                     capture.pcm {
+                       type plug
+                       slave.pcm "hw:1,0"
+                     }
+                  }
+            """
+            f.write(text)
         return default_audio_device, default_mixer
 
     def _parseconfig(self):

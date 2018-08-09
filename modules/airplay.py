@@ -7,9 +7,13 @@ import sys
 import time
 import threading
 import subprocess
-from resources.lib.utils import PlayerMetaData, json, DEVNULL, requests, import_or_install, global_import, check_software, run_proc
+from resources.lib.utils import PlayerMetaData, json, DEVNULL, requests, import_or_install, global_import, check_software, run_proc, HOSTNAME
 
 LOOP_WAIT = 2
+
+EXEC_BIN = "/usr/local/bin/shairport-sync"
+EXEC_CONF = "/tmp/shairport-sync.conf"
+EXEC_FIFO = "/tmp/shairport-sync-metadata"
 
 def setup(monitor):
     '''setup the module'''
@@ -17,7 +21,7 @@ def setup(monitor):
         LOGGER.debug("Airplay module is not enabled!")
         return False
 
-    if not check_software(dietpi_id="37", bin_path="/usr/local/bin/shairport-sync"):
+    if not check_software(dietpi_id="37", bin_path=EXEC_BIN):
         LOGGER.warning("shairport-sync is not installed, please install manually.")
         return False
 
@@ -36,30 +40,21 @@ class AirPlayPlayer(threading.Thread):
     _processor = None
     _remote = None
     _fifo_buffer = None
-    _fifo_file = "/tmp/shairport-sync-metadata"
+    _shairport_proc = None
 
     def __init__(self, monitor):
         self.monitor = monitor
         self.monitor.states["airplay"] = PlayerMetaData("Airplay")
         config_modified = False
-        with open("/usr/local/etc/shairport-sync.conf") as f:
-            cur_text = f.read()
-            if 'include_cover_art = "no"' in cur_text:
-                cur_text = cur_text.replace('include_cover_art = "no"', 'include_cover_art = "yes"')
-                config_modified = True
-            if self.monitor.config["ALSA_VOLUME_CONTROL"] and '//  mixer_control_name = "PCM"' in cur_text:
-                cur_text = cur_text.replace('//  mixer_control_name = "PCM"', '    mixer_control_name = "%s"' % self.monitor.config["ALSA_VOLUME_CONTROL"])
-                config_modified = True
-        if config_modified:
-            with open("/usr/local/etc/shairport-sync.conf", "w") as f:
-                f.write(cur_text)
-            run_proc("/DietPi/dietpi/dietpi-services restart shairport-sync")
+        run_proc("service shairport-sync stop", check_result=True, ignore_error=True) # make sure that the original service is stopped
+        run_proc("service shairport-sync stop", check_result=True, ignore_error=True) # make sure that the original service is stopped
         threading.Thread.__init__(self)
         
     def stop(self):
         self._exit.set()
-        run_proc("/DietPi/dietpi/dietpi-services restart shairport-sync")
-        with open(self._fifo_file, 'w') as f:
+        if self._shairport_proc:
+            self._shairport_proc.terminate()
+        with open(EXEC_FIFO, 'w') as f:
             f.write("####STOP####\n")
             f.write("####STOP####\n")
         if self._remote:
@@ -115,11 +110,45 @@ class AirPlayPlayer(threading.Thread):
             self.monitor.states["airplay"]["cover_file"] = ""
             self.monitor.states["airplay"]["cover_art"] = ""
 
+    def _create_config(self):
+        # create shairport sync config
+        config_text = '''
+        general =
+        {
+          name = "%s";
+          interpolation = "soxr";
+          output_backend = "alsa"; 
+        };
+        metadata =
+        {
+            enabled = "yes";
+            include_cover_art = "yes";
+            pipe_name = "%s";
+            pipe_timeout = 5000;
+        };
+        alsa =
+        {
+            output_device = "%s";
+            mixer_control_name = "%s";
+        };
+        ''' % (HOSTNAME, EXEC_FIFO, self.monitor.config["ALSA_SOUND_DEVICE"], self.monitor.config["ALSA_VOLUME_CONTROL"])
+        with open(EXEC_CONF, "w") as f:
+            f.write(cur_text)
+
+
     def run(self):
+        self._create_config()
+        args = [ EXEC_BIN, "-c", EXEC_CONF ]
+        if self.monitor.config["ENABLE_DEBUG"]:
+            LOGGER.debug("Starting shairport-sync: %s" % " ".join(args))
+            self._shairport_proc = subprocess.Popen(args)
+        else:
+            self._shairport_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
+        # start watching the metadata through the named pipe
         self._processor = Processor()
         self._processor.add_listener(self._event_processor)
-        LOGGER.info("Start Parsing named pipe: %s" % self._fifo_file)
-        self._fifo_buffer = open(self._fifo_file)
+        LOGGER.info("Start Parsing named pipe: %s" % EXEC_FIFO)
+        self._fifo_buffer = open(EXEC_FIFO)
         temp_line = ""
         while not self._exit.isSet():
             line = self._fifo_buffer.readline()

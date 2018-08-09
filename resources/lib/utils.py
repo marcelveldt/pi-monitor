@@ -57,6 +57,7 @@ def dietpi_install(dietpi_id):
     os.system("/DietPi/dietpi/dietpi-software install %s" % dietpi_id)
     return is_installed(dietpi_id)
 
+
 def is_installed(dietpi_id="", bin_path=""):
     ''' check if specified package is installed '''
     is_installed = False
@@ -95,6 +96,7 @@ def run_proc(cmd_str, check_result=False, ignore_error=False):
         if not ignore_error:
             LOGGER.error(str(exc))
         return False
+
 
 def import_or_install(modulename, shortname=None, asfunction=False, installpip="", installapt=""):
     '''try to import module and if that fails, try to install it with pip'''
@@ -169,9 +171,6 @@ def etree_to_dict(t):
     Function to modify a xml.etree.ElementTree thingy to be a dict.
     Attributes will be accessible via ["@attribute"],
     and get the text (aka. content) inside via ["#text"]
-    TESTED ONLY FOR PYTHON 3! (but should be working in Python 2...)
-    :param t:
-    :return:
     """
     # THANKS http://stackoverflow.com/a/10077069
 

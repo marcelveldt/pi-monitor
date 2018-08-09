@@ -204,6 +204,8 @@ class GoogleAssistantPlayer(threading.Thread):
         with open(self.credentialsfile, 'r') as f:
             self.credentials = Credentials(token=None, **json.load(f))
 
+        LOGGER.info("starting the assistant...")
+
         with Assistant(self.credentials, self.device_model_id) as assistant:
             events = assistant.start()
             #assistant.set_mic_mute(self.mic_muted)
@@ -216,6 +218,7 @@ class GoogleAssistantPlayer(threading.Thread):
             # Re-register if "device_id" is different from the last "device_id":
             if self.should_register or (device_id != self.last_device_id):
                 if self.project_id:
+                    LOGGER.info("register device!")
                     register_device(self.project_id, self.credentials,
                                     self.device_model_id, device_id)
                     pathlib.Path(os.path.dirname(self.devconfig_file)).mkdir(exist_ok=True)
@@ -228,4 +231,5 @@ class GoogleAssistantPlayer(threading.Thread):
                     LOGGER.error("Device is not registered!")
                 if self._exit.is_set():
                     return
-                self.process_event(event)
+                LOGGER.debug("Google received event: %s" % event)
+                #self.process_event(event)

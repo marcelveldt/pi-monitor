@@ -493,7 +493,7 @@ class Monitor():
             defaults.pcm.card %s
             defaults.ctl.card %s
             defaults.capture.card %s
-            """ % (selected_audio_device.split[":"][-1], selected_audio_device.split[":"][-1], selected_capture_device.split[":"][-1])
+            """ % (selected_audio_device.split(":")[-1], selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1])
             f.write(text)
         return selected_audio_device, selected_mixer, selected_capture_device
 

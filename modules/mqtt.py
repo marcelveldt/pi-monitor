@@ -87,7 +87,7 @@ class MQTT(threading.Thread):
         if result_code == 0:
             LOGGER.info("Connected to %s:%s" % (self.config["MQTT_HOST"], self.config["MQTT_PORT"]))
             # Subscribe to our incoming topics
-            _topic = self.config["MQTT_TOPIC_COMMAND"] + "/#"
+            _topic = self.config["MQTT_TOPIC_COMMAND"] + "/"
             LOGGER.info("subscribe to command topic: %s" % _topic)
             self._mqttc.subscribe(_topic, qos=self.config["MQTT_QOS"])
 
@@ -141,9 +141,7 @@ class MQTT(threading.Thread):
                 opt_data = eval(opt_data)
             except:
                 pass
-            LOGGER.debug("mqtt target: %s" % target)
-            LOGGER.debug("mqtt command: %s" % command)
-            LOGGER.debug("mqtt opt_data: %s" % opt_data)
+            LOGGER.debug("Processing command --> target: %s - command: %s - opt_data: %s" % (target, command, opt_data))
             self.monitor.command(target, command, opt_data)
 
 

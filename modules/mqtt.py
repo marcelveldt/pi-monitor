@@ -57,10 +57,6 @@ class MQTT(threading.Thread):
             return
         value = self.monitor.states[key]
         topic = "%s/%s" %(self.config["MQTT_TOPIC_STAT"], key)
-        try:
-            value = json.dumps(value)
-        except:
-            pass
         self.publish(topic, value, retain=False)
         
     def stop(self):
@@ -76,6 +72,10 @@ class MQTT(threading.Thread):
             qos = self.config["MQTT_QOS"]
         if retain == None:
             retain = self.config["MQTT_RETAIN"]
+        try:
+            value = json.dumps(value)
+        except:
+            pass
         return self._mqttc.publish(topic, value, qos=qos, retain=retain)
 
     def _on_connect(self, mosq, obj, flags, result_code):
@@ -137,7 +137,7 @@ class MQTT(threading.Thread):
         else:
             opt_data = msg.payload.decode("utf-8")
             try:
-                opt_data = eval(opt_data)
+                opt_data = json.loads(opt_data.decode("utf-8"))
             except:
                 pass
             LOGGER.debug("Received command --> target: %s - command: %s - opt_data: %s" % (target, command, opt_data))

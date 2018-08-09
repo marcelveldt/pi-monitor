@@ -50,7 +50,6 @@ class GPIO(object):
         Initialise the GPIO library
         """
         self.config = monitor.config
-        self.command = monitor.command
         self.states = monitor.states
         self.monitor = monitor
         self._gpio = None
@@ -167,7 +166,6 @@ class GPIO(object):
         
     def _update_state(self, pin):
         newstate = self.get_gpio(pin)
-        LOGGER.info("Pin %s changed to %s" % (pin, newstate))
         self.states["gpio"][int(pin)] = newstate
 
 

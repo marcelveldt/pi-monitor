@@ -53,6 +53,8 @@ class MQTT(threading.Thread):
 
     def state_event(self, key, value, subkey=None):
         ''' callback if one of the states changes we are listening for'''
+        if not key in self.monitor.states:
+            return
         value = self.monitor.states[key]
         topic = "%s/%s" %(self.config["MQTT_TOPIC_STAT"], key)
         try:

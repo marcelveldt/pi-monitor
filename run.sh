@@ -1,6 +1,8 @@
 #!/bin/bash
 
-if grep -Fxq '"AUTO_UPDATE_ON_STARTUP": true' /etc/pi-monitor.json
+AUTO_UPDATE=$( sed -n 's/.*"AUTO_UPDATE_ON_STARTUP": \(.*\),/\1/p' /etc/pi-monitor.json )
+
+if [[ $AUTO_UPDATE == "true" ]]
 then
     echo "Auto updating to latest version..."
     git fetch --all

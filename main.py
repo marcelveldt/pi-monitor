@@ -122,6 +122,7 @@ class Monitor():
         while not self._exit:
             # process commands queue
             while not self._cmd_queue.empty():
+                data = self._cmd_queue.get()
                 try:
                     self._process_command(*data)
                 except Exception:

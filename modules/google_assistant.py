@@ -204,12 +204,12 @@ class GoogleAssistantPlayer(threading.Thread):
 
         with Assistant(self.credentials, self.device_model_id) as assistant:
             events = assistant.start()
-            #assistant.set_mic_mute(self.mic_muted)
-            #assistant.send_text_query("set volume to 100%")
+            assistant.set_mic_mute(self.mic_muted)
+            assistant.send_text_query("set volume to 100%")
             device_id = assistant.device_id
             LOGGER.info('device_model_id: %s' % self.device_model_id)
             LOGGER.info('device_id: %s' % device_id)
-            #self._assistant = assistant
+            self._assistant = assistant
 
             # Re-register if "device_id" is different from the last "device_id":
             if self.should_register or (device_id != self.last_device_id):
@@ -228,5 +228,4 @@ class GoogleAssistantPlayer(threading.Thread):
             for event in events:
                 if self._exit.is_set():
                     return
-                LOGGER.info(event)
-                #self.process_event(event)
+                self.process_event(event)

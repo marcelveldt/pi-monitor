@@ -22,7 +22,7 @@ def setup(monitor):
 
 
 
-class RotaryEncoder
+class RotaryEncoder():
     """
     A class to decode mechanical rotary encoder pulses.
     """

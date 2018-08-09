@@ -72,7 +72,7 @@ class GPIO(object):
             value = 0
         else:
             value = int(opt_data)
-        self.set(pin, value)
+        self.set_gpio(pin, value)
            
     def start(self):
         if self.config["GPIO_CUSTOM_LAYOUT"]:
@@ -115,28 +115,20 @@ class GPIO(object):
         if self.config["GPIO_AUDIO_RELAY_PIN"]:
             self.monitor.deregister_state_callback(self.state_changed_event, "player")
 
-    def gpio_states(self):
-        for pin in self.config["GPIO_PINS_IN"] + self.config["GPIO_PINS_OUT"]:
-            oldstate = self.states["gpio"].get(pin, "UNKNOWN")
-            newstate = "ON" if self.get(pin) else "OFF"
-            if newstate != oldstate:
-                self.states["gpio"][pin] = newstate
-                self.publish_gpio(pin)
-
     def set_audio_relay(self, power):
         ''' toggle relay '''
         audio_relay = self.config["GPIO_AUDIO_RELAY_PIN"]
         if not audio_relay:
             return
-        relay_powered = self.get(audio_relay)
+        relay_powered = self.get_gpio(audio_relay)
         if relay_powered and not power:
             LOGGER.debug("turn off audio relay.")
-            self.set(audio_relay, 0)
+            self.set_gpio(audio_relay, 0)
         elif power and not relay_powered:
             LOGGER.debug("turn on audio relay.")
-            self.set(audio_relay, 1)
+            self.set_gpio(audio_relay, 1)
 
-    def get(self, pin):
+    def get_gpio(self, pin):
         ''' get state of self._gpio pin'''
         if not self._gpio:
             return 0
@@ -149,7 +141,7 @@ class GPIO(object):
                 # will happen for negative pin
                 return 0
 
-    def set(self, pin, new_state):
+    def set_gpio(self, pin, new_state):
         '''sets new state for gpgio state'''
         pin = int(pin)
         new_state = bool(new_state)
@@ -174,7 +166,7 @@ class GPIO(object):
         self._update_state(pin)
         
     def _update_state(self, pin):
-        newstate = self.get(pin)
+        newstate = self.get_gpio(pin)
         LOGGER.info("Pin %s changed to %s" % (pin, newstate))
         self.states["gpio"][int(pin)] = newstate
 

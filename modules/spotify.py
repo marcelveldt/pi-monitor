@@ -144,7 +144,7 @@ class SpotifyPlayer(threading.Thread):
             exec_dir = os.path.join("~/", "spotify-web-chroot", "usr", "src", "app")
         else:
             exec_dir = os.path.dirname(os.path.abspath(self.exec_path))
-        if os.path.exists(exec_dir):
+        if os.path.isdir(exec_dir):
             exec_dir = None
             mod_file = os.path.join(exec_dir, "utils.py")
             key_file_dest = os.path.join(exec_dir, "spotify_appkey.key")

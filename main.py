@@ -434,7 +434,7 @@ class Monitor():
                 alsa_devices.append(dev)
                 if selected_audio_device and dev == selected_audio_device:
                     selected_audio_device_found = True
-                if not default_audio_device and dev not is "default":
+                if not default_audio_device and dev != "default":
                     default_audio_device = dev
         if not default_audio_device:
             default_audio_device = "default"
@@ -454,7 +454,7 @@ class Monitor():
                 alsa_devices.append(dev)
                 if selected_capture_device and dev == selected_capture_device:
                     selected_capture_device_found = True
-                if not default_capture_device and dev not is "default":
+                if not default_capture_device and dev != "default":
                     default_capture_device = dev
         if not default_capture_device:
             # create dummy recording device

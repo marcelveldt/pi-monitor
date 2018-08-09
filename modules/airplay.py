@@ -133,7 +133,7 @@ class AirPlayPlayer(threading.Thread):
         };
         ''' % (HOSTNAME, EXEC_FIFO, self.monitor.config["ALSA_SOUND_DEVICE"], self.monitor.config["ALSA_VOLUME_CONTROL"])
         with open(EXEC_CONF, "w") as f:
-            f.write(cur_text)
+            f.write(config_text)
 
 
     def run(self):

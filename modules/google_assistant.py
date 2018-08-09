@@ -105,8 +105,8 @@ class GoogleAssistantPlayer(threading.Thread):
             else:
                 self.monitor.states["google_assistant"]["state"] = "idle"
                 if self.states["player"].get("interrupted_player"):
-                    self.monitor.command(self.states["player"]["interrupted_player"], "command", "play")
-                    self.states["player"]["interrupted_player"] = ""
+                    self.monitor.command(self.monitor.states["player"]["interrupted_player"], "command", "play")
+                    self.monitor.states["player"]["interrupted_player"] = ""
 
         
         elif event.type == EventType.ON_DEVICE_ACTION:

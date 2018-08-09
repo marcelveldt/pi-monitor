@@ -87,7 +87,7 @@ class MQTT(threading.Thread):
         if result_code == 0:
             LOGGER.info("Connected to %s:%s" % (self.config["MQTT_HOST"], self.config["MQTT_PORT"]))
             # Subscribe to our incoming topics
-            _topic = self.config["MQTT_TOPIC_COMMAND"] + "/"
+            _topic = self.config["MQTT_TOPIC_COMMAND"]
             LOGGER.info("subscribe to command topic: %s" % _topic)
             self._mqttc.subscribe(_topic, qos=self.config["MQTT_QOS"])
 

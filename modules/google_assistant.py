@@ -18,7 +18,7 @@
 from __future__ import print_function
 
 import os.path
-from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM, PLAYING_STATES, PLAYING_STATE, LISTENING_STATE, IDLE_STATE
+from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM, PLAYING_STATES, PLAYING_STATE, LISTENING_STATE, IDLE_STATE, NOTIFY_STATE
 import threading
 import sys
 
@@ -74,38 +74,37 @@ class GoogleAssistantPlayer(threading.Thread):
         """
         LOGGER.debug("Google received event: %s" % event)
 
-        if event.type == EventType.ON_CONVERSATION_TURN_STARTED:
+        if event.type in [EventType.ON_CONVERSATION_TURN_STARTED, EventType.ON_ALERT_STARTED]:
             cur_player = self.monitor.states["player"]["current_player"]
             if cur_player and self.monitor.states[cur_player]["state"] in PLAYING_STATES:
                 self.monitor.states["player"]["interrupted_player"] = cur_player
                 self.monitor.command("player", "stop")
-            self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
+            self.monitor.states["google_assistant"]["state"] = NOTIFY_STATE
             self.monitor.command("player", "ping")
-            # TODO: increase volume while assistant is speaking
+            self.monitor.states["player"]["interrupted_volume"] = self.monitor.states["player"]["volume_level"]
+            self.monitor.command("player", "volume_set", self.monitor.config["NOTIFY_VOLUME"])
 
-        elif event.type == EventType.ON_RESPONDING_STARTED:
-            LOGGER.debug("ON_RESPONDING_STARTED")
+        elif event.type in [EventType.ON_RESPONDING_STARTED, EventType.ON_MEDIA_TRACK_PLAY]:
             self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
 
-        elif event.type == EventType.ON_ALERT_STARTED:
-            self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
         elif event.type in [EventType.ON_ALERT_FINISHED, 
                                 EventType.ON_CONVERSATION_TURN_TIMEOUT, 
                                 EventType.ON_RESPONDING_FINISHED, 
-                                EventType.ON_MEDIA_TRACK_STOP]:
+                                EventType.ON_MEDIA_TRACK_STOP,
+                                EventType.ON_CONVERSATION_TURN_FINISHED]:
+            # check for follow-up
+            if event.type == EventType.ON_CONVERSATION_TURN_FINISHED:
+                if event.args and event.args['with_follow_on_turn']:
+                    # the mic is listening again for follow-up
+                    self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
+                    return
+            # return to idle - restore volume - send play command if player was interrupted
             self.monitor.states["google_assistant"]["state"] = IDLE_STATE
-
-        elif event.type == EventType.ON_MEDIA_TRACK_PLAY:
-            self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
-
-        elif event.type == EventType.ON_CONVERSATION_TURN_FINISHED:
-            if event.args and event.args['with_follow_on_turn']:
-                self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
-            else:
-                self.monitor.states["google_assistant"]["state"] = IDLE_STATE
-                if self.monitor.states["player"].get("interrupted_player"):
-                    self.monitor.command(self.monitor.states["player"]["interrupted_player"], "command", "play")
-                    self.monitor.states["player"]["interrupted_player"] = ""
+            if self.monitor.states["player"].get("interrupted_volume"):
+                self.monitor.command("player", "volume_set", self.monitor.states["player"]["interrupted_volume"])
+            if self.monitor.states["player"].get("interrupted_player"):
+                self.monitor.command(self.monitor.states["player"]["interrupted_player"], "play")
+                self.monitor.states["player"]["interrupted_player"] = ""
 
         
         elif event.type == EventType.ON_DEVICE_ACTION:
@@ -208,6 +207,7 @@ class GoogleAssistantPlayer(threading.Thread):
 
         try:
             with Assistant(self.credentials, self.device_model_id) as assistant:
+                assistant.send_text_query("set volume to 100%")
                 events = assistant.start()
                 assistant.set_mic_mute(self.mic_muted)
                 device_id = assistant.device_id

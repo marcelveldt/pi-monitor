@@ -26,13 +26,14 @@ IS_DIETPI = os.path.isfile("/DietPi/dietpi/.hw_model")
 
 PAUSED_STATE = "paused"
 PLAYING_STATE = "playing"
+NOTIFY_STATE = "notification"
 LISTENING_STATE = "playing"
 LOADING_STATE = "loading"
 STOPPED_STATE = "stopped"
 IDLE_STATE = "idle"
 OFF_STATE = "off"
 IDLE_STATES = [STOPPED_STATE, IDLE_STATE, OFF_STATE, PAUSED_STATE]
-PLAYING_STATES = [PLAYING_STATE, LISTENING_STATE, LOADING_STATE]
+PLAYING_STATES = [PLAYING_STATE, LISTENING_STATE, LOADING_STATE, NOTIFY_STATE]
 
 LIBS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 RESOURCES_FOLDER = os.path.abspath(os.path.join(LIBS_FOLDER, os.pardir))

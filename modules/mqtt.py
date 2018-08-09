@@ -61,7 +61,7 @@ class MQTT(threading.Thread):
         
     def stop(self):
         self._exit.set()
-        self.publish(self.config["MQTT_LWT"], "0", qos=0, retain=True)
+        self.publish(self.config["MQTT_TOPIC_AVAILABILITY"], "0", qos=0, retain=True)
         self._mqttc.disconnect()
         self._mqttc.loop_stop()
         threading.Thread.join(self, 10)
@@ -92,7 +92,7 @@ class MQTT(threading.Thread):
             self._mqttc.message_callback_add(_topic, self._on_message)
 
             # Publish retained LWT as per http://stackoverflow.com/questions/19057835/how-to-find-connected-mqtt-client-details/19071979#19071979
-            self._mqttc.publish(self.config["MQTT_LWT"], "1", qos=0, retain=True)
+            self._mqttc.publish(self.config["MQTT_TOPIC_AVAILABILITY"], "1", qos=0, retain=True)
         elif result_code == 1:
             LOGGER.info("Connection refused - unacceptable protocol version")
         elif result_code == 2:
@@ -163,7 +163,7 @@ class MQTT(threading.Thread):
             self._mqttc.username_pw_set(self.config["MQTT_USERNAME"], self.config["MQTT_PASSWORD"])
         
         # Set the Last Will and Testament (LWT) *before* connecting
-        self._mqttc.will_set(self.config["MQTT_LWT"], payload="0", qos=0, retain=True)
+        self._mqttc.will_set(self.config["MQTT_TOPIC_AVAILABILITY"], payload="0", qos=0, retain=True)
 
         # Attempt to connect
         mqtt_host = self.config["MQTT_HOST"]

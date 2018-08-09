@@ -476,7 +476,7 @@ class Monitor():
                   card "%s"
                 }
                 capture.pcm {
-                  type hw
+                  type plug
                   card "%s"
                 }
             }

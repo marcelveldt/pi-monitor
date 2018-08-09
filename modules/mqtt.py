@@ -53,12 +53,8 @@ class MQTT(threading.Thread):
 
     def state_event(self, key, value, subkey=None):
         ''' callback if one of the states changes we are listening for'''
-        if subkey:
-            value = self.monitor.states[key][subkey]
-            topic = "%s/%s/%s" %(self.config["MQTT_TOPIC_STAT"], key, subkey)
-        else:
-            value = self.monitor.states[key]
-            topic = "%s/%s" %(self.config["MQTT_TOPIC_STAT"], key)
+        value = self.monitor.states[key]
+        topic = "%s/%s" %(self.config["MQTT_TOPIC_STAT"], key)
         try:
             value = json.dumps(value)
         except:

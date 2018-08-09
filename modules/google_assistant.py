@@ -55,7 +55,7 @@ def setup(monitor):
     return GoogleAssistantPlayer(credentialsfile, model_id, project_id, devconfig_file, client_secrets, monitor, mute_mic)
 
 
-class GoogleAssistantPlayer(threading.Thread):
+class GoogleAssistantPlayer():
     _exit = threading.Event()
 
     def process_event(self, event):
@@ -183,7 +183,7 @@ class GoogleAssistantPlayer(threading.Thread):
         self.client_secrets = client_secrets
         if monitor:
             self.monitor.states["google_assistant"] = PlayerMetaData("Google Assistant")
-        threading.Thread.__init__(self)
+        #threading.Thread.__init__(self)
 
     def stop(self):
         self._exit.set()
@@ -191,7 +191,8 @@ class GoogleAssistantPlayer(threading.Thread):
             self._assistant.send_text_query("exit")
         threading.Thread.join(self, 10)
 
-    def run(self):
+
+    def start(self):
         from google.oauth2.credentials import Credentials
         from google.assistant.library.device_helpers import register_device
         from google.assistant.library import Assistant

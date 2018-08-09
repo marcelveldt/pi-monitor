@@ -133,6 +133,7 @@ class Monitor():
 
     def _process_command(self, target, cmd, cmd_data=None):
         ''' process command from the queue '''
+        LOGGER.debug("_process_command - target: %s - cmd: %s - cmd_data: %s" %(target, cmd, str(cmd_data)))
         if target == "player":
             # redirect player commands
             self._player_command(cmd, cmd_data)

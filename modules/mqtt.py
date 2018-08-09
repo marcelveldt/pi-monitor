@@ -126,27 +126,21 @@ class MQTT(threading.Thread):
         if "/".join(topicparts[:-1]) == self.config["MQTT_TOPIC_COMMAND"]:
             target = topicparts[-1]
             command = msg.payload
-            LOGGER.info("test1 target: %s" % target)
-            LOGGER.info("test1 command: %s" % command)
-            opt_data = msg.payload
-            try:
-                opt_data = eval(opt_data)
-            except:
-                pass
         elif "/".join(topicparts[:-2]) == self.config["MQTT_TOPIC_COMMAND"]:
             target = topicparts[-2]
             command = topicparts[-1]
-            opt_data = msg.payload
-            try:
-                opt_data = eval(opt_data)
-            except:
-                pass
+            
         else:
             target = None
             command = None
         if not target or not command:
             LOGGER.warning("received command in invalid format !")
         else:
+            opt_data = msg.payload
+            try:
+                opt_data = eval(opt_data)
+            except:
+                pass
             LOGGER.debug("mqtt target: %s" % target)
             LOGGER.debug("mqtt command: %s" % command)
             LOGGER.debug("mqtt opt_data: %s" % opt_data)

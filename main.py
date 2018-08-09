@@ -189,9 +189,6 @@ class Monitor():
             player_mod.command(cmd, cmd_data)
 
     def _volume_up(self):
-        if self.states["player"].get("volume_limiter"):
-            LOGGER.warning("volume limiter is active!")
-            return
         success = False
         # send command to current player
         if self.is_playing:
@@ -200,12 +197,8 @@ class Monitor():
         # fallback to direct alsa control
         if not success and self.config["ALSA_VOLUME_CONTROL"]:
             run_proc('amixer set "%s" 2+' % self.config["ALSA_VOLUME_CONTROL"])
-        thread.start_new_thread(self._check_volume_limiter, ())
 
     def _volume_down(self):
-        if self.states["player"].get("volume_limiter"):
-            LOGGER.warning("volume limiter is active!")
-            return
         success = False
         # send command to current player
         if self.is_playing:
@@ -214,7 +207,6 @@ class Monitor():
         # fallback to direct alsa control
         if not success and self.config["ALSA_VOLUME_CONTROL"]:
             run_proc('amixer set "%s" 2-' % self.config["ALSA_VOLUME_CONTROL"])
-        self.states["player"]["volume_limiter"] = False
 
     def _volume_set(self, volume_level):
         ''' set volume level '''
@@ -254,19 +246,6 @@ class Monitor():
                 vol_level = int(cur_vol)
         self.states["player"]["volume_level"] = vol_level
         return vol_level
-
-    def _check_volume_limiter(self):
-        '''check if volume limiter should be enabled'''
-        cur_vol = self._volume_get()
-        now = datetime.datetime.now()
-        volume_limiter = False
-        if self.config["VOLUME_LIMITER_MORNING"] and (now.hour > 0 and now.hour < 8):
-            if cur_vol >= self.config["VOLUME_LIMITER_MORNING"]:
-                volume_limiter = True
-        elif self.config["VOLUME_LIMITER"]:
-            if cur_vol >= self.config["VOLUME_LIMITER_MORNING"]:
-                volume_limiter = True
-        self.states["player"]["volume_limiter"] = volume_limiter
 
     def _play_sound(self, url, volume_level=None, loop=False, force=True):
         ''' play notification/alert by url '''
@@ -561,7 +540,7 @@ class StatesWatcher(threading.Thread):
                     data = self._event_queue.get()
                     self._handle_state_event(data)
             except Exception:
-                LOGGER.exception("Error while processing Queue - %s" % str(data))
+                LOGGER.exception("Error while processing StatesQueue - %s" % str(data))
             # wait for events in the queue
             self._event.wait(1200)
             self._event.clear()
@@ -604,7 +583,9 @@ class StatesWatcher(threading.Thread):
             if key in self.states["player"]["players"]:
                 # we received an update from one of the players
                 self._handle_player_state_change(key)
-            
+        if "volume_level" in [key, subkey]:
+            self._handle_volume_limiter()
+
     def _handle_player_state_change(self, player_key):
         ''' handle state changed event for the mediaplayers'''
         cur_player = self.states["player"]["current_player"]
@@ -631,6 +612,18 @@ class StatesWatcher(threading.Thread):
         if not self.states["player"]["power"] and self.states["player"]["state"] in PLAYING_STATES:
             self.monitor.command("power", "poweron")
     
+    def _handle_volume_limiter(self):
+        ''' check if volume_level is higher than the allowed setting '''
+        cur_vol = self.states["player"]["volume_level"]
+        now = datetime.datetime.now()
+        if self.config["VOLUME_LIMITER_MORNING"] and (now.hour > 0 and now.hour < 8):
+            if cur_vol > self.config["VOLUME_LIMITER_MORNING"]:
+                self.monitor.command("volume_set", self.config["VOLUME_LIMITER_MORNING"])
+                LOGGER.warning("volume limiter is active!")
+        elif self.config["VOLUME_LIMITER"]:
+            if cur_vol > self.config["VOLUME_LIMITER"]:
+                self.monitor.command("volume_set", self.config["VOLUME_LIMITER"])
+                LOGGER.warning("volume limiter is active!")
 
 # main entry point
 Monitor()

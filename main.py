@@ -471,15 +471,15 @@ class Monitor():
             text = '''
             pcm.!default {
                 type asym
-                playback.pcm {
-                 type hw
-                  card "%s"
-                }
-                capture.pcm {
-                  type plug
-                  card "%s"
-                }
-            }
+                 playback.pcm {
+                   type plug
+                   slave.pcm hw:%s
+                 }
+                 capture.pcm {
+                   type plug
+                   slave.pcm hw:%s
+                 }
+              }
             ctl.!default {
               type hw
               card "%s"

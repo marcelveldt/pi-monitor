@@ -614,9 +614,16 @@ class StatesWatcher(threading.Thread):
             self.states["player"]["current_player"] = player_key
             LOGGER.info("active player changed to %s" % player_key)
             # signal any other players about this so they must stop playing
+            flush_needed = False
             for player in self.states["player"]["players"]:
                 if self.states[player]["state"] not in ["off", "stopped", "standby", ""] and player != player_key:
                     self.monitor.command(player, "stop")
+                    flush_needed = True
+            # free alsa by quickly restarting playback
+            if flush_needed:
+                self.monitor.command(player_key, "pause")
+                time.sleep(0.5)
+                self.monitor.command(player_key, "play")
         # metadadata update of current player
         if player_key == self.states["player"]["current_player"]:
             self.states["player"].update(self.states[player_key])

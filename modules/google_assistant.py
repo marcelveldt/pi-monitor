@@ -18,7 +18,7 @@
 from __future__ import print_function
 
 import os.path
-from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM, PLAYING_STATES, PLAYING_STATE, LISTENING_STATE, IDLE_STATE, NOTIFY_STATE, RESOURCES_FOLDER
+from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM, PLAYING_STATES, PLAYING_STATE, LISTENING_STATE, IDLE_STATE, NOTIFY_STATE
 import threading
 import sys
 
@@ -42,21 +42,23 @@ def setup(monitor):
     mute_mic = monitor.config.get("GOOGLE_ASSISTANT_MUTE_MIC", dummy_mic)
 
     import_or_install("pathlib2", "pathlib", installpip="pathlib2")
-    #import_or_install("google.assistant.library", "Assistant", True, installpip="google-assistant-library google-assistant-sdk[samples]", installapt="portaudio19-dev libffi-dev libssl-dev")
+    import_or_install("google.assistant.library", "Assistant", True, installpip="google-assistant-library google-assistant-sdk[samples]", installapt="portaudio19-dev libffi-dev libssl-dev")
     import_or_install("google.assistant.library.event", "EventType", True, installpip="google-assistant-sdk[samples]")
-    #import_or_install("google.assistant.library.device_helpers", "register_device", True, installpip="google-assistant-sdk[samples]")
-    #import_or_install("google.oauth2.credentials", "Credentials", True, installpip="google-auth-oauthlib[tool]")
+    import_or_install("google.assistant.library.file_helpers", "existing_file", True, installpip="google-assistant-sdk[samples]")
+    import_or_install("google.assistant.library.device_helpers", "register_device", True, installpip="google-assistant-sdk[samples]")
+    import_or_install("google.oauth2.credentials", "Credentials", True, installpip="google-auth-oauthlib[tool]")
     
     model_id="voice-kit-208321-voice-kit-kftedd"
     project_id="voice-kit-208321"
-    client_secrets = os.path.join(RESOURCES_FOLDER, "googlecreds.json")
+    client_secrets = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","resources", "googlecreds.json")
     credentialsfile = None
     devconfig_file = None
-    return GoogleAssistantPlayer(credentialsfile, model_id, project_id, devconfig_file, client_secrets)
+    return GoogleAssistantPlayer(credentialsfile, model_id, project_id, devconfig_file, client_secrets, monitor, mute_mic)
 
 
-class GoogleAssistantPlayer():
+class GoogleAssistantPlayer(threading.Thread):
     _exit = threading.Event()
+    _assistant = None
 
     def process_event(self, event):
         """Pretty prints events.
@@ -179,49 +181,39 @@ class GoogleAssistantPlayer():
         self.project_id = project_id
         self.should_register = should_register
         self.mic_muted = mic_muted
-        #self.monitor = monitor
+        self.monitor = monitor
         self.client_secrets = client_secrets
-        # if monitor:
-        #     self.monitor.states["google_assistant"] = PlayerMetaData("Google Assistant")
-        #threading.Thread.__init__(self)
+        if monitor:
+            self.monitor.states["google_assistant"] = PlayerMetaData("Google Assistant")
+        threading.Thread.__init__(self)
 
     def stop(self):
         self._exit.set()
-        # if self._assistant:
-        #     self._assistant.send_text_query("exit")
+        if self._assistant:
+            self._assistant.send_text_query("exit")
         threading.Thread.join(self, 10)
 
-
-    def start(self):
-        from google.oauth2.credentials import Credentials
-        from google.assistant.library.device_helpers import register_device
-        from google.assistant.library import Assistant
-
+    def run(self):
         if not os.path.isfile(self.credentialsfile):
             # we should authenticate
-            LOGGER.info("authentication needed")
             self.authenticate_device()
         if not os.path.isfile(self.credentialsfile):
-            LOGGER.info("credentialsfile missing!")
             return
         with open(self.credentialsfile, 'r') as f:
             self.credentials = Credentials(token=None, **json.load(f))
 
-        LOGGER.info("starting the assistant...")
-
         with Assistant(self.credentials, self.device_model_id) as assistant:
             events = assistant.start()
-            #assistant.set_mic_mute(self.mic_muted)
-            #assistant.send_text_query("set volume to 100%")
+            assistant.set_mic_mute(self.mic_muted)
+            assistant.send_text_query("set volume to 100%")
             device_id = assistant.device_id
             LOGGER.info('device_model_id: %s' % self.device_model_id)
             LOGGER.info('device_id: %s' % device_id)
-            #self._assistant = assistant
+            self._assistant = assistant
 
             # Re-register if "device_id" is different from the last "device_id":
             if self.should_register or (device_id != self.last_device_id):
                 if self.project_id:
-                    LOGGER.info("register device!")
                     register_device(self.project_id, self.credentials,
                                     self.device_model_id, device_id)
                     pathlib.Path(os.path.dirname(self.devconfig_file)).mkdir(exist_ok=True)
@@ -232,8 +224,8 @@ class GoogleAssistantPlayer():
                         }, f)
                 else:
                     LOGGER.error("Device is not registered!")
+                
+            for event in event:
                 if self._exit.is_set():
                     return
-            for event in events:
-                LOGGER.debug("Google received event: %s" % event)
-                #self.process_event(event)
+                self.process_event(event)

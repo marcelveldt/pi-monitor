@@ -49,10 +49,10 @@ def setup(monitor):
     
     model_id="voice-kit-208321-voice-kit-kftedd"
     project_id="voice-kit-208321"
-    client_secrets = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","resources", "googlecreds.json")
+    client_secrets = os.path.join(RESOURCES_FOLDER, "googlecreds.json")
     credentialsfile = None
     devconfig_file = None
-    return GoogleAssistantPlayer(credentialsfile, model_id, project_id, devconfig_file, client_secrets, monitor, mute_mic)
+    return GoogleAssistantPlayer(credentialsfile, model_id, project_id, devconfig_file, client_secrets)
 
 
 class GoogleAssistantPlayer():
@@ -179,16 +179,16 @@ class GoogleAssistantPlayer():
         self.project_id = project_id
         self.should_register = should_register
         self.mic_muted = mic_muted
-        self.monitor = monitor
+        #self.monitor = monitor
         self.client_secrets = client_secrets
-        if monitor:
-            self.monitor.states["google_assistant"] = PlayerMetaData("Google Assistant")
+        # if monitor:
+        #     self.monitor.states["google_assistant"] = PlayerMetaData("Google Assistant")
         #threading.Thread.__init__(self)
 
     def stop(self):
         self._exit.set()
-        if self._assistant:
-            self._assistant.send_text_query("exit")
+        # if self._assistant:
+        #     self._assistant.send_text_query("exit")
         threading.Thread.join(self, 10)
 
 
@@ -199,8 +199,10 @@ class GoogleAssistantPlayer():
 
         if not os.path.isfile(self.credentialsfile):
             # we should authenticate
+            LOGGER.info("authentication needed")
             self.authenticate_device()
         if not os.path.isfile(self.credentialsfile):
+            LOGGER.info("credentialsfile missing!")
             return
         with open(self.credentialsfile, 'r') as f:
             self.credentials = Credentials(token=None, **json.load(f))
@@ -232,5 +234,6 @@ class GoogleAssistantPlayer():
                     LOGGER.error("Device is not registered!")
                 if self._exit.is_set():
                     return
+            for event in events:
                 LOGGER.debug("Google received event: %s" % event)
                 #self.process_event(event)

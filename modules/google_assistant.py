@@ -225,7 +225,8 @@ class GoogleAssistantPlayer(threading.Thread):
                 else:
                     LOGGER.error("Device is not registered!")
                 
-            for event in event:
-                # if self._exit.is_set():
-                #     return
-                self.process_event(event)
+            for event in events:
+                if self._exit.is_set():
+                    return
+                LOGGER.info(event)
+                #self.process_event(event)

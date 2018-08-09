@@ -57,7 +57,14 @@ def setup(monitor):
     devconfig_file = None
     if dummy_mic:
         os.system("modprobe snd-dummy fake_buffer=0")
-        with open("/etc/asound.conf", "w") as f:
+    asound_file = "/etc/asound.conf"
+    asound_contents = ""
+    if os.path.isfile(asound_file):
+        with open(asound_file) as f:
+            asound_contents = f.read()
+    # make sure that we have a capture device in the asound config, otherwise the assistant will crash badly
+    if not asound_contents or "capture" not in asound_contents:
+        with open(asound_file, "w") as f:
             text = """
                 defaults.ctl.card 0
                 pcm.!default {

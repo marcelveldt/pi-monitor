@@ -458,7 +458,6 @@ class Monitor():
 
     def _parseconfig(self):
         ''' get config from player's json configfile'''
-        CONFIG_FILE = '/etc/pi-monitor.json'
         try:
             with open(CONFIG_FILE) as json_file:
                 json_data = json_file.read()
@@ -481,6 +480,10 @@ class Monitor():
         for key, value in config.items():
             if key not in result:
                 result[key] = value
+        # save first config file
+        if not os.path.isfile(CONFIG_FILE):
+            with open(CONFIG_FILE, "w") as json_file:
+                json_file.write(result.json)
         return result
         
 class StatesWatcher(threading.Thread):

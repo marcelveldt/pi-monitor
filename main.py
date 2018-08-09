@@ -468,20 +468,23 @@ class Monitor():
         # write default asound file - is needed for volume control and google assistant to work properly
         # TODO: check if hardware id's actually match with the selected device
         with open("/etc/asound.conf", "w") as f:
-            text = """
+            text = '''
             pcm.!default {
-                type hw
-                card %s
+                type asym
+                playback.pcm {
+                 type hw
+                  card "%s"
+                }
+                capture.pcm {
+                  type hw
+                  card "%s"
+                }
             }
             ctl.!default {
-                type hw
-                card %s
+              type hw
+              card "%s"
             }
-            capture.!default {
-                type hw
-                card %s
-            }
-            """ % (selected_audio_device.split(":")[-1], selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1])
+            ''' % (selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1], selected_audio_device.split(":")[-1])
             f.write(text)
         return selected_audio_device, selected_mixer, selected_capture_device
 

@@ -84,7 +84,7 @@ class SqueezelitePlayer(threading.Thread):
         exec_path = "/usr/bin/squeezelite"
         args = [exec_path, "-C", "1", "-n", HOSTNAME, "-a", "4096:1024", "-m", self._playerid]
         if self.monitor.config["ALSA_VOLUME_CONTROL"]:
-            args += ["-O", self.monitor.config["ALSA_VOLUME_CONTROL"], "-X"]
+            args += ["-V", self.monitor.config["ALSA_VOLUME_CONTROL"], "-X"]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["-o", self.monitor.config["ALSA_SOUND_DEVICE"]]
         self._squeezelite_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)

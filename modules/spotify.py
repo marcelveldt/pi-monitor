@@ -157,7 +157,7 @@ class SpotifyPlayer(threading.Thread):
             exec_path = os.path.join(RESOURCES_FOLDER, "spotify-connect-web-chroot.sh")
         else:
             exec_path = '/mnt/dietpi_userdata/spotify-connect-web/spotify-connect-web'
-        args = [self.exec_path, "--bitrate", "320", "--name", HOSTNAME]
+        args = [exec_path, "--bitrate", "320", "--name", HOSTNAME]
         if self.monitor.config["ALSA_VOLUME_CONTROL"]:
             args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:

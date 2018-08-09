@@ -120,13 +120,16 @@ class Monitor():
         self.command("player","ping")
         loop_timeout = 1200
         while not self._exit:
-            try:
-                # process commands queue
-                while not self._cmd_queue.empty():
-                    data = self._cmd_queue.get()
-                    self._process_command(*data)
-            except Exception:
-                LOGGER.exception("Error while processing Queue - %s" % str(data))
+            # process commands queue
+            while not self._cmd_queue.empty():
+                data = self._cmd_queue.get()
+                target = data[0]
+                cmd = data[1]
+                cmd_data = data[2] if len(data) > 2 else None
+                try:
+                    self._process_command(target, cmd, cmd_data)
+                except Exception:
+                    LOGGER.exception("Error while processing command in Queue - %s" % str(data))
             # wait for events in the queue
             self._event.wait(loop_timeout)
             self._event.clear()
@@ -142,7 +145,7 @@ class Monitor():
             if cmd == "power":
                 self._set_power(cmd_data)
             elif cmd == "poweron":
-                self._set_power(True)
+                self._set_power(True, cmd_data)
             elif cmd == "poweroff":
                 self._set_power(False, cmd_data)
         elif target == "system":
@@ -160,11 +163,11 @@ class Monitor():
                 self._cleanup(0, 2, False)
         elif target and cmd:
             # direct command to module
-            mod = self.get_module(target)
-            if mod and getattr(mod, "command"):
+            try:
+                mod = self.get_module(target)
                 mod.command(cmd, cmd_data)
-            else:
-                LOGGER.warning("module %s does not accept commands or is not loaded!" % target)
+            except Exception:
+                LOGGER.exception("module %s does not accept commands or is not loaded!" % target)
     
     def _player_command(self, cmd, cmd_data=None):
         ''' send command to player'''

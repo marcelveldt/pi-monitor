@@ -475,23 +475,26 @@ class Monitor():
             alsa_conf = '''
             pcm.softvol {
                   type softvol
-                  slave.pcm "%s"
+                  slave.pcm hw:%s
                   control {
                     name "%s"
-                    card 0
+                    card %s
                   }
                   min_dB -90.2
                   max_dB 3.0
                 }
             pcm.!default {
                 type asym
-                 slave.pcm "softvol"
+                 playback.pcm {
+                   type plug
+                   slave.pcm "softvol"
+                 }
                  capture.pcm {
                    type plug
                    slave.pcm hw:%s
                  }
               }
-            ''' % (selected_audio_device.split(":")[-1], selected_mixer, selected_capture_device.split(":")[-1])
+            ''' % (selected_audio_device.split(":")[-1], VOLUME_CONTROL_SOFT, selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1])
             selected_audio_device = "softvol"
         else:
             # alsa conf without softvol

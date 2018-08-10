@@ -230,6 +230,21 @@ def get_info():
         'remoteName': zeroconf_vars['remoteName']
     })
 
+def add_user():
+    args = request.form
+    #TODO: Add parameter verification
+    username = str(args.get('userName'))
+    blob = str(args.get('blob'))
+    clientKey = str(args.get('clientKey'))
+
+    connect_app.login(username, zeroconf=(blob,clientKey))
+
+    return jsonify({
+        'status': 101,
+        'spotifyError': 0,
+        'statusString': 'ERROR-OK'
+        })
+
 #Loop to pump events
 def pump_events():
     lib.SpPumpEvents()

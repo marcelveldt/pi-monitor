@@ -151,7 +151,7 @@ class SpotifyPlayer(threading.Thread):
         # currently always use the chroot version as it is the most stable (surpisingly enough)
         # the chroot version works on both armv6 and armv7
         exec_path = os.path.join(RESOURCES_FOLDER, "spotify-connect-web-chroot.sh")
-        args = [exec_path, "--bitrate", "320", "--name", HOSTNAME, "--debug", "false"]
+        args = [exec_path, "--bitrate", "320", "--name", HOSTNAME]
         if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:
             args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:

@@ -16,7 +16,8 @@ def setup(monitor):
     if not monitor.config.get("ENABLE_MODULE_ROON", False):
         LOGGER.debug("Roon module is not enabled!")
         return False
-    enable_squeezelite = monitor.config.get("ROON_USE_SQUEEZELITE", False)
+    is_armv6 = "armv6" in PLATFORM
+    enable_squeezelite = monitor.config.get("ROON_USE_SQUEEZELITE", is_armv6)
     roon_proxy = monitor.config.get("ROON_PROXY", u"http://192.168.1.1:3006")
     if not roon_proxy:
         LOGGER.warning("Roon proxy address is empty")

@@ -7,22 +7,16 @@ import sys
 import argparse
 import re
 import logging
-from flask import Flask, request, abort, jsonify, redirect, url_for
-#from gevent.wsgi import WSGIServer
+from flask import Flask, request, abort, jsonify, render_template, redirect, flash, url_for
+from flask_bootstrap import Bootstrap
+from flask_cors import CORS
+from gevent.wsgi import WSGIServer
 from gevent import spawn_later, sleep
 from connect_ffi import ffi, lib
 from connect import Connect
 from utils import get_zeroconf_vars, get_metadata, get_image_url
 
 web_arg_parser = argparse.ArgumentParser(add_help=False)
-
-#Not a tuple, evaluates the same as "" + ""
-cors_help = (
-    "enable CORS support for this host (for the web api). "
-    "Must be in the format <protocol>://<hostname>:<port>. "
-    "Port can be excluded if its 80 (http) or 443 (https). "
-    "Can be specified multiple times"
-)
 
 args = web_arg_parser.parse_known_args()[0]
 
@@ -43,9 +37,6 @@ def web_error_callback(error, userdata):
 connect_app = Connect(web_error_callback, web_arg_parser)
 
 ##Routes
-
-
-##API routes
 
 #Playback routes
 @app.route('/api/playback/play')
@@ -156,7 +147,6 @@ def info_display_name():
 @app.route('/login/logout')
 def login_logout():
     lib.SpConnectionLogout()
-    return redirect(url_for('index'))
 
 @app.route('/login/password', methods=['POST'])
 def login_password():
@@ -171,7 +161,6 @@ def login_password():
         flash('Waiting for spotify', 'info')
         connect_app.login(username, password=password)
 
-    return redirect(url_for('index'))
 
 @app.route('/login/check_login')
 def check_login():
@@ -255,8 +244,8 @@ pump_events()
 #Only run if script is run directly and not by an import
 if __name__ == "__main__":
 #Can be run on any port as long as it matches the one used in avahi-publish-service
-
-    app.run(host='0.0.0.0', port=4000, debug=False, use_reloader=False)
+    http_server = WSGIServer(('', 4000), app)
+    http_server.serve_forever()
 
 #TODO: Add signal catcher
 lib.SpFree()

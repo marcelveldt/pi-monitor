@@ -63,10 +63,13 @@ class GoogleAssistantPlayer(threading.Thread):
     def command(self, cmd, cmd_data):
         if not self._assistant:
             return False
-        if cmd == "pause":
-            self._assistant.send_text_query("pause")
-        elif cmd == "stop":
-            self._assistant.send_text_query("cancel")
+        if self.monitor.states["google_assistant"]["state"] == PLAYING_STATE:
+            if cmd == "pause":
+                self._assistant.send_text_query("pause")
+            elif cmd == "stop":
+                self._assistant.send_text_query("stop")
+            else:
+                return False
         else:
             return False
 

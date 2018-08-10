@@ -119,7 +119,7 @@ class GoogleAssistantPlayer(threading.Thread):
         
         elif event.type == EventType.ON_DEVICE_ACTION:
             for command, params in event.actions:
-                LOGGER.info('Do command', command, 'with params', str(params))
+                LOGGER.info("Do command %s - with params: %s" %(command, params))
 
     def authenticate_device(self):
         import google_auth_oauthlib.flow

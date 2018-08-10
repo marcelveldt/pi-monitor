@@ -136,45 +136,40 @@ class SpotifyPlayer(threading.Thread):
         for item in ["/mnt/dietpi_userdata/spotify-web-chroot/usr/src/app", "/root/spotify-web-chroot/usr/src/app"]:
             if os.path.isdir(item):
                 exec_dir = item
-        if exec_dir:
-            # fix for image size (HACK!!)
-            mod_file = os.path.join(exec_dir, "utils.py")
-            if os.path.isfile(mod_file):
-                with open(mod_file) as f:
-                    cur_contents = f.read()
-                if "lib.kSpImageSizeSmall" in cur_contents:
-                    with open(mod_file, "w") as f:
-                        cur_contents = cur_contents.replace("lib.kSpImageSizeSmall", "lib.kSpImageSizeLarge")
-                        f.write(cur_contents)
 
         # finally start the spotify executable
         # currently always use the chroot version as it is the most stable (surpisingly enough)
         # the chroot version works on both armv6 and armv7
-        exec_path = os.path.join(RESOURCES_FOLDER, "spotify-connect-web-chroot.sh")
+        exec_path = os.path.join(RESOURCES_FOLDER, "spotify", "spotify-connect-web-chroot.sh")
         args = [exec_path, "--bitrate", "320", "--name", HOSTNAME]
         if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:
             args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["--playback_device", self.monitor.config["ALSA_SOUND_DEVICE"]]
-        if self.monitor.config["ENABLE_DEBUG"]:
-            LOGGER.debug("Starting spotify-connect-web: %s" % " ".join(args))
-            self._spotify_proc = subprocess.Popen(args, cwd=exec_dir)
-        else:
-            self._spotify_proc = subprocess.Popen(args, cwd=exec_dir, stdout=DEVNULL, stderr=subprocess.STDOUT)
+        LOGGER.debug("Starting spotify-connect-web: %s" % " ".join(args))
+        self._spotify_proc = subprocess.Popen(args, cwd=exec_dir, stderr=subprocess.STDOUT, stdout=subprocess.STDOUT)
 
         while not self._exit.isSet():
-            cur_state = self._get_state()
-            if cur_state != self._last_state:
-                self._last_state = cur_state
-                self._update_metadata()
-            if cur_state == "playing":
-                self._update_metadata()
-                LOOP_WAIT = 0.5
+            line = self._spotify_proc.stdout.readline().strip()
+            if not line:
+                self._exit.wait(0.1)
             else:
-                LOOP_WAIT = 3
-            if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:
-                # daemon crashed ? restart ?
-                LOGGER.error("spotify-connect-web exited")
-                break
-            self._exit.wait(LOOP_WAIT)
+                LOGGER.debug("Spotify: %s" % line)
+                if "kSpPlayback" in line:
+                    self._update_metadata()
+
+            # cur_state = self._get_state()
+            # if cur_state != self._last_state:
+            #     self._last_state = cur_state
+            #     self._update_metadata()
+            # if cur_state == "playing":
+            #     self._update_metadata()
+            #     LOOP_WAIT = 0.5
+            # else:
+            #     LOOP_WAIT = 3
+            # if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:
+            #     # daemon crashed ? restart ?
+            #     LOGGER.error("spotify-connect-web exited")
+            #     break
+            #self._exit.wait(LOOP_WAIT)
         

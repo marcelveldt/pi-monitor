@@ -33,7 +33,7 @@ class SpotifyPlayer(threading.Thread):
     _spotify_proc = None
     _avahi_proc = None
 
-    def __init__(self, monitor, use_chroot):
+    def __init__(self, monitor):
         self.monitor = monitor
         self.monitor.states["spotify"] = PlayerMetaData("Spotify")
         run_proc("service spotify-connect-web stop", check_result=True, ignore_error=True) # make sure that the original service is stopped

@@ -399,16 +399,13 @@ class Monitor():
         selected_audio_device_found = False
         for dev in alsaaudio.pcms(alsaaudio.PCM_PLAYBACK):
             # we only care about direct hardware access so we filter out the dsnoop stuff etc
-            if dev.startswith("hw:") or dev.startswith("plughw:") or dev == "default" and "Dummy" not in dev:
+            if dev.startswith("hw:") or dev.startswith("plughw:") and "Dummy" not in dev:
                 dev = dev.replace("CARD=","").split(",DEV=")[0]
                 alsa_devices.append(dev)
                 if selected_audio_device and dev == selected_audio_device:
                     selected_audio_device_found = True
-                if not default_audio_device and dev != "default":
+                if not default_audio_device:
                     default_audio_device = dev
-        if not default_audio_device:
-            default_audio_device = "default"
-            alsa_devices.append("default")
         if not selected_audio_device_found:
             selected_audio_device = default_audio_device
         self.states["alsa_devices"] = alsa_devices
@@ -418,12 +415,12 @@ class Monitor():
         alsa_capture_devices = []
         selected_capture_device_found = False
         for dev in alsaaudio.pcms(alsaaudio.PCM_CAPTURE):
-            if dev.startswith("hw:") or dev.startswith("plughw:") or dev == "default":
+            if dev.startswith("hw:") or dev.startswith("plughw:"):
                 dev = dev.replace("CARD=","").split(",DEV=")[0]
                 alsa_capture_devices.append(dev)
                 if selected_capture_device and dev == selected_capture_device:
                     selected_capture_device_found = True
-                if not default_capture_device and dev != "default":
+                if not default_capture_device:
                     default_capture_device = dev
         if not default_capture_device:
             # create dummy recording device

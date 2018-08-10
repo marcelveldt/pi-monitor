@@ -6,7 +6,6 @@ import os
 import sys
 import argparse
 import re
-import logging
 from flask import Flask, request, abort, jsonify, render_template, redirect, flash, url_for
 from flask_bootstrap import Bootstrap
 from flask_cors import CORS
@@ -18,12 +17,33 @@ from utils import get_zeroconf_vars, get_metadata, get_image_url
 
 web_arg_parser = argparse.ArgumentParser(add_help=False)
 
+#Not a tuple, evaluates the same as "" + ""
+cors_help = (
+    "enable CORS support for this host (for the web api). "
+    "Must be in the format <protocol>://<hostname>:<port>. "
+    "Port can be excluded if its 80 (http) or 443 (https). "
+    "Can be specified multiple times"
+)
+
+
+def validate_cors_host(host):
+    host_regex = re.compile(r'^(http|https)://[a-zA-Z0-9][a-zA-Z0-9-.]+(:[0-9]{1,5})?$')
+    result = re.match(host_regex, host)
+    if result is None:
+        raise argparse.ArgumentTypeError('%s is not in the format <protocol>://<hostname>:<port>. Protocol must be http or https' % host)
+    return host
+
+web_arg_parser.add_argument('--cors', help=cors_help, action='append', type=validate_cors_host)
 args = web_arg_parser.parse_known_args()[0]
 
-app = Flask(__name__)
-app.config.from_object(__name__)
-app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176b'
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
+app = Flask(__name__, root_path=sys.path[0])
+Bootstrap(app)
+#Add CORS headers to API requests for specified hosts
+CORS(app, resources={r"/api/*": {"origins": args.cors}})
+
+#Serve bootstrap files locally instead of from a CDN
+app.config['BOOTSTRAP_SERVE_LOCAL'] = True
+app.secret_key = os.urandom(24)
 
 #Used by the error callback to determine login status
 invalid_login = False
@@ -36,7 +56,17 @@ def web_error_callback(error, userdata):
 
 connect_app = Connect(web_error_callback, web_arg_parser)
 
+if os.environ.get('DEBUG') or connect_app.args.debug:
+    app.debug = True
+
 ##Routes
+
+#Home page
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+##API routes
 
 #Playback routes
 @app.route('/api/playback/play')
@@ -147,6 +177,7 @@ def info_display_name():
 @app.route('/login/logout')
 def login_logout():
     lib.SpConnectionLogout()
+    return redirect(url_for('index'))
 
 @app.route('/login/password', methods=['POST'])
 def login_password():
@@ -161,6 +192,7 @@ def login_password():
         flash('Waiting for spotify', 'info')
         connect_app.login(username, password=password)
 
+    return redirect(url_for('index'))
 
 @app.route('/login/check_login')
 def check_login():

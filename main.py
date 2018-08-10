@@ -99,7 +99,8 @@ class Monitor():
                 "power": False, 
                 "current_player": "",
                 "players": [],
-                "interrupted_player": ""
+                "interrupted_player": "",
+                "volume_level": self._volume_get()
                 })
         
         # Initialise logger
@@ -197,7 +198,7 @@ class Monitor():
         # fallback to direct alsa control
         if not success and self.config["ALSA_VOLUME_CONTROL"]:
             run_proc('amixer set "%s" 2+' % self.config["ALSA_VOLUME_CONTROL"])
-        self._volume_get()
+            self.states["player"]["volume_level"] = self._volume_get()
 
     def _volume_down(self):
         success = False
@@ -208,20 +209,10 @@ class Monitor():
         # fallback to direct alsa control
         if not success and self.config["ALSA_VOLUME_CONTROL"]:
             run_proc('amixer set "%s" 2-' % self.config["ALSA_VOLUME_CONTROL"])
+            self.states["player"]["volume_level"] = self._volume_get()
 
     def _volume_set(self, volume_level):
         ''' set volume level '''
-        now = datetime.datetime.now()
-        volume_limiter = False
-        if self.config["VOLUME_LIMITER_MORNING"] and (now.hour > 0 and now.hour < 9):
-            if volume_level >= self.config["VOLUME_LIMITER_MORNING"]:
-                volume_limiter = True
-        elif self.config["VOLUME_LIMITER"]:
-            if volume_level >= self.config["VOLUME_LIMITER"]:
-                volume_limiter = True
-        if volume_limiter:
-            LOGGER.warning("requested volume level is above the limiter treshold, ignoring request")
-            return False
         success = False
         # send command to current player
         if self.is_playing:
@@ -230,7 +221,7 @@ class Monitor():
         # fallback to direct alsa control
         if not success and self.config["ALSA_VOLUME_CONTROL"]:
             run_proc('amixer set "%s" %s' % (self.config["ALSA_VOLUME_CONTROL"], str(volume_level) + "%"))
-        self.states["player"]["volume_level"] = volume_level
+            self.states["player"]["volume_level"] = volume_level
 
     def _volume_get(self):
         ''' get current volume level of player'''
@@ -244,7 +235,6 @@ class Monitor():
             if amixer_result:
                 cur_vol = amixer_result.split("[")[1].split("]")[0].replace("%","")
                 vol_level = int(cur_vol)
-        self.states["player"]["volume_level"] = vol_level
         return vol_level
 
     def _play_sound(self, url, volume_level=None, loop=False, force=True):

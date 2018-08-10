@@ -23,11 +23,7 @@ def setup(monitor):
         LOGGER.error("avahi-utils is not installed! Please install manually")
         return False
 
-    if "armv7" in PLATFORM and check_software(dietpi_id="141", bin_path="/mnt/dietpi_userdata/spotify-connect-web/spotify-connect-web'"):
-        use_chroot = False
-    else:
-        use_chroot = True
-    return SpotifyPlayer(monitor, use_chroot)
+    return SpotifyPlayer(monitor)
 
 
 
@@ -39,7 +35,6 @@ class SpotifyPlayer(threading.Thread):
 
     def __init__(self, monitor, use_chroot):
         self.monitor = monitor
-        self.use_chroot = use_chroot
         self.monitor.states["spotify"] = PlayerMetaData("Spotify")
         run_proc("service spotify-connect-web stop", check_result=True, ignore_error=True) # make sure that the original service is stopped
         run_proc("service raspotify stop", check_result=True, ignore_error=True) # make sure that the original service is stopped
@@ -138,7 +133,7 @@ class SpotifyPlayer(threading.Thread):
                 "_spotify-connect._tcp", "4000", "VERSION=1.0", "CPath=/login/_zeroconf"]
         self._avahi_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
         exec_dir = None
-        for item in ["/mnt/dietpi_userdata/spotify-connect-web", "/mnt/dietpi_userdata/spotify-web-chroot/usr/src/app", "/root/spotify-web-chroot/usr/src/app"]:
+        for item in ["/mnt/dietpi_userdata/spotify-web-chroot/usr/src/app", "/root/spotify-web-chroot/usr/src/app"]:
             if os.path.isdir(item):
                 exec_dir = item
         if exec_dir:
@@ -153,23 +148,19 @@ class SpotifyPlayer(threading.Thread):
                         f.write(cur_contents)
 
         # finally start the spotify executable
-        if self.use_chroot:
-            exec_path = os.path.join(RESOURCES_FOLDER, "spotify-connect-web-chroot.sh")
-        else:
-            exec_path = '/mnt/dietpi_userdata/spotify-connect-web/spotify-connect-web'
-        args = [exec_path, "--bitrate", "320", "--name", HOSTNAME]
+        # currently always use the chroot version as it is the most stable (surpisingly enough)
+        # the chroot version works on both armv6 and armv7
+        exec_path = os.path.join(RESOURCES_FOLDER, "spotify-connect-web-chroot.sh")
+        args = [exec_path, "--bitrate", "320", "--name", HOSTNAME, "--debug", "false"]
         if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:
             args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["--playback_device", self.monitor.config["ALSA_SOUND_DEVICE"]]
-        if not self.use_chroot:
-            args += ["--key", os.path.join(RESOURCES_FOLDER, "spotify_appkey.key")]
         if self.monitor.config["ENABLE_DEBUG"]:
             LOGGER.debug("Starting spotify-connect-web: %s" % " ".join(args))
             self._spotify_proc = subprocess.Popen(args, cwd=exec_dir)
         else:
             self._spotify_proc = subprocess.Popen(args, cwd=exec_dir, stdout=DEVNULL, stderr=subprocess.STDOUT)
-
 
         while not self._exit.isSet():
             cur_state = self._get_state()

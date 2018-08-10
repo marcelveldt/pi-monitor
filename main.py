@@ -508,20 +508,7 @@ class Monitor():
                  }
               }
             ''' % (selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1])
-        alsa_conf += '''
-            ctl.!default {
-                playback.pcm
-                {
-                    type hw
-                    card %s
-                }
-                capture.pcm 
-                {
-                    type hw
-                    card %s
-                }
-            }
-            ''' % (selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1])
+        alsa_conf += "defaults.ctl.playback.device hw:%s" % selected_audio_device.split(":")[-1]
         # write file
         with open("/etc/asound.conf", "w") as f:
             f.write(alsa_conf)

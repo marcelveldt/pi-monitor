@@ -494,6 +494,7 @@ class Monitor():
                    slave.pcm hw:%s
                  }
               }
+              defaults.ctl.playback.device "softvol"
             ''' % (selected_audio_device.split(":")[-1], VOLUME_CONTROL_SOFT, selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1])
             selected_audio_device = "softvol"
         else:
@@ -510,8 +511,8 @@ class Monitor():
                    slave.pcm hw:%s
                  }
               }
-            ''' % (selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1])
-        alsa_conf += "defaults.ctl.playback.device hw:%s" % selected_audio_device.split(":")[-1]
+              defaults.ctl.playback.device hw:%s
+            ''' % (selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1],selected_audio_device.split(":")[-1])
         # write file
         with open("/etc/asound.conf", "w") as f:
             f.write(alsa_conf)

@@ -529,9 +529,9 @@ class Monitor():
         LOGGER.debug("alsa playback devices: %s - default_audio_device: %s - selected_audio_device: %s" % (str(alsa_devices), default_audio_device, selected_audio_device))
         LOGGER.debug("alsa recording devices: %s - default_capture_device: %s - selected_capture_device: %s" % (str(alsa_capture_devices), default_capture_device, selected_capture_device))
         LOGGER.debug("alsa mixers: %s - default_capture_device: %s - selected_capture_device: %s" % (str(alsa_mixers), default_mixer, selected_mixer))
-        self.config["ALSA_SOUND_DEVICE"] = audio_device
-        self.config["ALSA_VOLUME_CONTROL"] = mixer
-        self.config["ALSA_CAPTURE_DEVICE"] = capture_device
+        self.config["ALSA_SOUND_DEVICE"] = selected_audio_device
+        self.config["ALSA_VOLUME_CONTROL"] = selected_mixer
+        self.config["ALSA_CAPTURE_DEVICE"] = selected_capture_device
 
     def _parseconfig(self):
         ''' get config from player's json configfile'''

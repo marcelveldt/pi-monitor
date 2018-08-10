@@ -23,7 +23,7 @@ def setup(monitor):
     if not check_software(bin_path="/usr/bin/play", installapt="sox libsox-fmt-all"):
         LOGGER.error("sox is not installed! Please install manually")
         return False
-
+    return False # wip
     return LocalPlayer(monitor)
 
 

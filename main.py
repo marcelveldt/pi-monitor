@@ -484,7 +484,7 @@ class Monitor():
                   max_dB 3.0
                 }
             pcm.!default {
-                type plug
+                type asym
                  slave.pcm "softvol"
                  capture.pcm {
                    type plug

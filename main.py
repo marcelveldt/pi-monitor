@@ -494,8 +494,11 @@ class Monitor():
                    slave.pcm hw:%s
                  }
               }
-              defaults.ctl.playback.device "softvol"
-            ''' % (selected_audio_device.split(":")[-1], VOLUME_CONTROL_SOFT, selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1])
+              ctl.softvol { 
+                  type hw 
+                  card %s 
+              }
+            ''' % (selected_audio_device.split(":")[-1], VOLUME_CONTROL_SOFT, selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1], selected_audio_device.split(":")[-1])
             selected_audio_device = "softvol"
         else:
             # alsa conf without softvol

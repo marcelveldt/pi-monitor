@@ -385,7 +385,7 @@ class Monitor():
         else:
             LOGGER.info("Configuration did not change!")
 
-    def _setup_alsa_config(self, config):
+    def _setup_alsa_config(self):
         ''' get details about the alsa configuration'''
         # TODO: move this to another (helper) file
 

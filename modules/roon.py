@@ -5,7 +5,7 @@
 import os
 import time
 import threading
-from resources.lib.utils import PlayerMetaData, json, requests, PLATFORM, check_software, run_proc, subprocess, DEVNULL, PLAYING_STATE
+from resources.lib.utils import PlayerMetaData, json, requests, PLATFORM, check_software, run_proc, subprocess, DEVNULL, PLAYING_STATE, VOLUME_CONTROL_DISABLED
 
 
 LOOP_WAIT = 4
@@ -96,7 +96,7 @@ class RoonPlayer(threading.Thread):
             run_proc("service squeezelite stop", check_result=True, ignore_error=True)
             exec_path = "/usr/bin/squeezelite"
             args = [exec_path, "-C", "1", "-n", self.player_name, "-a", "4096:1024"]
-            if self.monitor.config["ALSA_VOLUME_CONTROL"]:
+            if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:
                 args += ["-V", self.monitor.config["ALSA_VOLUME_CONTROL"], "-X"]
             if self.monitor.config["ALSA_SOUND_DEVICE"]:
                 args += ["-o", self.monitor.config["ALSA_SOUND_DEVICE"]]

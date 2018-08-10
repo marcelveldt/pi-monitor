@@ -34,6 +34,8 @@ IDLE_STATE = "idle"
 OFF_STATE = "off"
 IDLE_STATES = [STOPPED_STATE, IDLE_STATE, OFF_STATE, PAUSED_STATE]
 PLAYING_STATES = [PLAYING_STATE, LISTENING_STATE, LOADING_STATE, NOTIFY_STATE]
+VOLUME_CONTROL_SOFT = "SoftMaster"
+VOLUME_CONTROL_DISABLED = "no volume control"
 
 LIBS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 RESOURCES_FOLDER = os.path.abspath(os.path.join(LIBS_FOLDER, os.pardir))

@@ -9,7 +9,7 @@ import thread
 import threading
 from Queue import Queue
 import datetime
-from resources.lib.utils import DEVNULL, PlayerMetaData, StatesDict, ConfigDict, HOSTNAME, APPNAME, json, import_or_install, run_proc, IS_DIETPI, PLAYING_STATES
+from resources.lib.utils import DEVNULL, PlayerMetaData, StatesDict, ConfigDict, HOSTNAME, APPNAME, json, import_or_install, run_proc, IS_DIETPI, PLAYING_STATES, VOLUME_CONTROL_SOFT, VOLUME_CONTROL_DISABLED
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -93,7 +93,11 @@ class Monitor():
 
         # parse config from file
         self.config.update(self._parseconfig())
-        self._lastconfig = self.config.copy()
+        self._lastconfig = self.config["last_updated"]
+        self._setup_alsa_config()
+        if self.config["ENABLE_DEBUG"]:
+            LOGGER.setLevel(logging.DEBUG)
+            LOGGER.debug("using config: %s" % self.config)
         self.states["player"] = PlayerMetaData("")
         self.states["player"].update({
                 "power": False, 
@@ -103,11 +107,6 @@ class Monitor():
                 "volume_level": self._volume_get()
                 })
         
-        # Initialise logger
-        if self.config["ENABLE_DEBUG"]:
-            LOGGER.setLevel(logging.DEBUG)
-            LOGGER.debug("config: %s" % self.config)
-
         # Use the signal module to handle signals
         for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
             signal.signal(sig, self._cleanup)
@@ -375,7 +374,7 @@ class Monitor():
         sys.exit(signum)
 
     def _saveconfig(self):
-        config_changed = self._lastconfig["last_updated"] != self.config["last_updated"]
+        config_changed = self._lastconfig != self.config["last_updated"]
         if config_changed:
             LOGGER.info("The configuration is changed! We need to reload.")
             self._lastconfig = self.config
@@ -386,19 +385,21 @@ class Monitor():
         else:
             LOGGER.info("Configuration did not change!")
 
-    def _get_alsa_config(self, config):
+    def _setup_alsa_config(self, config):
         ''' get details about the alsa configuration'''
+        # TODO: move this to another (helper) file
 
-        selected_mixer = config.get("ALSA_VOLUME_CONTROL", "") # value in stored config, if any
-        selected_audio_device = config.get("ALSA_SOUND_DEVICE", "") # value in stored config, if any
-        selected_capture_device = config.get("ALSA_CAPTURE_DEVICE", "") # value in stored config, if any
+        selected_mixer = self.config.get("ALSA_VOLUME_CONTROL", "") # value in stored config, if any
+        selected_audio_device = self.config.get("ALSA_SOUND_DEVICE", "") # value in stored config, if any
+        selected_capture_device = self.config.get("ALSA_CAPTURE_DEVICE", "") # value in stored config, if any
 
+        # get playback devices
         default_audio_device = ""
         alsa_devices = []
         selected_audio_device_found = False
         for dev in alsaaudio.pcms(alsaaudio.PCM_PLAYBACK):
             # we only care about direct hardware access so we filter out the dsnoop stuff etc
-            if dev.startswith("hw:") or dev.startswith("plughw:") or dev == "default":
+            if dev.startswith("hw:") or dev.startswith("plughw:") or dev == "default" and "Dummy" not in dev:
                 dev = dev.replace("CARD=","").split(",DEV=")[0]
                 alsa_devices.append(dev)
                 if selected_audio_device and dev == selected_audio_device:
@@ -411,16 +412,15 @@ class Monitor():
         if not selected_audio_device_found:
             selected_audio_device = default_audio_device
         self.states["alsa_devices"] = alsa_devices
-        LOGGER.debug("found alsa playback devices: %s - default_audio_device: %s - selected_audio_device: %s" % (str(alsa_devices), default_audio_device, selected_audio_device))
 
         # get capture devices
         default_capture_device = ""
-        alsa_devices = []
+        alsa_capture_devices = []
         selected_capture_device_found = False
         for dev in alsaaudio.pcms(alsaaudio.PCM_CAPTURE):
             if dev.startswith("hw:") or dev.startswith("plughw:") or dev == "default":
                 dev = dev.replace("CARD=","").split(",DEV=")[0]
-                alsa_devices.append(dev)
+                alsa_capture_devices.append(dev)
                 if selected_capture_device and dev == selected_capture_device:
                     selected_capture_device_found = True
                 if not default_capture_device and dev != "default":
@@ -429,36 +429,73 @@ class Monitor():
             # create dummy recording device
             os.system("modprobe snd-dummy fake_buffer=0")
             default_capture_device = "hw:Dummy"
-            alsa_devices.append(default_capture_device)
+            alsa_capture_devices.append(default_capture_device)
         if not selected_capture_device_found:
             selected_capture_device = default_capture_device
-        self.states["alsa_capture_devices"] = alsa_devices
-        LOGGER.debug("found alsa recording devices: %s - default_capture_device: %s - selected_capture_device: %s" % (str(alsa_devices), default_capture_device, default_capture_device))
-
+        self.states["alsa_capture_devices"] = alsa_capture_devices
+        
         # only lookup mixers for the selected audio device
         # TODO: extend this selection criteria with more use cases
-        alsa_mixers = alsaaudio.mixers(device=selected_audio_device)
-        self.states["alsa_mixers"] = alsa_mixers
-        default_mixer = alsa_mixers[0].decode("utf-8")
-        if "Digital" in alsa_mixers:
-            default_mixer = u"Digital"
-        elif "PCM" in alsa_mixers:
-            default_mixer = u"PCM"
-        elif "Analog" in alsa_mixers:
-            default_mixer = u"Analog"
-        elif "Lineout volume control" in alsa_mixers:
-            default_mixer = u"Lineout volume control"
-        elif "SoftMaster" in alsa_mixers:
-            default_mixer = u"SoftMaster"
-        elif "Master" in alsa_mixers:
-            default_mixer = u"Master"
-        if not selected_mixer or selected_mixer not in alsa_mixers:
+        default_mixer = ""
+        alsa_mixers = []
+        selected_mixer_found = False
+        for mixer in alsaaudio.mixers(device=selected_audio_device):
+            if mixer == "Digital":
+                default_mixer = u"Digital"
+            elif mixer == "PCM":
+                default_mixer = u"PCM"
+            elif mixer == "Analog":
+                default_mixer = u"Analog"
+            elif mixer == "Lineout volume control":
+                default_mixer = u"Lineout volume control"
+            elif mixer == "Master":
+                default_mixer = u"Master"
+            elif mixer == "SoftMaster":
+                default_mixer = u"SoftMaster"
+            alsa_mixers.append(mixer)
+            if mixer == selected_mixer:
+                selected_mixer_found = True
+        # append softvol and no volume control
+        if not alsa_mixers or not default_mixer:
+            alsa_mixers.append(VOLUME_CONTROL_SOFT)
+            if "digi" in selected_audio_device:
+                # assume digital output
+                default_mixer = VOLUME_CONTROL_DISABLED
+            else:
+                default_mixer =VOLUME_CONTROL_SOFT
+        alsa_mixers.append(VOLUME_CONTROL_DISABLED)
+        if not selected_mixer_found:
+            # set default mixer as selected mixer
             selected_mixer = default_mixer
+        self.states["alsa_mixers"] = alsa_mixers
         
         # write default asound file - is needed for volume control and google assistant to work properly
-        # TODO: check if hardware id's actually match with the selected device
-        with open("/etc/asound.conf", "w") as f:
-            text = '''
+        if selected_mixer == VOLUME_CONTROL_SOFT:
+            # alsa conf with softvol
+            alsa_conf = '''
+            pcm.softvol {
+                  type softvol
+                  slave.pcm "%s"
+                  control {
+                    name "%s"
+                    card 0
+                  }
+                  min_dB -90.2
+                  max_dB 3.0
+                }
+            pcm.!default {
+                type plug
+                 slave.pcm "softvol"
+                 capture.pcm {
+                   type plug
+                   slave.pcm hw:%s
+                 }
+              }
+            ''' % (selected_audio_device.split(":")[-1], selected_mixer, selected_capture_device.split(":")[-1])
+            selected_audio_device = "softvol"
+        else:
+            # alsa conf without softvol
+            alsa_conf = '''
             pcm.!default {
                 type asym
                  playback.pcm {
@@ -470,13 +507,31 @@ class Monitor():
                    slave.pcm hw:%s
                  }
               }
+            ''' % (selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1])
+        alsa_conf += '''
             ctl.!default {
-              type hw
-              card "%s"
+                playback.pcm
+                {
+                    type hw
+                    card %s
+                }
+                capture.pcm 
+                {
+                    type hw
+                    card %s
+                }
             }
-            ''' % (selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1], selected_audio_device.split(":")[-1])
-            f.write(text)
-        return selected_audio_device, selected_mixer, selected_capture_device
+            ''' % (selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1])
+        # write file
+        with open("/etc/asound.conf", "w") as f:
+            f.write(alsa_conf)
+        # print some logging and set the config values
+        LOGGER.debug("alsa playback devices: %s - default_audio_device: %s - selected_audio_device: %s" % (str(alsa_devices), default_audio_device, selected_audio_device))
+        LOGGER.debug("alsa recording devices: %s - default_capture_device: %s - selected_capture_device: %s" % (str(alsa_capture_devices), default_capture_device, selected_capture_device))
+        LOGGER.debug("alsa mixers: %s - default_capture_device: %s - selected_capture_device: %s" % (str(alsa_mixers), default_mixer, selected_mixer))
+        self.config["ALSA_SOUND_DEVICE"] = audio_device
+        self.config["ALSA_VOLUME_CONTROL"] = mixer
+        self.config["ALSA_CAPTURE_DEVICE"] = capture_device
 
     def _parseconfig(self):
         ''' get config from player's json configfile'''
@@ -495,12 +550,6 @@ class Monitor():
             ("ENABLE_DEBUG", config.get("ENABLE_DEBUG", False)),
             ("AUTO_UPDATE_ON_STARTUP", config.get("AUTO_UPDATE_ON_STARTUP", True))
         ])
-
-        # append alsa settings
-        audio_device, mixer, capture_device = self._get_alsa_config(config)
-        result["ALSA_SOUND_DEVICE"] = audio_device
-        result["ALSA_VOLUME_CONTROL"] = mixer
-        result["ALSA_CAPTURE_DEVICE"] = capture_device
         # append other config keys which are set by modules
         for key, value in config.items():
             if key not in result:

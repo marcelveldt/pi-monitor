@@ -7,7 +7,7 @@ import sys
 import time
 import threading
 import subprocess
-from resources.lib.utils import PlayerMetaData, json, DEVNULL, requests, import_or_install, global_import, check_software, run_proc, HOSTNAME
+from resources.lib.utils import PlayerMetaData, json, DEVNULL, requests, import_or_install, global_import, check_software, run_proc, HOSTNAME, VOLUME_CONTROL_DISABLED
 
 LOOP_WAIT = 2
 
@@ -112,6 +112,10 @@ class AirPlayPlayer(threading.Thread):
 
     def _create_config(self):
         # create shairport sync config
+        if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:
+            mixer_config_entry = 'mixer_control_name = "%s";' % self.monitor.config["ALSA_VOLUME_CONTROL"]
+        else:
+            mixer_config_entry = ""
         config_text = '''
         general =
         {
@@ -129,9 +133,9 @@ class AirPlayPlayer(threading.Thread):
         alsa =
         {
             output_device = "%s";
-            mixer_control_name = "%s";
+            %s
         };
-        ''' % (HOSTNAME, EXEC_FIFO, self.monitor.config["ALSA_SOUND_DEVICE"], self.monitor.config["ALSA_VOLUME_CONTROL"])
+        ''' % (HOSTNAME, EXEC_FIFO, self.monitor.config["ALSA_SOUND_DEVICE"], mixer_config_entry)
         with open(EXEC_CONF, "w") as f:
             f.write(config_text)
 

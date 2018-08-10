@@ -5,7 +5,7 @@ import requests
 import thread
 import socket
 import threading
-from resources.lib.utils import PlayerMetaData, json, requests, HOSTNAME, check_software, run_proc, subprocess, DEVNULL, STOPPED_STATE, PLAYING_STATE, PAUSED_STATE
+from resources.lib.utils import PlayerMetaData, json, requests, HOSTNAME, check_software, run_proc, subprocess, DEVNULL, STOPPED_STATE, PLAYING_STATE, PAUSED_STATE, VOLUME_CONTROL_DISABLED
 import re
 import time
 
@@ -83,7 +83,7 @@ class SqueezelitePlayer(threading.Thread):
         run_proc("service squeezelite stop", check_result=True, ignore_error=True)
         exec_path = "/usr/bin/squeezelite"
         args = [exec_path, "-C", "1", "-n", HOSTNAME, "-a", "4096:1024", "-m", self._playerid]
-        if self.monitor.config["ALSA_VOLUME_CONTROL"]:
+        if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:
             args += ["-V", self.monitor.config["ALSA_VOLUME_CONTROL"], "-X"]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["-o", self.monitor.config["ALSA_SOUND_DEVICE"]]

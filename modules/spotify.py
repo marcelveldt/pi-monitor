@@ -6,7 +6,7 @@ import os
 import time
 import threading
 import subprocess
-from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, RESOURCES_FOLDER
+from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, RESOURCES_FOLDER, VOLUME_CONTROL_DISABLED
 
 LOOP_WAIT = 5
 
@@ -158,7 +158,7 @@ class SpotifyPlayer(threading.Thread):
         else:
             exec_path = '/mnt/dietpi_userdata/spotify-connect-web/spotify-connect-web'
         args = [exec_path, "--bitrate", "320", "--name", HOSTNAME]
-        if self.monitor.config["ALSA_VOLUME_CONTROL"]:
+        if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:
             args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["--playback_device", self.monitor.config["ALSA_SOUND_DEVICE"]]

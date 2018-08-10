@@ -60,6 +60,16 @@ class GoogleAssistantPlayer(threading.Thread):
     _exit = threading.Event()
     _assistant = None
 
+    def command(self, cmd, cmd_data):
+        if not self._assistant:
+            return False
+        if cmd == "pause":
+            self._assistant.send_text_query("pause")
+        elif cmd == "stop":
+            self._assistant.send_text_query("cancel")
+        else:
+            return False
+
     def process_event(self, event):
         """Pretty prints events.
 

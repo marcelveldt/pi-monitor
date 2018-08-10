@@ -197,6 +197,7 @@ class Monitor():
         # fallback to direct alsa control
         if not success and self.config["ALSA_VOLUME_CONTROL"]:
             run_proc('amixer set "%s" 2+' % self.config["ALSA_VOLUME_CONTROL"])
+        self._volume_get()
 
     def _volume_down(self):
         success = False
@@ -212,11 +213,11 @@ class Monitor():
         ''' set volume level '''
         now = datetime.datetime.now()
         volume_limiter = False
-        if self.config["VOLUME_LIMITER_MORNING"] and (now.hour > 0 and now.hour < 8):
+        if self.config["VOLUME_LIMITER_MORNING"] and (now.hour > 0 and now.hour < 9):
             if volume_level >= self.config["VOLUME_LIMITER_MORNING"]:
                 volume_limiter = True
         elif self.config["VOLUME_LIMITER"]:
-            if volume_level >= self.config["VOLUME_LIMITER_MORNING"]:
+            if volume_level >= self.config["VOLUME_LIMITER"]:
                 volume_limiter = True
         if volume_limiter:
             LOGGER.warning("requested volume level is above the limiter treshold, ignoring request")
@@ -230,7 +231,6 @@ class Monitor():
         if not success and self.config["ALSA_VOLUME_CONTROL"]:
             run_proc('amixer set "%s" %s' % (self.config["ALSA_VOLUME_CONTROL"], str(volume_level) + "%"))
         self.states["player"]["volume_level"] = volume_level
-        self.states["player"]["volume_limiter"] = False
 
     def _volume_get(self):
         ''' get current volume level of player'''
@@ -619,13 +619,13 @@ class StatesWatcher(threading.Thread):
         ''' check if volume_level is higher than the allowed setting '''
         cur_vol = self.states["player"]["volume_level"]
         now = datetime.datetime.now()
-        if self.monitor.config["VOLUME_LIMITER_MORNING"] and (now.hour > 0 and now.hour < 8):
+        if self.monitor.config["VOLUME_LIMITER_MORNING"] and (now.hour > 0 and now.hour < 9):
             if cur_vol > self.monitor.config["VOLUME_LIMITER_MORNING"]:
-                self.monitor.command("volume_set", self.monitor.config["VOLUME_LIMITER_MORNING"])
+                self.monitor.command("player", "volume_set", self.monitor.config["VOLUME_LIMITER_MORNING"])
                 LOGGER.warning("volume limiter is active!")
         elif self.monitor.config["VOLUME_LIMITER"]:
             if cur_vol > self.monitor.config["VOLUME_LIMITER"]:
-                self.monitor.command("volume_set", self.monitor.config["VOLUME_LIMITER"])
+                self.monitor.command("player", "volume_set", self.monitor.config["VOLUME_LIMITER"])
                 LOGGER.warning("volume limiter is active!")
 
 # main entry point

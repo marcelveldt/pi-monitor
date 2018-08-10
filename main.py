@@ -225,7 +225,7 @@ class Monitor():
     def _volume_get(self):
         ''' get current volume level of player'''
         vol_level = 0
-        current_player = self.states["player"]["current_player"]
+        current_player = self.states["player"].get("current_player")
         if current_player and self.states[current_player]["state"] == "playing":
             vol_level = self.states[current_player]["volume_level"]
         # fallback to alsa

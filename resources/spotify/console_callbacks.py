@@ -9,6 +9,7 @@ from connect_ffi import ffi, lib
 import logging
 import urllib2
 from utils import LOGGER
+import signal
 
 RATE = 44100
 CHANNELS = 2

@@ -8,7 +8,6 @@ import argparse
 import re
 import json
 import uuid
-import signal
 from flask import Flask, request, abort, jsonify, redirect, url_for
 from gevent.wsgi import WSGIServer
 from gevent import spawn_later, sleep

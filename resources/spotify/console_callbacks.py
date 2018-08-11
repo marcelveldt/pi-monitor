@@ -28,9 +28,11 @@ audio_arg_parser.add_argument('--mixer', '-m', help='alsa mixer name for volume 
 audio_arg_parser.add_argument('--dbrange', '-r', help='alsa mixer volume range in Db', default=0)
 args = audio_arg_parser.parse_known_args()[0]
 
+global is_exited
 is_exited = False
 
 def signal_handler(signal, frame):
+        global is_exited
         is_exited = True
         lib.SpConnectionLogout()
         lib.SpFree()
@@ -151,6 +153,8 @@ def report_state(msg):
         return
     try:
         urllib2.urlopen("http://localhost/command?target=spotify&command=update&data=%s" % msg)
+    except SystemExit, KeyboardInterrupt:
+        pass
     except Exception as exc:
         LOGGER.error(exc)
 

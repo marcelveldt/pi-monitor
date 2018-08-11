@@ -72,7 +72,7 @@ class SpotifyPlayer(threading.Thread):
             cmd += json.dumps(cmd_data)
         #return self._api_execute("api/playback/%s" % cmd)
         if self._spotify_proc:
-            self._spotify_proc.stdin.write(cmd)
+            self._spotify_proc.stdin.write(cmd+"\n")
 
     def _volume_get(self):
         ''' get current volume level of player'''

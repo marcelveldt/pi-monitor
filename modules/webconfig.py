@@ -99,7 +99,6 @@ class WebConfig(threading.Thread):
                 return jsonify(self.monitor.states["spotify"]["zeroconf"])
             elif action == 'addUser' and request.method == 'POST':
                 args = request.form
-
                 username = str(args.get('userName'))
                 blob = str(args.get('blob'))
                 clientKey = str(args.get('clientKey'))

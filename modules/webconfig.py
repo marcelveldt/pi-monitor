@@ -15,7 +15,7 @@ def setup(monitor):
     if not monitor.config.get("ENABLE_MODULE_WEBCONFIG", True):
         LOGGER.debug("Webconfig module is not enabled!")
         return False
-    import_or_install("flask", ["Flask", "render_template", "flash", "request", "send_file", "redirect"], True, installpip="Flask")
+    import_or_install("flask", ["Flask", "render_template", "flash", "request", "send_file", "redirect", "jsonify"], True, installpip="Flask")
     import_or_install("wtforms", ["TextField", "TextAreaField", "StringField", "SubmitField", "BooleanField", "IntegerField", "FloatField", "SelectField"], True, installpip="WTForms")
     import_or_install("flask_wtf", "FlaskForm", True, installpip="")
     return WebConfig(monitor)
@@ -86,8 +86,50 @@ class WebConfig(threading.Thread):
             func()
             return 'Server shutting down...'
 
+        @app.route('/spotify/_zeroconf', methods=['GET', 'POST'])
+        def spotify_zeroconf():
+            LOGGER.info("spotify_zeroconf: %s" % request.args)
+            action = request.args.get('action') or request.form.get('action')
+            if not action:
+                return jsonify({
+                    'status': 301,
+                    'spotifyError': 0,
+                    'statusString': 'ERROR-MISSING-ACTION'})
+            if action == 'getInfo' and request.method == 'GET':
+                return jsonify(self.monitor.states["spotify"]["zeroconf"])
+            elif action == 'addUser' and request.method == 'POST':
+                args = request.form
+
+                username = str(args.get('userName'))
+                blob = str(args.get('blob'))
+                clientKey = str(args.get('clientKey'))
+                data = {
+                    "username": username,
+                    "blob": blob,
+                    "clientKey": clientKey
+                }
+                self.monitor.command("spotify", "login", data)
+                #connect_app.login(username, zeroconf=(blob,clientKey))
+                return jsonify({
+                    'status': 101,
+                    'spotifyError': 0,
+                    'statusString': 'ERROR-OK'
+                    })
+            else:
+                return jsonify({
+                    'status': 301,
+                    'spotifyError': 0,
+                    'statusString': 'ERROR-INVALID-ACTION'})
+
+        @app.route('/spotify/_zeroconf_vars', methods=['GET', 'POST'])
+        def spotify_zeroconf_vars():
+            content = request.get_json()
+            LOGGER.info("spotify_zeroconf_vars: %s" % content)
+            self.monitor.states["spotify"]["zeroconf"] = json.loads(content)
+            return "OK"
+
         def get_logs():
-            with open('tmp/gpio_monitor.log') as f:
+            with open('/tmp/pi-monitor.log') as f:
                 data = f.read()
             return data
 

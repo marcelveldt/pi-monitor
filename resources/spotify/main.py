@@ -14,6 +14,8 @@ from gevent import spawn_later, sleep
 from connect_ffi import ffi, lib
 from connect import Connect
 from utils import get_zeroconf_vars, get_metadata, get_image_url
+import urllib2
+import json
 
 web_arg_parser = argparse.ArgumentParser(add_help=False)
 
@@ -191,6 +193,11 @@ def login_zeroconf():
             'spotifyError': 0,
             'statusString': 'ERROR-INVALID-ACTION'})
 
+def publish_zeroconf():
+    jdata = get_info()
+    jdata = json.dumps({"username":"...", "password":"..."})
+    urllib2.urlopen("http://www.example.com/", jdata, {'Content-Type': 'application/json'})
+
 def get_info():
     zeroconf_vars = get_zeroconf_vars()
 
@@ -237,9 +244,22 @@ pump_events()
 
 #Only run if script is run directly and not by an import
 if __name__ == "__main__":
+    publish_zeroconf()
+    while True:
+        line=sys.stdin.readline().rstrip()
+        print "received line: %s" % line
+        if line == "play":
+            playback_play()
+        elif line == "pause":
+            playback_pause()
+        elif line.startswith("login"):
+            data = line.split("login")[1]
+            data = json.loads(data)
+            connect_app.login(data["username"], zeroconf=(data["blob"],data["clientKey"]))
+
 #Can be run on any port as long as it matches the one used in avahi-publish-service
-    http_server = WSGIServer(('', 4000), app, log=None)
-    http_server.serve_forever()
+    # http_server = WSGIServer(('', 4000), app, log=None)
+    # http_server.serve_forever()
 
 #TODO: Add signal catcher
 lib.SpFree()

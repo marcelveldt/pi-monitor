@@ -8,7 +8,7 @@ import threading
 from connect_ffi import ffi, lib
 import logging
 import urllib2
-from utils import is_exited, LOGGER
+from utils import LOGGER
 
 RATE = 44100
 CHANNELS = 2
@@ -27,6 +27,16 @@ audio_arg_parser.add_argument('--mixer', '-m', help='alsa mixer name for volume 
 audio_arg_parser.add_argument('--dbrange', '-r', help='alsa mixer volume range in Db', default=0)
 args = audio_arg_parser.parse_known_args()[0]
 
+is_exited = False
+
+def signal_handler(signal, frame):
+        is_exited = True
+        lib.SpConnectionLogout()
+        lib.SpFree()
+        sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 class PlaybackSession:
 

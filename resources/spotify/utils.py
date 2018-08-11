@@ -1,8 +1,6 @@
 from connect_ffi import ffi, lib
 import logging
 
-is_exited = False
-
 LOGGER = logging.getLogger("spotify-connect-web")
 LOGGER.addHandler(logging.StreamHandler())
 LOGGER.setLevel(logging.INFO)

@@ -13,7 +13,7 @@ from flask import Flask, request, abort, jsonify, redirect, url_for
 from gevent.wsgi import WSGIServer
 from gevent import spawn_later, sleep
 from connect_ffi import ffi, lib, C
-from utils import get_zeroconf_vars, get_metadata, get_image_url, is_exited
+from utils import get_zeroconf_vars, get_metadata, get_image_url
 from console_callbacks import audio_arg_parser, mixer, error_callback, connection_callbacks, debug_callbacks, playback_callbacks, playback_setup
 from utils import print_zeroconf_vars, LOGGER
 
@@ -329,15 +329,6 @@ def add_user():
         'spotifyError': 0,
         'statusString': 'ERROR-OK'
         })
-
-def signal_handler(signal, frame):
-        is_exited = True
-        lib.SpConnectionLogout()
-        lib.SpFree()
-        sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
 
 #Loop to pump events
 def pump_events():

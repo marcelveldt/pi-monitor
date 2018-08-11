@@ -46,10 +46,10 @@ class SpotifyPlayer(threading.Thread):
         
     def stop(self):
         self._exit.set()
-        if self._spotify_proc:
-            self._spotify_proc.terminate()
         if self._avahi_proc:
             self._avahi_proc.terminate()
+        if self._spotify_proc:
+            self._spotify_proc.terminate()
         threading.Thread.join(self, 10)
 
     def command(self, cmd, cmd_data=None):

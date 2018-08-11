@@ -21,7 +21,7 @@ try:
     import bjoern
 except ImportError:
     os.system("apt-get update")
-    os.system("apt-get install -y python2-dev")
+    os.system("apt-get install -y libev-dev python-dev")
     os.system("pip install bjoern")
     import bjoern
 

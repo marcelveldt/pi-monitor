@@ -141,6 +141,7 @@ def signal_handler(signal, frame):
     lib.SpConnectionLogout()
     lib.SpFree()
     sys.exit(0)
+
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
@@ -343,8 +344,13 @@ def add_user():
         'statusString': 'ERROR-OK'
         })
 
-spawn_later(0.1, lib.SpPumpEvents)
+def pump_events():
+    lib.SpPumpEvents()
+    spawn_later(0.1, pump_events)
+
+pump_events()
+
 if __name__ == "__main__":
     #Loop to pump events
-    http_server = WSGIServer(('', 4000), app,spawn=Pool(2), log=None)
+    http_server = WSGIServer(('', 4000), app,spawn=Pool(1), log=None)
     http_server.serve_forever()

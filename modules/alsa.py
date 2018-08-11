@@ -53,7 +53,7 @@ class AlsaVolume(object):
 
     def _volume_set(self, volume_level):
         ''' set volume level '''
-        self._mixer.getvolume(int(volume_level), direction=alsaaudio.PCM_PLAYBACK)
+        self._mixer.setvolume(int(volume_level), direction=alsaaudio.PCM_PLAYBACK)
         self.monitor.states["player"]["volume_level"] = volume_level
         return True
 

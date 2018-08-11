@@ -33,7 +33,7 @@ class WebConfig(threading.Thread):
         
     def stop(self):
         self._exit.set()
-        run_proc("curl http://localhost/shutdown")
+        #run_proc("curl http://localhost/shutdown")
         threading.Thread.join(self, 10)
 
     def run(self):

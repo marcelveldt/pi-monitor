@@ -42,7 +42,7 @@ class WebConfig(threading.Thread):
         app = Flask(__name__, root_path=root_path)
         app.config.from_object(__name__)
         app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176a'
-        logging.getLogger('werkzeug').setLevel(logging.ERROR)
+        #logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
         @app.route('/player_image')
         def player_image():

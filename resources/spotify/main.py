@@ -335,17 +335,19 @@ def add_user():
         })
 
 if __name__ == "__main__":
-    #Loop to pump events
-    def pump_events():
-        lib.SpPumpEvents()
-        spawn_later(0.1, pump_events)
-    pump_events()
-
     try:
+        #Loop to pump events
+        def pump_events():
+            lib.SpPumpEvents()
+            spawn_later(0.1, pump_events)
+        pump_events()
+        # start web server for hosting the api
         http_server = WSGIServer(('', 4000), app, log=None)
         http_server.serve_forever()
     except SystemExit, KeyboardInterrupt:
         print "interrupted"
+    
+    print "cleaning up"
     lib.SpConnectionLogout()
     lib.SpFree()
     sys.exit(0)

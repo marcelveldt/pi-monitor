@@ -71,7 +71,6 @@ class RoonPlayer(threading.Thread):
         self._exit.set()
         if self._squeezelite_proc:
             self._squeezelite_proc.terminate()
-            #run_proc("service squeezelite start")
         threading.Thread.join(self, 10)
 
     def command(self, cmd, cmd_data=None):

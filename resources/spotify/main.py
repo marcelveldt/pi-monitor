@@ -98,9 +98,6 @@ class Connect:
             self.login(password=self.args.password)
         elif self.credentials['username'] and self.credentials['blob']:
             self.login(blob=self.credentials['blob'])
-        else:
-            if __name__ == '__main__':
-                raise ValueError("No username given, and none stored")
 
     def login(self, username=None, password=None, blob=None, zeroconf=None):
         if username is not None:
@@ -108,7 +105,7 @@ class Connect:
         elif self.credentials['username']:
             username = self.credentials['username']
         else:
-            raise ValueError("No username given, and none stored")
+            LOGGER.error("No username given, and none stored")
 
         if password is not None:
             lib.SpConnectionLoginPassword(username, password)
@@ -117,7 +114,7 @@ class Connect:
         elif zeroconf is not None:
             lib.SpConnectionLoginZeroConf(username, *zeroconf)
         else:
-            raise ValueError("Must specify a login method (password, blob or zeroconf)")
+            LOGGER.error("Must specify a login method (password, blob or zeroconf)")
 
 
 web_arg_parser = argparse.ArgumentParser(add_help=False)
@@ -244,6 +241,14 @@ def info_display_name():
         }), 400
     lib.SpSetDisplayName(display_name)
     return '', 204
+
+
+@app.route('/shutdown', methods=['POST', 'GET'])
+def shutdown():
+    lib.SpConnectionLogout()
+    lib.SpFree()
+    sys.exit(0)
+    return 'Server shutting down...'
 
 #Login routes
 @app.route('/login/logout')

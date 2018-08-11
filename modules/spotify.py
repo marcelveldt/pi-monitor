@@ -49,6 +49,7 @@ class SpotifyPlayer(threading.Thread):
         if self._avahi_proc:
             self._avahi_proc.terminate()
         if self._spotify_proc:
+            run_proc("curl http://localhost:4000/shutdown")
             self._spotify_proc.terminate()
         threading.Thread.join(self, 10)
 

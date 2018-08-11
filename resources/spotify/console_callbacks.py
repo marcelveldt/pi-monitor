@@ -32,15 +32,15 @@ args = audio_arg_parser.parse_known_args()[0]
 global is_exited
 is_exited = False
 
-def signal_handler(signal, frame):
-        global is_exited
-        is_exited = True
-        lib.SpConnectionLogout()
-        lib.SpFree()
-        sys.exit(0)
+# def signal_handler(signal, frame):
+#         global is_exited
+#         is_exited = True
+#         lib.SpConnectionLogout()
+#         lib.SpFree()
+#         sys.exit(0)
 
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
+# signal.signal(signal.SIGINT, signal_handler)
+# signal.signal(signal.SIGTERM, signal_handler)
 
 class PlaybackSession:
 
@@ -153,7 +153,7 @@ def report_state(msg):
     if is_exited:
         return
     try:
-        urllib2.urlopen("http://localhost/command?target=spotify&command=update&data=%s" % msg)
+        urllib2.urlopen("http://localhost/command?target=spotify&command=update&data=%s" % msg, timeout=0.1)
     except SystemExit, KeyboardInterrupt:
         pass
     except Exception as exc:

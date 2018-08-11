@@ -201,7 +201,7 @@ def publish_zeroconf():
 def get_info():
     zeroconf_vars = get_zeroconf_vars()
 
-    return jsonify({
+    return json.dumps({
         'status': 101,
         'spotifyError': 0,
         'activeUser': zeroconf_vars['activeUser'],

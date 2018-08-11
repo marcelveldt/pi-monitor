@@ -33,6 +33,8 @@ def web_error_callback(error, userdata):
     if error == lib.kSpErrorLoginBadCredentials:
         invalid_login = True
 
+connect_app = Connect(web_error_callback, web_arg_parser)
+
 ##Routes
 
 ##API routes

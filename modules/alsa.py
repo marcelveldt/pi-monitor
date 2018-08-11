@@ -44,7 +44,7 @@ class AlsaVolume(object):
         return True
 
     def _volume_down(self):
-         cur_vol = self._volume_get()
+        cur_vol = self._volume_get()
         self._volume_set(cur_vol - 2)
         return True
 

@@ -9,6 +9,7 @@ import logging
 import re
 import json
 import uuid
+import signal
 from flask import Flask, request, abort, jsonify, redirect, url_for
 from gevent.wsgi import WSGIServer
 from gevent import spawn_later, sleep
@@ -334,21 +335,22 @@ def add_user():
         'statusString': 'ERROR-OK'
         })
 
+def signal_handler(signal, frame):
+        lib.SpConnectionLogout()
+        lib.SpFree()
+        sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
+#Loop to pump events
+def pump_events():
+    lib.SpPumpEvents()
+    spawn_later(0.1, pump_events)
+pump_events()
+
 if __name__ == "__main__":
-    try:
-        #Loop to pump events
-        def pump_events():
-            lib.SpPumpEvents()
-            spawn_later(0.1, pump_events)
-        pump_events()
-        # start web server for hosting the api
-        http_server = WSGIServer(('', 4000), app, log=None)
-        http_server.serve_forever()
-    except SystemExit, KeyboardInterrupt:
-        print "interrupted"
-    
-    print "cleaning up"
-    lib.SpConnectionLogout()
-    lib.SpFree()
-    sys.exit(0)
+    # start web server for hosting the api
+    http_server = WSGIServer(('', 4000), app, log=None)
+    http_server.serve_forever()
 

@@ -15,10 +15,9 @@ class AlsaVolume(object):
 
     def __init__(self, monitor):
         self.monitor = monitor
-        self.monitor.states["alsa"] = 
-            {
-                "alsa_devices": []
-                "alsa_capture_devices": []
+        self.monitor.states["alsa"] = {
+                "alsa_devices": [],
+                "alsa_capture_devices": [],
                 "alsa_mixers": []
             }
         self._setup_alsa_config()

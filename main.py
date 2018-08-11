@@ -90,7 +90,6 @@ class Monitor():
         # parse config from file
         self.config.update(self._parseconfig())
         self._lastconfig = self.config["last_updated"]
-        self._setup_alsa_config()
         if self.config["ENABLE_DEBUG"]:
             LOGGER.setLevel(logging.DEBUG)
             LOGGER.debug("using config: %s" % self.config)

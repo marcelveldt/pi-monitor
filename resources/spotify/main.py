@@ -259,7 +259,7 @@ if __name__ == "__main__":
         elif line.startswith("login"):
             data = line.split("login")[1]
             data = json.loads(data)
-            connect_app.login(data["username"], zeroconf=(data["blob"],data["clientKey"]))
+            connect_app.login(data["username"].encode("utf-8"), zeroconf=(data["blob"].encode("utf-8"),data["clientKey"].encode("utf-8")))
 
 #Can be run on any port as long as it matches the one used in avahi-publish-service
     # http_server = WSGIServer(('', 4000), app, log=None)

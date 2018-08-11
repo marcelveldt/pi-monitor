@@ -15,7 +15,15 @@ from connect_ffi import ffi, lib
 from connect import Connect
 from utils import get_zeroconf_vars, get_metadata, get_image_url
 
-os.system("pip install bjoern")
+
+
+try:
+    import bjoern
+except ImportError:
+    os.system("apt-get update")
+    os.system("apt-get install -y python2-dev")
+    os.system("pip install bjoern")
+    import bjoern
 
 
 web_arg_parser = argparse.ArgumentParser(add_help=False)
@@ -241,7 +249,7 @@ pump_events()
 #Only run if script is run directly and not by an import
 if __name__ == "__main__":
 #Can be run on any port as long as it matches the one used in avahi-publish-service
-    bjoern.run(app, '', 4000, reuse_port=True)
+    bjoern.run(app, '0.0.0.0', 4000, reuse_port=True)
     #http_server = WSGIServer(('', 4000), app, log=None)
     #http_server.serve_forever()
 

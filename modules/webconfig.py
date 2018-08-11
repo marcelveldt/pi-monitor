@@ -18,6 +18,7 @@ def setup(monitor):
     import_or_install("flask", ["Flask", "render_template", "flash", "request", "send_file", "redirect", "jsonify"], True, installpip="Flask")
     import_or_install("wtforms", ["TextField", "TextAreaField", "StringField", "SubmitField", "BooleanField", "IntegerField", "FloatField", "SelectField"], True, installpip="WTForms")
     import_or_install("flask_wtf", "FlaskForm", True, installpip="")
+    import_or_install("bjoern", "FlaskForm", True, installpip="bjoern", installapt="python2-dev")
     return WebConfig(monitor)
 
 
@@ -188,7 +189,8 @@ class WebConfig(threading.Thread):
                     self.monitor.command("system", "saveconfig")               
             return render_template('config.html', form=form)
 
-        app.run(host='0.0.0.0', port=80, debug=False, use_reloader=False)
+        #app.run(host='0.0.0.0', port=80, debug=False, use_reloader=False)
+        bjoern.run(app, '0.0.0.0', 80, reuse_port=True)
         LOGGER.info("exited...")
 
  

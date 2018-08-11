@@ -27,7 +27,7 @@ if [ ! -f "$INSTALL_COMPLETE" ]; then
 fi
 
 # copy our customized code
-cp -v -r "$THIS_DIR/." "$INSTALL_DIR/usr/src/app/"
+cp -r "$THIS_DIR/." "$INSTALL_DIR/usr/src/app/"
 
 # run executable from chroot
 trap "sudo umount $INSTALL_DIR/dev $INSTALL_DIR/proc" EXIT

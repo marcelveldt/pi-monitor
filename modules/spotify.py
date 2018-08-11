@@ -155,7 +155,7 @@ class SpotifyPlayer(threading.Thread):
                 self._exit.wait(0.1)
             else:
                 LOGGER.debug("Spotify: %s" % line)
-                if "kSpPlayback" in line:
+                if "kSpPlayback" in line or "playback_volume" in line:
                     self._update_metadata()
 
             # cur_state = self._get_state()

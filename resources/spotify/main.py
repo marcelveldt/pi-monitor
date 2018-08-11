@@ -7,13 +7,11 @@ import sys
 import argparse
 import logging
 import re
-import signal
 import json
 import uuid
 from flask import Flask, request, abort, jsonify, redirect, url_for
 from gevent.wsgi import WSGIServer
 from gevent import spawn_later, sleep
-from gevent.pool import Pool
 from connect_ffi import ffi, lib, C
 from utils import get_zeroconf_vars, get_metadata, get_image_url
 from console_callbacks import audio_arg_parser, mixer, error_callback, connection_callbacks, debug_callbacks, playback_callbacks, playback_setup
@@ -137,13 +135,6 @@ app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176b'
 #Used by the error callback to determine login status
 invalid_login = False
 
-def signal_handler(signal, frame):
-    lib.SpConnectionLogout()
-    lib.SpFree()
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
 
 @ffi.callback('void(SpError error, void *userdata)')
 def web_error_callback(error, userdata):
@@ -155,7 +146,6 @@ connect_app = Connect(web_error_callback, web_arg_parser)
 
 
 ##Routes
-
 
 #Playback routes
 @app.route('/api/playback/play')
@@ -352,5 +342,12 @@ pump_events()
 
 if __name__ == "__main__":
     #Loop to pump events
-    http_server = WSGIServer(('', 4000), app,spawn=Pool(1), log=None)
-    http_server.serve_forever()
+    try:
+        http_server = WSGIServer(('', 4000), app, log=None)
+        http_server.serve_forever()
+    except:
+        print "interrupted?"
+    lib.SpConnectionLogout()
+    lib.SpFree()
+    sys.exit(0)
+

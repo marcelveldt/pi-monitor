@@ -7,7 +7,7 @@ from threading import Thread
 import threading
 from connect_ffi import ffi, lib
 import logging
-import urllib
+import urllib.request
 
 RATE = 44100
 CHANNELS = 2

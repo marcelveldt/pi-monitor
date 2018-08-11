@@ -27,6 +27,9 @@ class AlsaVolume(object):
     def stop(self):
         self._exit = True
 
+    def start(self):
+        pass
+
     def command(self, cmd, cmd_data=None):
         ''' send command to roon output/zone'''
         if cmd == "volume_up":
@@ -50,13 +53,13 @@ class AlsaVolume(object):
 
     def _volume_set(self, volume_level):
         ''' set volume level '''
-        self._mixer.getvolume(int(volume_level))
+        self._mixer.getvolume(int(volume_level), direction=alsaaudio.PCM_PLAYBACK)
         self.monitor.states["player"]["volume_level"] = volume_level
         return True
 
     def _volume_get(self):
         ''' get current volume level of player'''
-        return self._mixer.getvolume()
+        return self._mixer.getvolume(alsaaudio.PCM_PLAYBACK)
 
     def _setup_alsa_config(self):
         ''' get details about the alsa configuration'''

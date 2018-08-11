@@ -10,6 +10,7 @@ import logging
 import urllib2
 from utils import LOGGER
 import signal
+import sys
 
 RATE = 44100
 CHANNELS = 2

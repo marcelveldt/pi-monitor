@@ -154,13 +154,16 @@ class SpotifyPlayer(threading.Thread):
             args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["--playback_device", self.monitor.config["ALSA_SOUND_DEVICE"]]
-        LOGGER.debug("Starting spotify-connect-web: %s" % " ".join(args))
-        self._spotify_proc = subprocess.Popen(args, bufsize=0, cwd=exec_dir, stdout=DEVNULL, stderr=subprocess.STDOUT)
+        if self.config["ENABLE_DEBUG"]:
+            LOGGER.debug("Starting spotify-connect-web: %s" % " ".join(args))
+            self._spotify_proc = subprocess.Popen(args, cwd=exec_dir)
+        else:
+            self._spotify_proc = subprocess.Popen(args, cwd=exec_dir, stdout=DEVNULL, stderr=subprocess.STDOUT)
 
         while not self._exit.isSet():
             if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:
                 # daemon crashed ? restart ?
-                LOGGER.error("spotify-connect-web exited")
+                LOGGER.error("spotify-connect-web exited !")
                 break
             self._exit.wait(60)
         

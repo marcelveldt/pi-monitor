@@ -25,7 +25,9 @@ audio_arg_parser.add_argument('--mixer_device_index', help='alsa card index of t
 audio_arg_parser.add_argument('--mixer', '-m', help='alsa mixer name for volume control', default=alsa.mixers()[0])
 audio_arg_parser.add_argument('--dbrange', '-r', help='alsa mixer volume range in Db', default=0)
 args = audio_arg_parser.parse_known_args()[0]
-LOGGER = logging.getLogger(__name__)
+
+LOGGER = logging.getLogger("spotify-connect-web")
+
 
 class PlaybackSession:
 

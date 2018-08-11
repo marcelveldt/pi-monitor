@@ -18,6 +18,9 @@ from utils import get_zeroconf_vars, get_metadata, get_image_url
 from console_callbacks import audio_arg_parser, mixer, error_callback, connection_callbacks, debug_callbacks, playback_callbacks, playback_setup
 from utils import print_zeroconf_vars
 
+LOGGER = logging.getLogger("spotify-connect-web")
+LOGGER.addHandler(logging.StreamHandler())
+LOGGER.setLevel(logging.INFO)
 
 
 class Connect:
@@ -121,7 +124,6 @@ class Connect:
             lib.SpConnectionLoginZeroConf(username, *zeroconf)
         else:
             raise ValueError("Must specify a login method (password, blob or zeroconf)")
-
 
 
 web_arg_parser = argparse.ArgumentParser(add_help=False)
@@ -340,9 +342,8 @@ def add_user():
         'statusString': 'ERROR-OK'
         })
 
-
+spawn_later(0.1, lib.SpPumpEvents)
 if __name__ == "__main__":
     #Loop to pump events
-    spawn_later(0.1, lib.SpPumpEvents)
     http_server = WSGIServer(('', 4000), app, log=None)
     http_server.serve_forever()

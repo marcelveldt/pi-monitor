@@ -51,6 +51,7 @@ class SpotifyPlayer(threading.Thread):
         if self._spotify_proc:
             run_proc("curl http://localhost:4000/shutdown")
             self._spotify_proc.terminate()
+            self._spotify_proc.kill()
         threading.Thread.join(self, 10)
 
     def command(self, cmd, cmd_data=None):

@@ -247,7 +247,6 @@ def info_display_name():
 def shutdown():
     lib.SpConnectionLogout()
     lib.SpFree()
-    sys.exit(0)
     return 'Server shutting down...'
 
 #Login routes

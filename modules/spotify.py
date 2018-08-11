@@ -142,7 +142,7 @@ class SpotifyPlayer(threading.Thread):
 
         # launch avahi for auto discovery
         args = ["/usr/bin/avahi-publish-service", HOSTNAME, 
-                "_spotify-connect._tcp", "4000", "VERSION=1.0", "CPath=/login/_zeroconf"]
+                "_spotify-connect._tcp", "80", "VERSION=1.0", "CPath=/spotify/_zeroconf"]
         self._avahi_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
         exec_dir = None
         for item in ["/mnt/dietpi_userdata/spotify-web-chroot/usr/src/app", "/root/spotify-web-chroot/usr/src/app"]:

@@ -9,7 +9,7 @@ import thread
 import threading
 from Queue import Queue
 import datetime
-from resources.lib.utils import DEVNULL, PlayerMetaData, StatesDict, ConfigDict, HOSTNAME, APPNAME, json, import_or_install, run_proc, IS_DIETPI, PLAYING_STATES, VOLUME_CONTROL_SOFT, VOLUME_CONTROL_DISABLED
+from resources.lib.utils import DEVNULL, PlayerMetaData, StatesDict, ConfigDict, HOSTNAME, APPNAME, json, import_or_install, run_proc, IS_DIETPI, PLAYING_STATES, VOLUME_CONTROL_SOFT, VOLUME_CONTROL_DISABLED, PLAYING_STATE, INTERRUPT_STATES, IDLE_STATES
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,7 +27,6 @@ LOGGER.setLevel(logging.INFO)
 
 CONFIG_FILE = '/etc/pi-monitor.json'
 
-import_or_install("alsaaudio", installapt="libasound2-dev", installpip="pyalsaaudio")
 
 class Monitor():
     states = StatesDict()
@@ -55,9 +54,6 @@ class Monitor():
         else:
             self._cmd_queue.put((target, cmd, data))
             self._event.set()
-
-    def set_volume(self, vol_level):
-        self.command("player", "set_volume", vol_level)
 
     def register_state_callback(self, callback, filter=None):
         '''allow modules to listen for state changed events'''
@@ -104,9 +100,9 @@ class Monitor():
                 "current_player": "",
                 "players": [],
                 "interrupted_player": "",
-                "volume_level": self._volume_get()
+                "interrupted_volume": 0,
+                "volume_level": 0
                 })
-        
         # Use the signal module to handle signals
         for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
             signal.signal(sig, self._cleanup)
@@ -117,7 +113,7 @@ class Monitor():
         if self.config["STARTUP_VOLUME"]:
             self.command("player", "set_volume", self.config["STARTUP_VOLUME"])
         # start the main loop
-        self.command("player","ping")
+        self.command("system","ping")
         loop_timeout = 1200
         while not self._exit:
             # process commands queue
@@ -151,12 +147,12 @@ class Monitor():
             elif cmd == "run_proc" and cmd_data:
                 run_proc(cmd_data)
             elif cmd == "restart":
-                self._cleanup(2, 2, True)
+                os.system("reboot")
             elif cmd == "reload":
-                LOGGER.info("Restart of service requested!")
-                self._cleanup(2, 2)
-            elif cmd == "shutdown":
-                self._cleanup(0, 2, False)
+                LOGGER.info("Restart of service requested!\n")
+                os.kill(os.getpid(), 9)
+            elif cmd in ["ping", "beep", "buzz"]:
+                return self._beep()
         elif target and cmd:
             # direct command to module
             try:
@@ -174,131 +170,36 @@ class Monitor():
         elif cmd in ["toggle", "toggleplaypause", "toggleplay", "togglepause"]:
             cmd = "pause" if self.is_playing else "play"
         elif cmd in ["volup", "volumeup", "volume_up"]:
-            return self._volume_up()
+            cmd = "volume_up"
         elif cmd in ["voldown", "volumedown", "volume_down"]:
-            return self._volume_down()
+            cmd = "volume_down"
         elif cmd in ["volume", "setvolume", "volume_set", "set_volume"]:
-            return self._volume_set(cmd_data)
-        elif cmd == "play_sound":
-            return self._play_sound(cmd_data)
-        elif cmd == "ping":
-            return self._play_ping()
+            cmd = "volume_set"
+        elif cmd in ["play_sound", "play_url", "play_media"]:
+            cmd = "play_media"
+        elif cmd in ["ping", "beep", "buzz"]:
+            return self._beep()
+        if "volume" in cmd and not self.is_playing:
+            # use alsa volume control directly
+            self.get_module("alsa").command(cmd, cmd_data)
         # redirect command to current player
+        success = False
         if self.states["player"]["current_player"]:
             player_mod = self.get_module(self.states["player"]["current_player"])
-            player_mod.command(cmd, cmd_data)
+            success = player_mod.command(cmd, cmd_data)
+        if not success and "volume" in cmd:
+            # fallback to alsa again
+            self.get_module("alsa").command(cmd, cmd_data)
 
-    def _volume_up(self):
-        success = False
-        # send command to current player
-        if self.is_playing:
-            player_mod = self.get_module(self.states["player"]["current_player"])
-            success = player_mod.command("volume_up")
-        # fallback to direct alsa control
-        if not success and self.config["ALSA_VOLUME_CONTROL"]:
-            run_proc('amixer set "%s" 2+' % self.config["ALSA_VOLUME_CONTROL"])
-            self.states["player"]["volume_level"] = self._volume_get()
-
-    def _volume_down(self):
-        success = False
-        # send command to current player
-        if self.is_playing:
-            player_mod = self.get_module(self.states["player"]["current_player"])
-            success = player_mod.command("volume_down")
-        # fallback to direct alsa control
-        if not success and self.config["ALSA_VOLUME_CONTROL"]:
-            run_proc('amixer set "%s" 2-' % self.config["ALSA_VOLUME_CONTROL"])
-            self.states["player"]["volume_level"] = self._volume_get()
-
-    def _volume_set(self, volume_level):
-        ''' set volume level '''
-        success = False
-        # send command to current player
-        if self.is_playing:
-            player_mod = self.get_module(self.states["player"]["current_player"])
-            success = player_mod.command("volume_set", volume_level)
-        # fallback to direct alsa control
-        if not success and self.config["ALSA_VOLUME_CONTROL"]:
-            run_proc('amixer set "%s" %s' % (self.config["ALSA_VOLUME_CONTROL"], str(volume_level) + "%"))
-            self.states["player"]["volume_level"] = volume_level
-
-    def _volume_get(self):
-        ''' get current volume level of player'''
-        vol_level = 0
-        current_player = self.states["player"].get("current_player")
-        if current_player and self.states[current_player]["state"] == "playing":
-            vol_level = self.states[current_player]["volume_level"]
-        # fallback to alsa
-        if not vol_level and self.config["ALSA_VOLUME_CONTROL"]:
-            amixer_result = run_proc('amixer get "%s"' % self.config["ALSA_VOLUME_CONTROL"], True)
-            if amixer_result:
-                cur_vol = amixer_result.split("[")[1].split("]")[0].replace("%","")
-                vol_level = int(cur_vol)
-        return vol_level
-
-    def _play_sound(self, url, volume_level=None, loop=False, force=True):
-        ''' play notification/alert by url '''
-        if volume_level == None:
-            volume_level = self.config["NOTIFY_VOLUME"]
-        LOGGER.info("play_sound --> url: %s - volume_level: %s - loop: %s - force: %s" % (url, volume_level, loop, force))
-        self.states["notification"] = True
-
-        # get current state of player
-        prev_vol = self._volume_get()
-        prev_play = self.is_playing
-        prev_pwr = self.states.get("power")
-        LOGGER.debug("Current state of player --> power: %s - playing: %s - volume_level: %s" % (prev_pwr, prev_play, prev_vol))
-
-        # send stop to release audio from current player
-        self._player_command("stop")
-        
-        if not prev_pwr and not force:
-            self.states["notification"] = False
-            return
-
-        # set notification volume level
-        self.set_volume(volume_level)
-
-        # enable power if needed
-        self._set_power(True)
-
-        if prev_play:
-            time.sleep(1) # allow some time for the audio device to become available
-
-        # play file and wait for completion (using SOX play executable)
-        if loop:
-            # play untill stop requested
-            while self.states["notification"]:
-                LOGGER.debug("playing notification....")
-                run_proc('play %s bass -10' % url, True)
-        else:
-            # just play once
-            run_proc('play %s bass -10' % url, True)
-
-        # restore volume level and playback
-        LOGGER.debug("restore state of player")
-        self.set_volume(prev_vol)
-        if prev_play:
-            self._player_command("play")
-        else:
-            self._set_power(False)
-        self.states["notification"] = False
-
-    def _play_alarm_sound(self):
-        ''' play loud beep through speakers for signalling errors'''
-        self._play_ping()
-        self._play_ping()
-        self._play_ping()
-
-    def _play_ping(self, alt_sound=False):
-        ''' play ping or buzz sound'''
+    def _beep(self, alt_sound=False):
+        ''' play beep through gpio buzzer or speakers '''
         if "GPIO_BUZZER_PIN" in self.config and self.config["GPIO_BUZZER_PIN"]:
             self.command("gpio", "beep", alt_sound, True)
-        else:
+        elif not self.player_info["state"] == PLAYING_STATE:
             filename = os.path.join(BASE_DIR, 'resources', 'ding.wav')
             if alt_sound:
                 filename = os.path.join(BASE_DIR, 'resources', 'dong.wav')
-            self._play_sound(filename)
+            self._player_command("play_media", filename)
 
     def _set_power(self, player_powered, stop_players=False):
         if isinstance(player_powered, (str, unicode)):
@@ -312,7 +213,11 @@ class Monitor():
         self.states["player"]["power"] = player_powered
 
     def _setup_modules(self):
-        '''load all optional modules'''
+        '''load all modules from the modules directory'''
+        # first load our required modules (they will be ignored if already imported later on)
+        for item in ["alsa", "webconfig"]:
+            self._setup_module(item)
+        # load all other modules
         for item in os.listdir(MODULES_PATH):
             if (os.path.isfile(os.path.join(MODULES_PATH, item)) and 
                 not item.startswith("_") and 
@@ -384,145 +289,6 @@ class Monitor():
             #self.command("system", "restart")
         else:
             LOGGER.info("Configuration did not change!")
-
-    def _setup_alsa_config(self):
-        ''' get details about the alsa configuration'''
-        # TODO: move this to another (helper) file
-
-        selected_mixer = self.config.get("ALSA_VOLUME_CONTROL", "") # value in stored config, if any
-        selected_audio_device = self.config.get("ALSA_SOUND_DEVICE", "") # value in stored config, if any
-        selected_capture_device = self.config.get("ALSA_CAPTURE_DEVICE", "") # value in stored config, if any
-
-        # get playback devices
-        default_audio_device = ""
-        alsa_devices = []
-        selected_audio_device_found = False
-        for dev in alsaaudio.pcms(alsaaudio.PCM_PLAYBACK):
-            # we only care about direct hardware access so we filter out the dsnoop stuff etc
-            if dev.startswith("hw:") or dev.startswith("plughw:") and "Dummy" not in dev:
-                dev = dev.replace("CARD=","").split(",DEV=")[0]
-                alsa_devices.append(dev)
-                if selected_audio_device and dev == selected_audio_device:
-                    selected_audio_device_found = True
-                if not default_audio_device:
-                    default_audio_device = dev
-        if not selected_audio_device_found:
-            selected_audio_device = default_audio_device
-        self.states["alsa_devices"] = alsa_devices
-
-        # get capture devices
-        default_capture_device = ""
-        alsa_capture_devices = []
-        selected_capture_device_found = False
-        for dev in alsaaudio.pcms(alsaaudio.PCM_CAPTURE):
-            if dev.startswith("hw:") or dev.startswith("plughw:"):
-                dev = dev.replace("CARD=","").split(",DEV=")[0]
-                alsa_capture_devices.append(dev)
-                if selected_capture_device and dev == selected_capture_device:
-                    selected_capture_device_found = True
-                if not default_capture_device:
-                    default_capture_device = dev
-        if not default_capture_device:
-            # create dummy recording device
-            os.system("modprobe snd-dummy fake_buffer=0")
-            default_capture_device = "hw:Dummy"
-            alsa_capture_devices.append(default_capture_device)
-        if not selected_capture_device_found:
-            selected_capture_device = default_capture_device
-        self.states["alsa_capture_devices"] = alsa_capture_devices
-        
-        # only lookup mixers for the selected audio device
-        # TODO: extend this selection criteria with more use cases
-        default_mixer = ""
-        alsa_mixers = []
-        selected_mixer_found = False
-        for mixer in alsaaudio.mixers(device=selected_audio_device):
-            if mixer == "Digital":
-                default_mixer = u"Digital"
-            elif mixer == "PCM":
-                default_mixer = u"PCM"
-            elif mixer == "Analog":
-                default_mixer = u"Analog"
-            elif mixer == "Lineout volume control":
-                default_mixer = u"Lineout volume control"
-            elif mixer == "Master":
-                default_mixer = u"Master"
-            elif mixer == "SoftMaster":
-                default_mixer = u"SoftMaster"
-            alsa_mixers.append(mixer)
-            if mixer == selected_mixer:
-                selected_mixer_found = True
-        # append softvol and no volume control
-        if not alsa_mixers or not default_mixer:
-            alsa_mixers.append(VOLUME_CONTROL_SOFT)
-            if "digi" in selected_audio_device:
-                # assume digital output
-                default_mixer = VOLUME_CONTROL_DISABLED
-            else:
-                default_mixer =VOLUME_CONTROL_SOFT
-        alsa_mixers.append(VOLUME_CONTROL_DISABLED)
-        if not selected_mixer_found:
-            # set default mixer as selected mixer
-            selected_mixer = default_mixer
-        self.states["alsa_mixers"] = alsa_mixers
-        
-        # write default asound file - is needed for volume control and google assistant to work properly
-        if selected_mixer == VOLUME_CONTROL_SOFT:
-            # alsa conf with softvol
-            alsa_conf = '''
-            pcm.softvol {
-                  type softvol
-                  slave.pcm hw:%s
-                  control {
-                    name "%s"
-                    card %s
-                  }
-                  min_dB -90.2
-                  max_dB 3.0
-                }
-            pcm.!default {
-                type asym
-                 playback.pcm {
-                   type plug
-                   slave.pcm "softvol"
-                 }
-                 capture.pcm {
-                   type plug
-                   slave.pcm hw:%s
-                 }
-              }
-              ctl.softvol { 
-                  type hw 
-                  card %s 
-              }
-            ''' % (selected_audio_device.split(":")[-1], VOLUME_CONTROL_SOFT, selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1], selected_audio_device.split(":")[-1])
-            selected_audio_device = "softvol"
-        else:
-            # alsa conf without softvol
-            alsa_conf = '''
-            pcm.!default {
-                type asym
-                 playback.pcm {
-                   type plug
-                   slave.pcm hw:%s
-                 }
-                 capture.pcm {
-                   type plug
-                   slave.pcm hw:%s
-                 }
-              }
-              defaults.ctl.playback.device hw:%s
-            ''' % (selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1],selected_audio_device.split(":")[-1])
-        # write file
-        with open("/etc/asound.conf", "w") as f:
-            f.write(alsa_conf)
-        # print some logging and set the config values
-        LOGGER.debug("alsa playback devices: %s - default_audio_device: %s - selected_audio_device: %s" % (str(alsa_devices), default_audio_device, selected_audio_device))
-        LOGGER.debug("alsa recording devices: %s - default_capture_device: %s - selected_capture_device: %s" % (str(alsa_capture_devices), default_capture_device, selected_capture_device))
-        LOGGER.debug("alsa mixers: %s - default_capture_device: %s - selected_capture_device: %s" % (str(alsa_mixers), default_mixer, selected_mixer))
-        self.config["ALSA_SOUND_DEVICE"] = selected_audio_device
-        self.config["ALSA_VOLUME_CONTROL"] = selected_mixer
-        self.config["ALSA_CAPTURE_DEVICE"] = selected_capture_device
 
     def _parseconfig(self):
         ''' get config from player's json configfile'''
@@ -622,22 +388,36 @@ class StatesWatcher(threading.Thread):
     def _handle_player_state_change(self, player_key):
         ''' handle state changed event for the mediaplayers'''
         cur_player = self.states["player"]["current_player"]
-        if ((cur_player != player_key and self.states[player_key]["state"] in ["playing", "listening"]) or 
+        if ((cur_player != player_key and self.states[player_key]["state"] in PLAYING_STATES) or 
                 (not cur_player and self.states[player_key]["state"] in ["paused", "idle"])):
-            # we have a new active player
+            # we have a new active player!
             self.states["player"]["current_player"] = player_key
             LOGGER.info("active player changed to %s" % player_key)
             # signal any other players about this so they must stop playing
             flush_needed = False
             for player in self.states["player"]["players"]:
-                if self.states[player]["state"] not in ["off", "stopped", "standby", ""] and player != player_key:
+                if player != player_key and self.states[player]["state"] in [PLAYING_STATES]:
                     self.monitor.command(player, "stop")
                     flush_needed = True
             # free alsa by quickly restarting playback
             if flush_needed:
                 self.monitor.command(player_key, "pause")
-                time.sleep(0.5)
+                time.sleep(1)
                 self.monitor.command(player_key, "play")
+        # handle notifications and alerts
+        if player_key != cur_player and self.states[player_key]["state"] in INTERRUPT_STATES:
+            # a notification or alert started, store previous player and set notification volume level
+            self.states["player"]["interrupted_player"] = cur_player
+            self.states["player"]["interrupted_volume"] = self.states["player"]["volume_level"]
+            if self.monitor.config["NOTIFY_VOLUME"]:
+                self.monitor.command("player", "volume_set", self.monitor.config["NOTIFY_VOLUME"])
+        elif self.states["player"]["interrupted_player"] and player_key == cur_player and self.states[player_key]["state"] in IDLE_STATES:
+            # the notification/alert stopped, restore the previous state
+            if self.states["player"]["interrupted_volume"]:
+                self.monitor.command("player", "volume_set", self.states["player"]["interrupted_volume"])
+            self.monitor.command(self.states["player"]["interrupted_player"], "play")
+            self.states["player"]["interrupted_volume"] = 0
+            self.states["player"]["interrupted_player"] = ""
         # metadadata update of current player
         if player_key == self.states["player"]["current_player"]:
             self.states["player"].update(self.states[player_key])

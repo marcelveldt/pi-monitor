@@ -86,13 +86,8 @@ class GoogleAssistantPlayer(threading.Thread):
 
         if event.type in [EventType.ON_CONVERSATION_TURN_STARTED, EventType.ON_ALERT_STARTED]:
             cur_player = self.monitor.states["player"]["current_player"]
-            if cur_player and self.monitor.states[cur_player]["state"] in PLAYING_STATES:
-                self.monitor.states["player"]["interrupted_player"] = cur_player
-                self.monitor.command("player", "stop")
-            self.monitor.states["google_assistant"]["state"] = NOTIFY_STATE
-            self.monitor.command("player", "ping")
-            self.monitor.states["player"]["interrupted_volume"] = self.monitor.states["player"]["volume_level"]
-            self.monitor.command("player", "volume_set", self.monitor.config["NOTIFY_VOLUME"])
+            self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
+            self.monitor.command("system", "ping")
 
         elif event.type in [EventType.ON_RESPONDING_STARTED, EventType.ON_MEDIA_TRACK_PLAY]:
             self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
@@ -108,14 +103,8 @@ class GoogleAssistantPlayer(threading.Thread):
                     # the mic is listening again for follow-up
                     self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
                     return
-            # return to idle - restore volume - send play command if player was interrupted
+            # return to idle
             self.monitor.states["google_assistant"]["state"] = IDLE_STATE
-            if self.monitor.states["player"].get("interrupted_volume"):
-                self.monitor.command("player", "volume_set", self.monitor.states["player"]["interrupted_volume"])
-            if self.monitor.states["player"].get("interrupted_player"):
-                self.monitor.command(self.monitor.states["player"]["interrupted_player"], "play")
-                self.monitor.states["player"]["interrupted_player"] = ""
-
         
         elif event.type == EventType.ON_DEVICE_ACTION:
             for command, params in event.actions:

@@ -125,7 +125,7 @@ class WebConfig(threading.Thread):
         def spotify_zeroconf_vars():
             content = request.get_json()
             LOGGER.info("spotify_zeroconf_vars: %s" % content)
-            self.monitor.states["spotify"]["zeroconf"] = json.loads(content)
+            self.monitor.states["spotify"]["zeroconf"] = content
             return "OK"
 
         def get_logs():

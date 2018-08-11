@@ -7,7 +7,7 @@ from threading import Thread
 import threading
 from connect_ffi import ffi, lib
 import logging
-import urllib.request
+import urllib2
 
 RATE = 44100
 CHANNELS = 2
@@ -167,14 +167,14 @@ def playback_notify(self, type):
     if type == lib.kSpPlaybackNotifyPlay:
         LOGGER.info("kSpPlaybackNotifyPlay")
         device.acquire()
-        urllib.request.urlopen("http://localhost/command?target=spotify&command=update")
+        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
     elif type == lib.kSpPlaybackNotifyPause:
         LOGGER.info("kSpPlaybackNotifyPause")
         device.release()
-        urllib.request.urlopen("http://localhost/command?target=spotify&command=update")
+        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
     elif type == lib.kSpPlaybackNotifyTrackChanged:
         LOGGER.info("kSpPlaybackNotifyTrackChanged")
-        urllib.request.urlopen("http://localhost/command?target=spotify&command=update")
+        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
     elif type == lib.kSpPlaybackNotifyNext:
         LOGGER.info("kSpPlaybackNotifyNext")
     elif type == lib.kSpPlaybackNotifyPrev:
@@ -190,12 +190,12 @@ def playback_notify(self, type):
     elif type == lib.kSpPlaybackNotifyBecameActive:
         print "kSpPlaybackNotifyBecameActive"
         session.activate()
-        urllib.request.urlopen("http://localhost/command?target=spotify&command=update")
+        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
     elif type == lib.kSpPlaybackNotifyBecameInactive:
         LOGGER.info("kSpPlaybackNotifyBecameInactive")
         device.release()
         session.deactivate()
-        urllib.request.urlopen("http://localhost/command?target=spotify&command=update")
+        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
     elif type == lib.kSpPlaybackNotifyPlayTokenLost:
         LOGGER.info("kSpPlaybackNotifyPlayTokenLost")
     elif type == lib.kSpPlaybackEventAudioFlush:
@@ -262,7 +262,7 @@ def playback_volume(self, volume):
         corrected_playback_volume = int(min_volume_range + ((volume / 655.35) * (100 - min_volume_range) / 100))
         LOGGER.info("corrected_playback_volume: %s" % corrected_playback_volume)
         mixer.setvolume(corrected_playback_volume)
-        urllib.request.urlopen("http://localhost/command?target=spotify&command=update")
+        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
 
 connection_callbacks = ffi.new('SpConnectionCallbacks *', [
     connection_notify,

@@ -8,14 +8,15 @@ import argparse
 import logging
 import re
 from flask import Flask, request, abort, jsonify, redirect, flash, url_for
-from flask_cors import CORS
-from gevent.wsgi import WSGIServer
+#from flask_cors import CORS
+#from gevent.wsgi import WSGIServer
 from gevent import spawn_later, sleep
 from connect_ffi import ffi, lib
 from connect import Connect
 from utils import get_zeroconf_vars, get_metadata, get_image_url
-import urllib2
-import json
+
+os.system("pip install bjoern")
+
 
 web_arg_parser = argparse.ArgumentParser(add_help=False)
 
@@ -193,19 +194,10 @@ def login_zeroconf():
             'spotifyError': 0,
             'statusString': 'ERROR-INVALID-ACTION'})
 
-def publish_zeroconf():
-    jdata = get_info()
-    clen = len(jdata)
-    req = urllib2.Request("http://localhost/spotify/_zeroconf_vars", jdata, {'Content-Type': 'application/json', 'Content-Length': clen})
-    try:
-        urllib2.urlopen(req)
-    except Exception as exc:
-        print exc
-
 def get_info():
     zeroconf_vars = get_zeroconf_vars()
 
-    return json.dumps({
+    return jsonify({
         'status': 101,
         'spotifyError': 0,
         'activeUser': zeroconf_vars['activeUser'],
@@ -248,22 +240,10 @@ pump_events()
 
 #Only run if script is run directly and not by an import
 if __name__ == "__main__":
-    publish_zeroconf()
-    while True:
-        line=sys.stdin.readline().rstrip()
-        print "received line: %s" % line
-        if line == "play":
-            playback_play()
-        elif line == "pause":
-            playback_pause()
-        elif line.startswith("login"):
-            data = line.split("login")[1]
-            data = json.loads(data)
-            connect_app.login(data["username"].encode("utf-8"), zeroconf=(data["blob"].encode("utf-8"),data["clientKey"].encode("utf-8")))
-
 #Can be run on any port as long as it matches the one used in avahi-publish-service
-    # http_server = WSGIServer(('', 4000), app, log=None)
-    # http_server.serve_forever()
+    bjoern.run(app, '', 4000, reuse_port=True)
+    #http_server = WSGIServer(('', 4000), app, log=None)
+    #http_server.serve_forever()
 
 #TODO: Add signal catcher
 lib.SpFree()

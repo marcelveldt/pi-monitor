@@ -68,11 +68,7 @@ class SpotifyPlayer(threading.Thread):
             return False
         elif cmd == "previous":
             cmd = "prev"
-        elif cmd == "login":
-            cmd += json.dumps(cmd_data)
-        #return self._api_execute("api/playback/%s" % cmd)
-        if self._spotify_proc:
-            self._spotify_proc.stdin.write(cmd+"\n")
+        return self._api_execute("api/playback/%s" % cmd)
 
     def _volume_get(self):
         ''' get current volume level of player'''
@@ -139,16 +135,6 @@ class SpotifyPlayer(threading.Thread):
         return cur_state
 
     def run(self):
-
-        # launch avahi for auto discovery
-        args = ["/usr/bin/avahi-publish-service", HOSTNAME, 
-                "_spotify-connect._tcp", "80", "VERSION=1.0", "CPath=/spotify/_zeroconf"]
-        self._avahi_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
-        exec_dir = None
-        for item in ["/mnt/dietpi_userdata/spotify-web-chroot/usr/src/app", "/root/spotify-web-chroot/usr/src/app"]:
-            if os.path.isdir(item):
-                exec_dir = item
-
         # finally start the spotify executable
         # currently always use the chroot version as it is the most stable (surpisingly enough)
         # the chroot version works on both armv6 and armv7
@@ -160,9 +146,14 @@ class SpotifyPlayer(threading.Thread):
             args += ["--playback_device", self.monitor.config["ALSA_SOUND_DEVICE"]]
         if self.monitor.config["ENABLE_DEBUG"]:
             LOGGER.debug("Starting spotify-connect-web: %s" % " ".join(args))
-            self._spotify_proc = subprocess.Popen(args, cwd=exec_dir, stdin=subprocess.PIPE)
+            self._spotify_proc = subprocess.Popen(args)
         else:
-            self._spotify_proc = subprocess.Popen(args, cwd=exec_dir, stdout=DEVNULL, stderr=subprocess.STDOUT, stdin=subprocess.PIPE)
+            self._spotify_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
+
+        # launch avahi for auto discovery
+        args = ["/usr/bin/avahi-publish-service", HOSTNAME, 
+                "_spotify-connect._tcp", "4000", "VERSION=1.0", "CPath=/login/_zeroconf"]
+        self._avahi_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
 
         while not self._exit.isSet():
             if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:

@@ -195,10 +195,12 @@ def login_zeroconf():
 
 def publish_zeroconf():
     jdata = get_info()
-    jdata = json.dumps({"username":"...", "password":"..."})
     clen = len(jdata)
     req = urllib2.Request("http://localhost/spotify/_zeroconf_vars", jdata, {'Content-Type': 'application/json', 'Content-Length': clen})
-    urllib2.urlopen(req)
+    try:
+        urllib2.urlopen(req)
+    except Exception as exc:
+        print exc
 
 def get_info():
     zeroconf_vars = get_zeroconf_vars()

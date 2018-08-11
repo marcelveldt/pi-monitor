@@ -55,7 +55,9 @@ class SpotifyPlayer(threading.Thread):
         threading.Thread.join(self, 10)
 
     def command(self, cmd, cmd_data=None):
-        ''' send command to roon output/zone'''
+        ''' send command to player'''
+        if command == "update":
+            return self._update_metadata()
         if cmd == "stop":
             cmd = "pause"
         elif cmd == "volume_up":
@@ -153,29 +155,12 @@ class SpotifyPlayer(threading.Thread):
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["--playback_device", self.monitor.config["ALSA_SOUND_DEVICE"]]
         LOGGER.debug("Starting spotify-connect-web: %s" % " ".join(args))
-        self._spotify_proc = subprocess.Popen(args, bufsize=0, cwd=exec_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        self._spotify_proc = subprocess.Popen(args, bufsize=0, cwd=exec_dir, stdout=DEVNULL, stderr=subprocess.STDOUT)
 
         while not self._exit.isSet():
-            line = self._spotify_proc.stdout.readline().strip()
-            if not line:
-                self._exit.wait(0.1)
-            else:
-                LOGGER.debug("Spotify: %s" % line)
-                if "kSpPlayback" in line or "playback_volume" in line:
-                    self._update_metadata()
-
-            # cur_state = self._get_state()
-            # if cur_state != self._last_state:
-            #     self._last_state = cur_state
-            #     self._update_metadata()
-            # if cur_state == "playing":
-            #     self._update_metadata()
-            #     LOOP_WAIT = 0.5
-            # else:
-            #     LOOP_WAIT = 3
-            # if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:
-            #     # daemon crashed ? restart ?
-            #     LOGGER.error("spotify-connect-web exited")
-            #     break
-            #self._exit.wait(LOOP_WAIT)
+            if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:
+                # daemon crashed ? restart ?
+                LOGGER.error("spotify-connect-web exited")
+                break
+            self._exit.wait(60)
         

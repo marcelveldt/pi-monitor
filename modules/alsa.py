@@ -23,6 +23,7 @@ class AlsaVolume(object):
         self._setup_alsa_config()
         self._mixer = alsaaudio.Mixer(self.monitor.config["ALSA_VOLUME_CONTROL"])
         self.monitor.states["player"]["volume_level"] = self._volume_get()
+        LOGGER.info("current alsa volume level: %s" % self._volume_get())
         
     def stop(self):
         self._exit = True
@@ -53,7 +54,7 @@ class AlsaVolume(object):
 
     def _volume_set(self, volume_level):
         ''' set volume level '''
-        self._mixer.setvolume(int(volume_level), direction=alsaaudio.PCM_PLAYBACK)
+        self._mixer.setvolume(int(volume_level), alsaaudio.PCM_PLAYBACK)
         self.monitor.states["player"]["volume_level"] = volume_level
         return True
 

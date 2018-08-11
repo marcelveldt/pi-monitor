@@ -18,7 +18,7 @@ def setup(monitor):
     import_or_install("flask", ["Flask", "render_template", "flash", "request", "send_file", "redirect", "jsonify"], True, installpip="Flask")
     import_or_install("wtforms", ["TextField", "TextAreaField", "StringField", "SubmitField", "BooleanField", "IntegerField", "FloatField", "SelectField"], True, installpip="WTForms")
     import_or_install("flask_wtf", "FlaskForm", True, installpip="")
-    import_or_install("bjoern", "FlaskForm", True, installpip="bjoern", installapt="libev-dev python-dev")
+    import_or_install("bjoern", installpip="bjoern", installapt="libev-dev python-dev")
     return WebConfig(monitor)
 
 

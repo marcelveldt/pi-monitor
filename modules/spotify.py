@@ -56,7 +56,7 @@ class SpotifyPlayer(threading.Thread):
 
     def command(self, cmd, cmd_data=None):
         ''' send command to player'''
-        if command == "update":
+        if cmd == "update":
             return self._update_metadata()
         if cmd == "stop":
             cmd = "pause"

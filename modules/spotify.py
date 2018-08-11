@@ -160,9 +160,9 @@ class SpotifyPlayer(threading.Thread):
             args += ["--playback_device", self.monitor.config["ALSA_SOUND_DEVICE"]]
         if self.monitor.config["ENABLE_DEBUG"]:
             LOGGER.debug("Starting spotify-connect-web: %s" % " ".join(args))
-            self._spotify_proc = subprocess.Popen(args, cwd=exec_dir)
+            self._spotify_proc = subprocess.Popen(args, cwd=exec_dir, stdin=subprocess.STDIN)
         else:
-            self._spotify_proc = subprocess.Popen(args, cwd=exec_dir, stdout=DEVNULL, stderr=subprocess.STDOUT)
+            self._spotify_proc = subprocess.Popen(args, cwd=exec_dir, stdout=DEVNULL, stderr=subprocess.STDOUT, stdin=subprocess.STDIN)
 
         while not self._exit.isSet():
             if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:

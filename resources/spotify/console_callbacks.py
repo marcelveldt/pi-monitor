@@ -6,7 +6,7 @@ import Queue
 from threading import Thread
 import threading
 from connect_ffi import ffi, lib
-
+import logging
 
 RATE = 44100
 CHANNELS = 2
@@ -24,6 +24,7 @@ audio_arg_parser.add_argument('--mixer_device_index', help='alsa card index of t
 audio_arg_parser.add_argument('--mixer', '-m', help='alsa mixer name for volume control', default=alsa.mixers()[0])
 audio_arg_parser.add_argument('--dbrange', '-r', help='alsa mixer volume range in Db', default=0)
 args = audio_arg_parser.parse_known_args()[0]
+LOGGER = logging.getLogger(__name__)
 
 class PlaybackSession:
 
@@ -66,9 +67,9 @@ class AlsaSink:
                 pcm.setformat(alsa.PCM_FORMAT_S16_LE)
 
                 self._device = pcm
-                print "AlsaSink: device acquired"
+                LOGGER.info("AlsaSink: device acquired")
             except alsa.ALSAAudioError as error:
-                print "Unable to acquire device: ", error
+                LOGGER.error("Unable to acquire device: %s" % error)
                 self.release()
 
 
@@ -79,7 +80,7 @@ class AlsaSink:
                 if self._device is not None:
                     self._device.close()
                     self._device = None
-                    print "AlsaSink: device released"
+                    LOGGER.info("AlsaSink: device released")
             finally:
                 self._lock.release()
 
@@ -91,7 +92,7 @@ class AlsaSink:
                 if self._device is not None:
                     self._device.write(data)
             except alsa.ALSAAudioError as error:
-                print "Ups! Some badness happened: ", error
+                LOGGER.error("Ups! Some badness happened: %s" % error)
             finally:
                 self._lock.release()
 
@@ -108,7 +109,7 @@ try:
     mute_available = True
 except alsa.ALSAAudioError:
     mute_available = False
-    print "Device has no native mute"
+    LOGGER.info( "Device has no native mute")
 
 #Gets mimimum volume Db for the mixer
 volume_range = (mixer.getrange()[1]-mixer.getrange()[0]) / 100
@@ -135,9 +136,9 @@ def error_callback(error, userdata):
 @userdata_wrapper
 def connection_notify(self, type):
     if type == lib.kSpConnectionNotifyLoggedIn:
-        print "kSpConnectionNotifyLoggedIn"
+        LOGGER.info("kSpConnectionNotifyLoggedIn")
     elif type == lib.kSpConnectionNotifyLoggedOut:
-        print "kSpConnectionNotifyLoggedOut"
+        LOGGER.info("kSpConnectionNotifyLoggedOut")
     elif type == lib.kSpConnectionNotifyTemporaryError:
         print "kSpConnectionNotifyTemporaryError"
     else:
@@ -163,36 +164,36 @@ def debug_message(self, msg):
 @userdata_wrapper
 def playback_notify(self, type):
     if type == lib.kSpPlaybackNotifyPlay:
-        print "kSpPlaybackNotifyPlay"
+        LOGGER.info("kSpPlaybackNotifyPlay")
         device.acquire()
     elif type == lib.kSpPlaybackNotifyPause:
-        print "kSpPlaybackNotifyPause"
+        LOGGER.info("kSpPlaybackNotifyPause")
         device.release()
     elif type == lib.kSpPlaybackNotifyTrackChanged:
-        print "kSpPlaybackNotifyTrackChanged"
+        LOGGER.info("kSpPlaybackNotifyTrackChanged")
     elif type == lib.kSpPlaybackNotifyNext:
-        print "kSpPlaybackNotifyNext"
+        LOGGER.info("kSpPlaybackNotifyNext")
     elif type == lib.kSpPlaybackNotifyPrev:
-        print "kSpPlaybackNotifyPrev"
+        LOGGER.info("kSpPlaybackNotifyPrev")
     elif type == lib.kSpPlaybackNotifyShuffleEnabled:
-        print "kSpPlaybackNotifyShuffleEnabled"
+        LOGGER.info("kSpPlaybackNotifyShuffleEnabled")
     elif type == lib.kSpPlaybackNotifyShuffleDisabled:
-        print "kSpPlaybackNotifyShuffleDisabled"
+        LOGGER.info("kSpPlaybackNotifyShuffleDisabled")
     elif type == lib.kSpPlaybackNotifyRepeatEnabled:
-        print "kSpPlaybackNotifyRepeatEnabled"
+        LOGGER.info("kSpPlaybackNotifyRepeatEnabled")
     elif type == lib.kSpPlaybackNotifyRepeatDisabled:
-        print "kSpPlaybackNotifyRepeatDisabled"
+        LOGGER.info("kSpPlaybackNotifyRepeatDisabled")
     elif type == lib.kSpPlaybackNotifyBecameActive:
         print "kSpPlaybackNotifyBecameActive"
         session.activate()
     elif type == lib.kSpPlaybackNotifyBecameInactive:
-        print "kSpPlaybackNotifyBecameInactive"
+        LOGGER.info("kSpPlaybackNotifyBecameInactive")
         device.release()
         session.deactivate()
     elif type == lib.kSpPlaybackNotifyPlayTokenLost:
-        print "kSpPlaybackNotifyPlayTokenLost"
+        LOGGER.info("kSpPlaybackNotifyPlayTokenLost")
     elif type == lib.kSpPlaybackEventAudioFlush:
-        print "kSpPlaybackEventAudioFlush"
+        LOGGER.info("kSpPlaybackEventAudioFlush")
         #audio_flush();
     else:
         print "UNKNOWN PlaybackNotify {}".format(type)
@@ -252,9 +253,9 @@ def playback_volume(self, volume):
         if mute_available and mixer.getmute()[0] ==  1:
             mixer.setmute(0)
             print "Mute deactivated"
-        corected_playback_volume = int(min_volume_range + ((volume / 655.35) * (100 - min_volume_range) / 100))
-        print "corected_playback_volume: {}".format(corected_playback_volume)
-        mixer.setvolume(corected_playback_volume)
+        corrected_playback_volume = int(min_volume_range + ((volume / 655.35) * (100 - min_volume_range) / 100))
+        LOGGER.info("corrected_playback_volume: %s" % corrected_playback_volume)
+        mixer.setvolume(corrected_playback_volume)
 
 connection_callbacks = ffi.new('SpConnectionCallbacks *', [
     connection_notify,

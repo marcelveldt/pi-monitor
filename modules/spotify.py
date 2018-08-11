@@ -10,6 +10,12 @@ from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, request
 
 LOOP_WAIT = 5
 
+"""
+    SpotifyPlayer
+    player implementation for Spotify
+    for now still using spotify-connect-web (and not raspotify/librespot) because it has hardware volume control
+"""
+
 
 def setup(monitor):
     '''setup the module'''

@@ -154,7 +154,7 @@ class SpotifyPlayer(threading.Thread):
             args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["--playback_device", self.monitor.config["ALSA_SOUND_DEVICE"]]
-        if self.config["ENABLE_DEBUG"]:
+        if self.monitor.config["ENABLE_DEBUG"]:
             LOGGER.debug("Starting spotify-connect-web: %s" % " ".join(args))
             self._spotify_proc = subprocess.Popen(args, cwd=exec_dir)
         else:

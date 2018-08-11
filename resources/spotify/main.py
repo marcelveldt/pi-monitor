@@ -334,19 +334,18 @@ def add_user():
         'statusString': 'ERROR-OK'
         })
 
-def pump_events():
-    lib.SpPumpEvents()
-    spawn_later(0.1, pump_events)
-
-pump_events()
-
 if __name__ == "__main__":
     #Loop to pump events
+    def pump_events():
+        lib.SpPumpEvents()
+        spawn_later(0.1, pump_events)
+    pump_events()
+
     try:
         http_server = WSGIServer(('', 4000), app, log=None)
         http_server.serve_forever()
-    except:
-        print "interrupted?"
+    except SystemExit, KeyboardInterrupt:
+        print "interrupted"
     lib.SpConnectionLogout()
     lib.SpFree()
     sys.exit(0)

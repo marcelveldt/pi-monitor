@@ -8,8 +8,6 @@ import threading
 import subprocess
 from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, RESOURCES_FOLDER, VOLUME_CONTROL_DISABLED
 
-LOOP_WAIT = 5
-
 """
     SpotifyPlayer
     player implementation for Spotify
@@ -155,10 +153,22 @@ class SpotifyPlayer(threading.Thread):
                 "_spotify-connect._tcp", "4000", "VERSION=1.0", "CPath=/login/_zeroconf"]
         self._avahi_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
 
+        loop_wait = 120
         while not self._exit.isSet():
             if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:
                 # daemon crashed ? restart ?
                 LOGGER.error("spotify-connect-web exited !")
                 break
-            self._exit.wait(60)
+            if not self.monitor.config["ENABLE_MODULE_WEBCONFIG"]:
+                # if webinterface is disabled, we need to poll
+                cur_state = self._get_state()
+                if cur_state != self._last_state:
+                    self._last_state = cur_state
+                    self._update_metadata()
+                if cur_state == "playing":
+                    self._update_metadata()
+                    loop_wait = 1
+                else:
+                    loop_wait = 3
+            self._exit.wait(loop_wait) # we just wait as we'll be notified of updates through the webinterface
         

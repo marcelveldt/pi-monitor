@@ -7,36 +7,35 @@ import sys
 import argparse
 import logging
 import re
-from flask import Flask, request, abort, jsonify, redirect, flash, url_for
-#from flask_cors import CORS
-#from gevent.wsgi import WSGIServer
+import signal
+import json
+import uuid
+from flask import Flask, request, abort, jsonify, redirect, url_for
+from gevent.wsgi import WSGIServer
 from gevent import spawn_later, sleep
-from connect_ffi import ffi, lib
-from connect import Connect
+from connect_ffi import ffi, lib, C
 from utils import get_zeroconf_vars, get_metadata, get_image_url
+from console_callbacks import audio_arg_parser, mixer, error_callback, connection_callbacks, debug_callbacks, playback_callbacks, playback_setup
+from utils import print_zeroconf_vars
 
-
-
-try:
-    import bjoern
-except ImportError:
-    os.system("apt-get update")
-    os.system("apt-get install -y libev-dev python-dev")
-    os.system("pip install bjoern")
-    import bjoern
 
 
 web_arg_parser = argparse.ArgumentParser(add_help=False)
-
 args = web_arg_parser.parse_known_args()[0]
 
 app = Flask(__name__, root_path=sys.path[0])
 app.config.from_object(__name__)
 app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176b'
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 #Used by the error callback to determine login status
 invalid_login = False
+
+def signal_handler(signal, frame):
+    lib.SpConnectionLogout()
+    lib.SpFree()
+    sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 @ffi.callback('void(SpError error, void *userdata)')
 def web_error_callback(error, userdata):
@@ -46,9 +45,9 @@ def web_error_callback(error, userdata):
 
 connect_app = Connect(web_error_callback, web_arg_parser)
 
+
 ##Routes
 
-##API routes
 
 #Playback routes
 @app.route('/api/playback/play')
@@ -71,7 +70,6 @@ def playback_next():
     lib.SpPlaybackSkipToNext()
     return '', 204
 
-
 #TODO: Add ability to disable shuffle/repeat
 @app.route('/api/playback/shuffle')
 def playback_shuffle():
@@ -85,7 +83,6 @@ def playback_shuffle(status):
     elif status == 'disable':
         lib.SpPlaybackEnableShuffle(False)
     return '', 204
-
 
 @app.route('/api/playback/repeat')
 def playback_repeat():
@@ -239,19 +236,124 @@ def add_user():
         'statusString': 'ERROR-OK'
         })
 
-#Loop to pump events
-def pump_events():
-    lib.SpPumpEvents()
-    spawn_later(0.1, pump_events)
+class Connect:
+    def __init__(self, error_cb = error_callback, web_arg_parser = None):
+        arg_parsers = [audio_arg_parser]
+        if web_arg_parser:
+            arg_parsers.append(web_arg_parser)
+        arg_parser = argparse.ArgumentParser(description='Web interface for Spotify Connect', parents=arg_parsers)
+        arg_parser.add_argument('--debug', '-d', help='enable libspotify_embedded/flask debug output', action="store_true")
+        arg_parser.add_argument('--key', '-k', help='path to spotify_appkey.key (can be obtained from https://developer.spotify.com/my-account/keys )', default='spotify_appkey.key')
+        arg_parser.add_argument('--username', '-u', help='your spotify username')
+        arg_parser.add_argument('--password', '-p', help='your spotify password')
+        arg_parser.add_argument('--name', '-n', help='name that shows up in the spotify client', default='TestConnect')
+        arg_parser.add_argument('--bitrate', '-b', help='Sets bitrate of audio stream (may not actually work)', choices=[90, 160, 320], type=int, default=160)
+        arg_parser.add_argument('--credentials', '-c', help='File to load and save credentials from/to', default='credentials.json')
+        self.args = arg_parser.parse_args()
 
-pump_events()
+        try:
+            with open(self.args.key) as f:
+                app_key = ffi.new('uint8_t *')
+                f.readinto(ffi.buffer(app_key))
+                app_key_size = len(f.read()) + 1
+        except IOError as e:
+            print "Error opening app key: {}.".format(e)
+            print "If you don't have one, it can be obtained from https://developer.spotify.com/my-account/keys"
+            sys.exit(1)
 
-#Only run if script is run directly and not by an import
+
+        self.credentials = dict({
+            'device-id': str(uuid.uuid4()),
+            'username': None,
+            'blob': None
+        })
+
+        try:
+            with open(self.args.credentials) as f:
+                self.credentials.update(
+                        { k: v.encode('utf-8') if isinstance(v, unicode) else v
+                            for (k,v)
+                            in json.loads(f.read()).iteritems() })
+        except IOError:
+            pass
+
+        if self.args.username:
+            self.credentials['username'] = self.args.username
+
+        userdata = ffi.new_handle(self)
+
+        if self.args.debug:
+            lib.SpRegisterDebugCallbacks(debug_callbacks, userdata)
+
+        self.config = {
+             'version': 4,
+             'buffer': C.malloc(0x100000),
+             'buffer_size': 0x100000,
+             'app_key': app_key,
+             'app_key_size': app_key_size,
+             'deviceId': ffi.new('char[]', self.credentials['device-id']),
+             'remoteName': ffi.new('char[]', self.args.name),
+             'brandName': ffi.new('char[]', 'DummyBrand'),
+             'modelName': ffi.new('char[]', 'DummyModel'),
+             'client_id': ffi.new('char[]', '0'),
+             'deviceType': lib.kSpDeviceTypeAudioDongle,
+             'error_callback': error_cb,
+             'userdata': userdata,
+        }
+
+        init = ffi.new('SpConfig *' , self.config)
+        init_status = lib.SpInit(init)
+        print "SpInit: {}".format(init_status)
+        if init_status != 0:
+            print "SpInit failed, exiting"
+            sys.exit(1)
+
+        lib.SpRegisterConnectionCallbacks(connection_callbacks, userdata)
+        lib.SpRegisterPlaybackCallbacks(playback_callbacks, userdata)
+
+        mixer_volume = int(mixer.getvolume()[0] * 655.35)
+        lib.SpPlaybackUpdateVolume(mixer_volume)
+
+        bitrates = {
+            90: lib.kSpBitrate90k,
+            160: lib.kSpBitrate160k,
+            320: lib.kSpBitrate320k
+        }
+
+        lib.SpPlaybackSetBitrate(bitrates[self.args.bitrate])
+
+        playback_setup()
+
+        print_zeroconf_vars()
+
+        if self.credentials['username'] and self.args.password:
+            self.login(password=self.args.password)
+        elif self.credentials['username'] and self.credentials['blob']:
+            self.login(blob=self.credentials['blob'])
+        else:
+            if __name__ == '__main__':
+                raise ValueError("No username given, and none stored")
+
+    def login(self, username=None, password=None, blob=None, zeroconf=None):
+        if username is not None:
+            self.credentials['username'] = username
+        elif self.credentials['username']:
+            username = self.credentials['username']
+        else:
+            raise ValueError("No username given, and none stored")
+
+        if password is not None:
+            lib.SpConnectionLoginPassword(username, password)
+        elif blob is not None:
+            lib.SpConnectionLoginBlob(username, blob)
+        elif zeroconf is not None:
+            lib.SpConnectionLoginZeroConf(username, *zeroconf)
+        else:
+            raise ValueError("Must specify a login method (password, blob or zeroconf)")
+
+
 if __name__ == "__main__":
-#Can be run on any port as long as it matches the one used in avahi-publish-service
-    bjoern.run(app, '0.0.0.0', 4000, reuse_port=True)
-    #http_server = WSGIServer(('', 4000), app, log=None)
-    #http_server.serve_forever()
-
-#TODO: Add signal catcher
-lib.SpFree()
+    #Loop to pump events
+    spawn_later(0.1, lib.SpPumpEvents)
+    http_server = WSGIServer(('', 4000), app, log=None)
+    http_server.serve_forever()

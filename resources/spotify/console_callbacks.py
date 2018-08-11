@@ -118,7 +118,6 @@ selected_volume_range = int(args.dbrange)
 if selected_volume_range > volume_range or selected_volume_range == 0:
     selected_volume_range = volume_range
 min_volume_range = (1 - selected_volume_range / volume_range) * 100
-print "min_volume_range: {}".format(min_volume_range)
 
 def userdata_wrapper(f):
     def inner(*args):
@@ -130,27 +129,36 @@ def userdata_wrapper(f):
 #Error callbacks
 @ffi.callback('void(SpError error, void *userdata)')
 def error_callback(error, userdata):
-    print "error_callback: {}".format(error)
+    LOGGER.error("error_callback: {}".format(error))
+
+
+def report_state(msg):
+    ''' report state update to pi-monitor to prevent polling'''
+    LOGGER.debug(msg)
+    try:
+        urllib2.urlopen("http://localhost/command?target=spotify&command=update&data=%s" % msg)
+    except Exception as exc:
+        LOGGER.error(exc)
+
 
 #Connection callbacks
 @ffi.callback('void(SpConnectionNotify type, void *userdata)')
 @userdata_wrapper
 def connection_notify(self, type):
     if type == lib.kSpConnectionNotifyLoggedIn:
-        LOGGER.info("kSpConnectionNotifyLoggedIn")
+        report_state("kSpConnectionNotifyLoggedIn")
     elif type == lib.kSpConnectionNotifyLoggedOut:
-        LOGGER.info("kSpConnectionNotifyLoggedOut")
+        report_state("kSpConnectionNotifyLoggedOut")
     elif type == lib.kSpConnectionNotifyTemporaryError:
-        print "kSpConnectionNotifyTemporaryError"
+        LOGGER.error("kSpConnectionNotifyTemporaryError")
     else:
-        print "UNKNOWN ConnectionNotify {}".format(type)
+        LOGGER.warning("UNKNOWN ConnectionNotify {}".format(type))
 
 @ffi.callback('void(const char *blob, void *userdata)')
 @userdata_wrapper
 def connection_new_credentials(self, blob):
-    print ffi.string(blob)
+    LOGGER.debug(ffi.string(blob))
     self.credentials['blob'] = ffi.string(blob)
-
     with open(self.args.credentials, 'w') as f:
         f.write(json.dumps(self.credentials))
 
@@ -158,48 +166,43 @@ def connection_new_credentials(self, blob):
 @ffi.callback('void(const char *msg, void *userdata)')
 @userdata_wrapper
 def debug_message(self, msg):
-    print ffi.string(msg)
+    LOGGER.debug(ffi.string(msg))
 
 #Playback callbacks
 @ffi.callback('void(SpPlaybackNotify type, void *userdata)')
 @userdata_wrapper
 def playback_notify(self, type):
     if type == lib.kSpPlaybackNotifyPlay:
-        LOGGER.info("kSpPlaybackNotifyPlay")
         device.acquire()
-        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
+        report_state("kSpPlaybackNotifyPlay")
     elif type == lib.kSpPlaybackNotifyPause:
-        LOGGER.info("kSpPlaybackNotifyPause")
         device.release()
-        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
+        report_state("kSpPlaybackNotifyPause")
     elif type == lib.kSpPlaybackNotifyTrackChanged:
-        LOGGER.info("kSpPlaybackNotifyTrackChanged")
-        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
+        report_state("kSpPlaybackNotifyTrackChanged")
     elif type == lib.kSpPlaybackNotifyNext:
-        LOGGER.info("kSpPlaybackNotifyNext")
+        LOGGER.debug("kSpPlaybackNotifyNext")
     elif type == lib.kSpPlaybackNotifyPrev:
-        LOGGER.info("kSpPlaybackNotifyPrev")
+        LOGGER.debug("kSpPlaybackNotifyPrev")
     elif type == lib.kSpPlaybackNotifyShuffleEnabled:
-        LOGGER.info("kSpPlaybackNotifyShuffleEnabled")
+        LOGGER.debug("kSpPlaybackNotifyShuffleEnabled")
     elif type == lib.kSpPlaybackNotifyShuffleDisabled:
-        LOGGER.info("kSpPlaybackNotifyShuffleDisabled")
+        LOGGER.debug("kSpPlaybackNotifyShuffleDisabled")
     elif type == lib.kSpPlaybackNotifyRepeatEnabled:
-        LOGGER.info("kSpPlaybackNotifyRepeatEnabled")
+        LOGGER.debug("kSpPlaybackNotifyRepeatEnabled")
     elif type == lib.kSpPlaybackNotifyRepeatDisabled:
-        LOGGER.info("kSpPlaybackNotifyRepeatDisabled")
+        LOGGER.debug("kSpPlaybackNotifyRepeatDisabled")
     elif type == lib.kSpPlaybackNotifyBecameActive:
-        print "kSpPlaybackNotifyBecameActive"
         session.activate()
-        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
+        report_state("kSpPlaybackNotifyBecameActive")
     elif type == lib.kSpPlaybackNotifyBecameInactive:
-        LOGGER.info("kSpPlaybackNotifyBecameInactive")
         device.release()
         session.deactivate()
-        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
+        report_state("kSpPlaybackNotifyBecameInactive")
     elif type == lib.kSpPlaybackNotifyPlayTokenLost:
         LOGGER.info("kSpPlaybackNotifyPlayTokenLost")
     elif type == lib.kSpPlaybackEventAudioFlush:
-        LOGGER.info("kSpPlaybackEventAudioFlush")
+        report_state("kSpPlaybackEventAudioFlush")
         #audio_flush();
     else:
         print "UNKNOWN PlaybackNotify {}".format(type)
@@ -222,12 +225,9 @@ def playback_setup():
 @userdata_wrapper
 def playback_data(self, data, num_samples, format, pending):
     global pending_data
-
     # Make sure we don't pass incomplete frames to alsa
     num_samples -= num_samples % CHANNELS
-
     buf = pending_data + ffi.buffer(data, num_samples * SAMPLESIZE)[:]
-
     try:
         total = 0
         while len(buf) >= PERIODSIZE * CHANNELS * SAMPLESIZE:
@@ -245,7 +245,7 @@ def playback_data(self, data, num_samples, format, pending):
 @ffi.callback('void(uint32_t millis, void *userdata)')
 @userdata_wrapper
 def playback_seek(self, millis):
-    print "playback_seek: {}".format(millis)
+    LOGGER.debug("playback_seek: {}".format(millis))
 
 @ffi.callback('void(uint16_t volume, void *userdata)')
 @userdata_wrapper
@@ -254,15 +254,15 @@ def playback_volume(self, volume):
     if volume == 0:
         if mute_available:
             mixer.setmute(1)
-            print "Mute activated"
+            LOGGER.debug("Mute activated")
     else:
         if mute_available and mixer.getmute()[0] ==  1:
             mixer.setmute(0)
-            print "Mute deactivated"
+            LOGGER.debug("Mute deactivated")
         corrected_playback_volume = int(min_volume_range + ((volume / 655.35) * (100 - min_volume_range) / 100))
-        LOGGER.info("corrected_playback_volume: %s" % corrected_playback_volume)
+        LOGGER.debug("corrected_playback_volume: %s" % corrected_playback_volume)
         mixer.setvolume(corrected_playback_volume)
-        urllib2.urlopen("http://localhost/command?target=spotify&command=update")
+    report_state("playback_volume")
 
 connection_callbacks = ffi.new('SpConnectionCallbacks *', [
     connection_notify,

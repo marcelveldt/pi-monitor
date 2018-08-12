@@ -52,11 +52,11 @@ class AirPlayPlayer(threading.Thread):
         
     def stop(self):
         self._exit.set()
-        if self._shairport_proc:
-            self._shairport_proc.terminate()
         with open(EXEC_FIFO, 'w') as f:
             f.write("####STOP####\n")
             f.write("####STOP####\n")
+        if self._shairport_proc:
+            self._shairport_proc.terminate()
         if self._remote:
             del self._remote
             self._remote = None

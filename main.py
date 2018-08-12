@@ -150,7 +150,7 @@ class Monitor():
                 os.system("reboot")
             elif cmd == "reload":
                 LOGGER.info("Restart of service requested!\n")
-                os.kill(os.getpid(), signal.SIGTERM)
+                self._cleanup(15, 15)
             elif cmd in ["ping", "beep", "buzz"]:
                 return self._beep()
         elif target and cmd:
@@ -239,6 +239,7 @@ class Monitor():
             mod.LOGGER = LOGGER
             mod = mod.setup(self)
             if mod:
+                mod.daemon = True # needed to properly exit all child processes at signals
                 self._loaded_modules.append(mod)
                 cls_name = mod.__class__.__name__
                 self.states["modules"].append(cls_name)

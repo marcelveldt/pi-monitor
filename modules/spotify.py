@@ -47,6 +47,7 @@ class SpotifyPlayer(threading.Thread):
     def stop(self):
         self._exit.set()
         if self._spotify_proc:
+            os.system("pkill -f spotify_connect.py")
             self._spotify_proc.terminate()
         if self._avahi_proc:
             self._avahi_proc.terminate()

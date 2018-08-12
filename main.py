@@ -150,7 +150,7 @@ class Monitor():
                 os.system("reboot")
             elif cmd == "reload":
                 LOGGER.info("Restart of service requested!\n")
-                os.kill(os.getpid(), signal.SIGTER)
+                os.kill(os.getpid(), signal.SIGTERM)
             elif cmd in ["ping", "beep", "buzz"]:
                 return self._beep()
         elif target and cmd:

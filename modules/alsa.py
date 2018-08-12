@@ -60,7 +60,7 @@ class AlsaVolume(object):
 
     def _volume_get(self):
         ''' get current volume level of player'''
-        return self._mixer.getvolume(alsaaudio.PCM_PLAYBACK)
+        return self._mixer.getvolume(alsaaudio.PCM_PLAYBACK)[0]
 
     def _setup_alsa_config(self):
         ''' get details about the alsa configuration'''

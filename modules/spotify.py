@@ -50,12 +50,14 @@ class SpotifyPlayer(threading.Thread):
         if os.path.isfile(spotify_pid_file):
             with open(spotify_pid_file) as f:
                 spotify_pid = f.read()
-                os.kill(int(spotify_pid), 9)
+                LOGGER.debug("stop Chrooted spotify by sending kill to pid %s" % spotify_pid)
+                try:
+                    os.kill(int(spotify_pid), 9)
+                except:
+                    if self._spotify_proc and not self._spotify_proc.returncode:
+                        self._spotify_proc.terminate()
         if self._avahi_proc:
             self._avahi_proc.terminate()
-        if self._spotify_proc:
-            run_proc("curl http://localhost:4000/shutdown")
-            self._spotify_proc.terminate()
         threading.Thread.join(self, 10)
 
     def command(self, cmd, cmd_data=None):

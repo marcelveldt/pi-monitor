@@ -9,7 +9,6 @@ from connect_ffi import ffi, lib
 import logging
 import urllib2
 from utils import LOGGER
-import signal
 import sys
 
 RATE = 44100
@@ -32,15 +31,6 @@ args = audio_arg_parser.parse_known_args()[0]
 global is_exited
 is_exited = False
 
-# def signal_handler(signal, frame):
-#         global is_exited
-#         is_exited = True
-#         lib.SpConnectionLogout()
-#         lib.SpFree()
-#         sys.exit(0)
-
-# signal.signal(signal.SIGINT, signal_handler)
-# signal.signal(signal.SIGTERM, signal_handler)
 
 class PlaybackSession:
 

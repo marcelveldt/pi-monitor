@@ -15,7 +15,7 @@ from connect_ffi import ffi, lib, C
 from utils import get_zeroconf_vars, get_metadata, get_image_url
 from console_callbacks import audio_arg_parser, mixer, error_callback, connection_callbacks, debug_callbacks, playback_callbacks, playback_setup
 from utils import print_zeroconf_vars, LOGGER
-
+import signal
 
 class Connect:
     def __init__(self, error_cb = error_callback, web_arg_parser = None):
@@ -204,7 +204,6 @@ def playback_volume():
     lib.SpPlaybackUpdateVolume(int(volume))
     return '', 204
 
-
 #Info routes
 @app.route('/api/info/metadata')
 def info_metadata():
@@ -241,13 +240,6 @@ def info_display_name():
         }), 400
     lib.SpSetDisplayName(display_name)
     return '', 204
-
-
-@app.route('/shutdown', methods=['POST', 'GET'])
-def shutdown():
-    lib.SpConnectionLogout()
-    lib.SpFree()
-    return 'Server shutting down...'
 
 #Login routes
 @app.route('/login/logout')
@@ -332,6 +324,16 @@ def add_user():
         'spotifyError': 0,
         'statusString': 'ERROR-OK'
         })
+
+def signal_handler(signal, frame):
+        global is_exited
+        is_exited = True
+        lib.SpConnectionLogout()
+        lib.SpFree()
+        sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 #Loop to pump events
 def pump_events():

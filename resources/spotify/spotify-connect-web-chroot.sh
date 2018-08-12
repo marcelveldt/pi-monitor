@@ -36,4 +36,4 @@ sudo mount --bind /dev $INSTALL_DIR/dev
 sudo mount -t proc proc $INSTALL_DIR/proc/
 sudo cp /etc/resolv.conf $INSTALL_DIR/etc/
 sudo cp $THIS_DIR/spotify_appkey.key $INSTALL_DIR/usr/src/app
-sudo chroot $INSTALL_DIR /bin/bash -c "cd /usr/src/app && python main.py $*" & echo $! >$THIS_DIR/.pid
+sudo chroot $INSTALL_DIR /bin/bash -c "cd /usr/src/app && python spotify.py $*" & echo $! >$THIS_DIR/.pid

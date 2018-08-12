@@ -52,9 +52,6 @@ class AirPlayPlayer(threading.Thread):
         
     def stop(self):
         self._exit.set()
-        with open(EXEC_FIFO, 'w') as f:
-            f.write("####STOP####\n")
-            f.write("####STOP####\n")
         if self._shairport_proc:
             self._shairport_proc.terminate()
         if self._remote:
@@ -157,9 +154,7 @@ class AirPlayPlayer(threading.Thread):
         while not self._exit.isSet():
             line = self._fifo_buffer.readline()
             if not line:
-                self._exit.wait(0.5)
-            if len(line) == 0 or "STOP" in line:
-                break
+                self._exit.wait(0.1)
             if not line.strip().endswith("</item>"):
                 temp_line += line.strip()
                 continue

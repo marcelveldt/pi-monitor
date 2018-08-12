@@ -40,15 +40,15 @@ class SpotifyPlayer(threading.Thread):
     def __init__(self, monitor):
         self.monitor = monitor
         self.monitor.states["spotify"] = PlayerMetaData("Spotify")
-        run_proc("service spotify-connect-web stop", check_result=True, ignore_error=True) # make sure that the original service is stopped
-        run_proc("service raspotify stop", check_result=True, ignore_error=True) # make sure that the original service is stopped
+        run_proc("service spotify-connect-web stop", check_result=False, ignore_error=True) # make sure that the original service is stopped
+        run_proc("service raspotify stop", check_result=False, ignore_error=True) # make sure that the original service is stopped
         threading.Thread.__init__(self)
         
     def stop(self):
         self._exit.set()
         if self._spotify_proc:
             os.system("pkill -f spotify_connect.py")
-            self._spotify_proc.terminate()
+            # we need to send a kill signal to the chrooted python script instead of the bash script that runs chroot to clean stuff up correctly
         if self._avahi_proc:
             self._avahi_proc.terminate()
         threading.Thread.join(self, 10)

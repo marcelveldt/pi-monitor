@@ -47,16 +47,10 @@ class SpotifyPlayer(threading.Thread):
     def stop(self):
         self._exit.set()
         spotify_pid_file = os.path.join(RESOURCES_FOLDER, "spotify", ".pid")
-        if os.path.isfile(spotify_pid_file):
-            with open(spotify_pid_file) as f:
-                spotify_pid = f.read()
-            LOGGER.debug("stop Chrooted spotify by sending kill to pid %s" % spotify_pid)
-            try:
-                os.kill(int(spotify_pid), 9)
-            except Exception as exc:
-                LOGGER.exception(str(exc))
-                if self._spotify_proc:
-                    self._spotify_proc.terminate()
+        if self._spotify_proc:
+            os.system("pkill -f spotify_connect.py")
+            time.sleep(0.5)
+            self._spotify_proc.terminate()
         if self._avahi_proc:
             self._avahi_proc.terminate()
         threading.Thread.join(self, 10)

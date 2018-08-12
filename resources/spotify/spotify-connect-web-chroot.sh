@@ -29,11 +29,10 @@ fi
 # copy our customized code
 cp -r "$THIS_DIR/." "$INSTALL_DIR/usr/src/app/"
 
-rm -f $THIS_DIR/.pid
 # run executable from chroot
 trap "sudo umount $INSTALL_DIR/dev $INSTALL_DIR/proc" EXIT
 sudo mount --bind /dev $INSTALL_DIR/dev
 sudo mount -t proc proc $INSTALL_DIR/proc/
 sudo cp /etc/resolv.conf $INSTALL_DIR/etc/
 sudo cp $THIS_DIR/spotify_appkey.key $INSTALL_DIR/usr/src/app
-sudo chroot $INSTALL_DIR /bin/bash -c "cd /usr/src/app && python spotify_connect.py $*" & echo $! >$THIS_DIR/.pid
+sudo chroot $INSTALL_DIR /bin/bash -c "cd /usr/src/app && python spotify_connect.py $*"

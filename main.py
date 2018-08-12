@@ -153,7 +153,7 @@ class Monitor():
                 if cmd_data and cmd_data == True:
                     os.kill(os.getpid(), 9)
                 else:
-                    self._cleanup(2, 2)
+                    self._cleanup(9, 9)
             elif cmd in ["ping", "beep", "buzz"]:
                 return self._beep()
         elif target and cmd:

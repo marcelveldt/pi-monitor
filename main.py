@@ -146,10 +146,14 @@ class Monitor():
             elif cmd == "run_proc" and cmd_data:
                 run_proc(cmd_data)
             elif cmd == "restart":
+                LOGGER.warning("System will now reboot!")
                 os.system("reboot")
             elif cmd == "reload":
                 LOGGER.info("Restart of service requested!\n")
-                os.kill(os.getpid(), 9)
+                if cmd_data and cmd_data == True:
+                    os.kill(os.getpid(), 9)
+                else:
+                    self._cleanup(2, 2)
             elif cmd in ["ping", "beep", "buzz"]:
                 return self._beep()
         elif target and cmd:

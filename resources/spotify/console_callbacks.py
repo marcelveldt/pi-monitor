@@ -104,6 +104,7 @@ class AlsaSink:
 
 session = PlaybackSession()
 device = AlsaSink(session, args)
+LOGGER.info("mixer: %s" % args.mixer)
 mixer = alsa.Mixer(args.mixer)
 
 try:

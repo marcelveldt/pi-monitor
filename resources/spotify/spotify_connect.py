@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-#First run the command avahi-publish-service TestConnect _spotify-connect._tcp 4000 VERSION=1.0 CPath=/login/_zeroconf
-#TODO: Add error checking
-#TODO: Show when request fails on webpage
+# Modified version of spotify-connect-web, by Fornoth. All credits go to the original author
 import os
 import sys
 import argparse
@@ -137,7 +135,7 @@ def web_error_callback(error, userdata):
 connect_app = Connect(web_error_callback, web_arg_parser)
 
 
-##Routes
+## API Routes
 
 #Playback routes
 @app.route('/api/playback/play')

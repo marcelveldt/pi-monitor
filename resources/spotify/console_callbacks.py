@@ -24,7 +24,7 @@ playback_device_group.add_argument('--device', '-D', help='alsa output device (d
 playback_device_group.add_argument('--playback_device', '-o', help='alsa output device (get name from aplay -L)', default='default')
 
 audio_arg_parser.add_argument('--mixer_device_index', help='alsa card index of the mixer device', type=int)
-audio_arg_parser.add_argument('--mixer', '-m', help='alsa mixer name for volume control', default=alsa.mixers()[0])
+audio_arg_parser.add_argument('--mixer', '-m', help='alsa mixer name for volume control', default='')
 audio_arg_parser.add_argument('--dbrange', '-r', help='alsa mixer volume range in Db', default=0)
 args = audio_arg_parser.parse_known_args()[0]
 
@@ -104,11 +104,7 @@ class AlsaSink:
 
 session = PlaybackSession()
 device = AlsaSink(session, args)
-mixer_card_arg = {}
-if args.mixer_device_index:
-    mixer_card_arg['cardindex'] = args.mixer_device_index
-
-mixer = alsa.Mixer(args.mixer, **mixer_card_arg)
+mixer = alsa.Mixer(args.mixer)
 
 try:
     mixer.getmute()

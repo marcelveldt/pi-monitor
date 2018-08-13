@@ -41,12 +41,12 @@ class PowerSave(object):
     def state_changed_event(self, key, value=None, subkey=None):
         if key == "player" and subkey == "power":
             player_powered = self.monitor.states["player"]["power"]
-            if player_powered and self.monitor.config["POWERSAVE_COMMAND_OFF"]:
+            if player_powered:
                 # player is powered, disable powersave
-                self.monitor.command("system", "run_proc", self.monitor.config["POWERSAVE_COMMAND_OFF"])
-            elif not player_powered and self.monitor.config["POWERSAVE_COMMAND_ON"]:
+                self._disable_powersave()
+            else:
                 # player is not powered, enable powersave
-                self.monitor.command("system", "run_proc", self.monitor.config["POWERSAVE_COMMAND_ON"])
+                self._enable_powersave()
         elif key == "player" and subkey == "state" and self.monitor.config["AUTO_POWER_OFF_WHEN_IDLE_SECONDS"]:
             if self.monitor.states["player"]["state"] in IDLE_STATES and self.monitor.states["player"]["power"]:
                 self._interrupted = False
@@ -75,5 +75,16 @@ class PowerSave(object):
     def stop(self):
         self._interrupted = True
         self.monitor.deregister_state_callback(self.state_changed_event, "player")
+        self._disable_powersave()
+
+
+    def _enable_powersave(self):
+        if self.monitor.config["POWERSAVE_COMMAND_ON"]:
+            for cmd_part in self.monitor.config["POWERSAVE_COMMAND_ON"].split(" && "):
+                self.monitor.command("system", "run_proc", cmd_part)
+
+    def _disable_powersave(self):
         if self.monitor.config["POWERSAVE_COMMAND_OFF"]:
-            self.monitor.command("system", "run_proc", self.monitor.config["POWERSAVE_COMMAND_OFF"])
+            for cmd_part in self.monitor.config["POWERSAVE_COMMAND_OFF"].split(" && "):
+                self.monitor.command("system", "run_proc", cmd_part)
+

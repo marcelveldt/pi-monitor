@@ -18,7 +18,7 @@
 from __future__ import print_function
 
 import os.path
-from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM, PLAYING_STATES, PLAYING_STATE, LISTENING_STATE, IDLE_STATE, NOTIFY_STATE
+from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM, PLAYING_STATES, PLAYING_STATE, LISTENING_STATE, IDLE_STATE, NOTIFY_STATE, ALERT_STATE
 import threading
 import sys
 
@@ -84,13 +84,21 @@ class GoogleAssistantPlayer(threading.Thread):
         """
         LOGGER.debug("Google received event: %s" % event)
 
-        if event.type in [EventType.ON_CONVERSATION_TURN_STARTED, EventType.ON_ALERT_STARTED]:
+        if event.type in [EventType.ON_CONVERSATION_TURN_STARTED]:
             cur_player = self.monitor.states["player"]["current_player"]
             self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
             self.monitor.command("system", "ping")
+            LOGGER.info("Google Assistant is now listening for a command (hotword detected)")
+
+
+        elif event.type in [EventType.ON_ALERT_STARTED]:
+            cur_player = self.monitor.states["player"]["current_player"]
+            self.monitor.states["google_assistant"]["state"] = ALERT_STATE
+            LOGGER.info("Google Assistant is now broadcasting an alert")
 
         elif event.type in [EventType.ON_RESPONDING_STARTED, EventType.ON_MEDIA_TRACK_PLAY]:
             self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
+            LOGGER.info("Google Assistant is playing (announcement or media)")
 
         elif event.type in [EventType.ON_ALERT_FINISHED, 
                                 EventType.ON_CONVERSATION_TURN_TIMEOUT, 
@@ -108,7 +116,7 @@ class GoogleAssistantPlayer(threading.Thread):
         
         elif event.type == EventType.ON_DEVICE_ACTION:
             for command, params in event.actions:
-                LOGGER.info("Do command %s - with params: %s" %(command, params))
+                LOGGER.info("Do command %s - with params: %s" % (command, params))
 
     def authenticate_device(self):
         import google_auth_oauthlib.flow

@@ -46,8 +46,7 @@ class AirPlayPlayer(threading.Thread):
         self.monitor = monitor
         self.monitor.states["airplay"] = PlayerMetaData("Airplay")
         config_modified = False
-        run_proc("service shairport-sync stop", check_result=True, ignore_error=True) # make sure that the original service is stopped
-        run_proc("service shairport-sync stop", check_result=True, ignore_error=True) # make sure that the original service is stopped
+        run_proc("service shairport-sync stop", check_result=False, ignore_error=True) # make sure that the original service is stopped
         threading.Thread.__init__(self)
         
     def stop(self):

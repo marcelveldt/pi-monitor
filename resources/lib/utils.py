@@ -82,25 +82,22 @@ def is_installed(dietpi_id="", bin_path=""):
     return is_installed
 
 
-def run_proc(cmd_str, check_result=False, ignore_error=False):
+def run_proc(cmd_str, check_result=False, ignore_error=True):
     ''' execute command with optional waiting for the results'''
+    if isinstance(cmd_str, list):
+        args = cmd_str
+    else:
+        args = cmd_str.split(" ")
     try:
         if check_result:
             # execute command and wait for result
-            output = ""
-            for cmd in cmd_str.split(' && '):
-                res = subprocess.check_output(cmd, shell=True)
-                if res and isinstance(res, (str, unicode)):
-                    output += res
-                else:
-                    LOGGER.debug("Error while executing command %s --> %s" % (cmd, output))
-            return output
+            return subprocess.check_output(args)
+        elif not check_result and ignore_error:
+            # execute command without waiting or returning
+            subprocess.Popen(args, creationflags=subprocess.DETACHED_PROCESS)
         else:
             # execute command without waiting
-            for cmd in cmd_str.split(' && '):
-                subprocess.Popen(cmd, shell=True,
-                         stdin=None, stdout=DEVNULL, stderr=subprocess.STDOUT, close_fds=True)
-            return True
+            return subprocess.call(cmd, stdout=DEVNULL, stderr=STDOUT)
     except Exception as exc:
         if not ignore_error:
             LOGGER.error(str(exc))

@@ -123,6 +123,8 @@ class Monitor():
                 except Exception:
                     LOGGER.exception("Error while processing command in Queue - %s" % str(data))
             # wait for events in the queue
+            if self._exit:
+                break
             self._event.wait(loop_timeout)
             self._event.clear()
 
@@ -266,14 +268,15 @@ class Monitor():
         in the event of a SIGTERM or SIGINT.
         """
         self._exit = True
+
+        #turn off power
+        self._set_power(False)
+
         self._event.set()
         self._state_watcher.stop()
 
         # stop all loaded optional modules
         self._unload_modules()
-
-        #turn off power
-        self._set_power(False)
         
         # Exit from our application
         LOGGER.info("Exiting on signal %d" % (signum))

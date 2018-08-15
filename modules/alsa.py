@@ -16,9 +16,9 @@ class AlsaVolume(object):
     def __init__(self, monitor):
         self.monitor = monitor
         self.monitor.states["alsa"] = {
-                "alsa_devices": [],
-                "alsa_capture_devices": [],
-                "alsa_mixers": []
+                "audio_devices": [],
+                "capture_devices": [],
+                "mixers": []
             }
         self._setup_alsa_config()
         self._mixer = alsaaudio.Mixer(self.monitor.config["ALSA_VOLUME_CONTROL"])
@@ -84,7 +84,7 @@ class AlsaVolume(object):
                     default_audio_device = dev
         if not selected_audio_device_found:
             selected_audio_device = default_audio_device
-        self.monitor.states["alsa_devices"] = alsa_devices
+        self.monitor.states["alsa"]["audio_devices"] = alsa_devices
 
         # get capture devices
         default_capture_device = ""
@@ -105,7 +105,7 @@ class AlsaVolume(object):
             alsa_capture_devices.append(default_capture_device)
         if not selected_capture_device_found:
             selected_capture_device = default_capture_device
-        self.monitor.states["alsa_capture_devices"] = alsa_capture_devices
+        self.monitor.states["alsa"]["capture_devices"] = alsa_capture_devices
         
         # only lookup mixers for the selected audio device
         # TODO: extend this selection criteria with more use cases
@@ -140,7 +140,7 @@ class AlsaVolume(object):
         if not selected_mixer_found:
             # set default mixer as selected mixer
             selected_mixer = default_mixer
-        self.monitor.states["alsa_mixers"] = alsa_mixers
+        self.monitor.states["alsa"]["mixers"] = alsa_mixers
         
         # write default asound file - is needed for volume control and google assistant to work properly
         if selected_mixer == VOLUME_CONTROL_SOFT:

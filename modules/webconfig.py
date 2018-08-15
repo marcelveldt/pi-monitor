@@ -90,10 +90,13 @@ class WebConfig(threading.Thread):
                         continue
                     label = key.replace("_"," ")
                     if key == "ALSA_VOLUME_CONTROL":
-                        choices = [(item, item) for item in self.monitor.states["alsa"]["alsa_mixers"]]
+                        choices = [(item, item) for item in self.monitor.states["alsa"]["mixers"]]
                         vars()[key] = SelectField(label=label, choices=choices, id=key, default=value)
                     elif key == "ALSA_SOUND_DEVICE":
-                        choices = [(item, item) for item in self.monitor.states["alsa"]["alsa_devices"]]
+                        choices = [(item, item) for item in self.monitor.states["alsa"]["audio_devices"]]
+                        vars()[key] = SelectField(label=label, choices=choices, id=key, default=value)
+                    elif key == "ALSA_CAPTURE_DEVICE":
+                        choices = [(item, item) for item in self.monitor.states["alsa"]["capture_devices"]]
                         vars()[key] = SelectField(label=label, choices=choices, id=key, default=value)
                     elif isinstance(value, (str, unicode)):
                         vars()[key] = StringField(label=label, id=key, default=value)

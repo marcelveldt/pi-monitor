@@ -82,7 +82,7 @@ def is_installed(dietpi_id="", bin_path=""):
     return is_installed
 
 
-def run_proc(cmd_str, check_result=False, ignore_error=True):
+def run_proc(cmd_str, check_result=True, ignore_error=True):
     ''' execute command with optional waiting for the results'''
     if isinstance(cmd_str, list):
         args = cmd_str

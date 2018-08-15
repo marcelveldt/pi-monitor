@@ -116,7 +116,7 @@ class Monitor():
         loop_timeout = 1200
         while not self._exit:
             # process commands queue
-            while not self._cmd_queue.empty():
+            while not self._cmd_queue.empty() and not self._exit:
                 data = self._cmd_queue.get()
                 try:
                     self._process_command(*data)
@@ -268,6 +268,8 @@ class Monitor():
         in the event of a SIGTERM or SIGINT.
         """
         self._exit = True
+
+        LOGGER.info("Exit requested!")
 
         #turn off power
         self._set_power(False)

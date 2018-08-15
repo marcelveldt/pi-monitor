@@ -16,7 +16,7 @@ def setup(monitor):
         LOGGER.debug("Webconfig module is not enabled!")
         return False
     import_or_install("flask", ["Flask", "render_template", "flash", "request", "send_file", "redirect", "jsonify"], True, installpip="Flask")
-    import_or_install("wtforms", ["TextField", "TextAreaField", "StringField", "SubmitField", "BooleanField", "IntegerField", "FloatField", "SelectField"], True, installpip="WTForms")
+    import_or_install("wtforms", ["StringField", "TextAreaField", "StringField", "SubmitField", "BooleanField", "IntegerField", "FloatField", "SelectField"], True, installpip="WTForms")
     import_or_install("flask_wtf", "FlaskForm", True, installpip="")
     import_or_install("bjoern", installpip="bjoern", installapt="libev-dev python-dev")
     return WebConfig(monitor)
@@ -33,7 +33,6 @@ class WebConfig(threading.Thread):
         
     def stop(self):
         self._exit.set()
-        #run_proc("curl http://localhost/shutdown")
         threading.Thread.join(self, 2)
 
     def run(self):
@@ -42,7 +41,6 @@ class WebConfig(threading.Thread):
         app = Flask(__name__, root_path=root_path)
         app.config.from_object(__name__)
         app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176a'
-        #logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
         @app.route('/player_image')
         def player_image():
@@ -79,55 +77,6 @@ class WebConfig(threading.Thread):
             else:
                 return "command is empty"
 
-        @app.route('/shutdown', methods=['POST', 'GET'])
-        def shutdown():
-            func = request.environ.get('werkzeug.server.shutdown')
-            if func is None:
-                raise RuntimeError('Not running with the Werkzeug Server')
-            func()
-            return 'Server shutting down...'
-
-        @app.route('/spotify/_zeroconf', methods=['GET', 'POST'])
-        def spotify_zeroconf():
-            LOGGER.info("spotify_zeroconf: %s" % request.args)
-            action = request.args.get('action') or request.form.get('action')
-            if not action:
-                return jsonify({
-                    'status': 301,
-                    'spotifyError': 0,
-                    'statusString': 'ERROR-MISSING-ACTION'})
-            if action == 'getInfo' and request.method == 'GET':
-                return jsonify(self.monitor.states["spotify"]["zeroconf"])
-            elif action == 'addUser' and request.method == 'POST':
-                args = request.form
-                username = str(args.get('userName'))
-                blob = str(args.get('blob'))
-                clientKey = str(args.get('clientKey'))
-                data = {
-                    "username": username,
-                    "blob": blob,
-                    "clientKey": clientKey
-                }
-                self.monitor.command("spotify", "login", data)
-                #connect_app.login(username, zeroconf=(blob,clientKey))
-                return jsonify({
-                    'status': 101,
-                    'spotifyError': 0,
-                    'statusString': 'ERROR-OK'
-                    })
-            else:
-                return jsonify({
-                    'status': 301,
-                    'spotifyError': 0,
-                    'statusString': 'ERROR-INVALID-ACTION'})
-
-        @app.route('/spotify/_zeroconf_vars', methods=['GET', 'POST'])
-        def spotify_zeroconf_vars():
-            content = request.get_json()
-            LOGGER.info("spotify_zeroconf_vars: %s" % content)
-            self.monitor.states["spotify"]["zeroconf"] = content
-            return "OK"
-
         def get_logs():
             with open('/tmp/pi-monitor.log') as f:
                 data = f.read()
@@ -147,7 +96,7 @@ class WebConfig(threading.Thread):
                         choices = [(item, item) for item in self.monitor.states["alsa"]["alsa_devices"]]
                         vars()[key] = SelectField(label=label, choices=choices, id=key, default=value)
                     elif isinstance(value, (str, unicode)):
-                        vars()[key] = TextField(label=label, id=key, default=value)
+                        vars()[key] = StringField(label=label, id=key, default=value)
                     elif isinstance(value, bool):
                         vars()[key] = BooleanField(label=label, id=key, default=value)
                     elif isinstance(value, int):
@@ -156,10 +105,10 @@ class WebConfig(threading.Thread):
                         vars()[key] = FloatField(label=label, id=key, default=value)
                     elif isinstance(value, list):
                         values_str = ",".join([str(item) for item in value])
-                        vars()[key] = TextField(label=label, id=key, default=values_str)
+                        vars()[key] = StringField(label=label, id=key, default=values_str)
                     else:
                         LOGGER.warning("unknown type for key %s" % key)
-                        vars()[key] = TextField(label=label, id=key, default=value)
+                        vars()[key] = StringField(label=label, id=key, default=value)
             form = ConfigForm()
             print form.errors
             if request.method == 'POST':

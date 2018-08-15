@@ -270,6 +270,7 @@ class Monitor():
         self._exit = True
 
         LOGGER.info("Exit requested!")
+        self._saveconfig(False)
 
         #turn off power
         self._set_power(False)
@@ -284,15 +285,15 @@ class Monitor():
         LOGGER.info("Exiting on signal %d" % (signum))
         sys.exit(signum)
 
-    def _saveconfig(self):
+    def _saveconfig(self, autoreload=True):
         config_changed = self._lastconfig != self.config["last_updated"]
         if config_changed:
-            LOGGER.info("The configuration is changed! We need to reload.")
             self._lastconfig = self.config
             with open(CONFIG_FILE, "w") as json_file:
                 json_file.write(self.config.json)
-            self.command("system", "reload")
-            #self.command("system", "restart")
+            if autoreload:
+                LOGGER.info("The configuration is changed! We need to reload.")
+                self.command("system", "reload")
         else:
             LOGGER.info("Configuration did not change!")
 

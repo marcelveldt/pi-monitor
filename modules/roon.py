@@ -35,7 +35,7 @@ def setup(monitor):
         LOGGER.debug("Squeezelite module is enabled. You can not use Roon in squeezelite mode at the same time!")
         return False
     import_or_install("roon", "RoonApi", True, installpip="roonapi")
-    return RoonPlayer(monitor, roon_proxy, player_name, enable_squeezelite)
+    return RoonPlayer(monitor, player_name, enable_squeezelite)
 
 
 class RoonPlayer(threading.Thread):
@@ -46,10 +46,9 @@ class RoonPlayer(threading.Thread):
     _squeezelite_proc = None
     _roonapi = None
 
-    def __init__(self, monitor, proxy_address, player_name, enable_squeezelite):
+    def __init__(self, monitor, player_name, enable_squeezelite):
         threading.Thread.__init__(self)
         self.player_name = player_name
-        self.proxy_address = proxy_address
         self.monitor = monitor
         self.enable_squeezelite = enable_squeezelite
         self.monitor.states["roon"] = PlayerMetaData("Roon")

@@ -48,7 +48,7 @@ class SqueezelitePlayer(threading.Thread):
         self._exit.set()
         if self._squeezelite_proc:
             self._squeezelite_proc.terminate()
-        threading.Thread.join(self, 10)
+        threading.Thread.join(self, 2)
 
     def command(self, cmd, cmd_data=None):
         ''' send command to lms'''

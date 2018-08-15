@@ -81,7 +81,7 @@ class RoonPlayer(threading.Thread):
             self._squeezelite_proc.terminate()
         if self._roonapi:
             self._roonapi.stop()
-        threading.Thread.join(self, 10)
+        threading.Thread.join(self, 2)
 
     def command(self, cmd, cmd_data=None):
         ''' send command to roon output/zone'''

@@ -37,7 +37,7 @@ class OLEDDisplay(threading.Thread):
 
     def stop(self):
         self._exit.set()
-        threading.Thread.join(self, 10)
+        threading.Thread.join(self, 2)
 
     def run(self):
 

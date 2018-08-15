@@ -64,7 +64,7 @@ class MQTT(threading.Thread):
         self.publish(self.config["MQTT_TOPIC_AVAILABILITY"], "0", qos=0, retain=True)
         self._mqttc.disconnect()
         self._mqttc.loop_stop()
-        threading.Thread.join(self, 10)
+        threading.Thread.join(self, 2)
 
     def publish(self, topic, value, qos=None, retain=None):
         LOGGER.debug("publish %s to topic %s" %(value, topic))

@@ -51,7 +51,7 @@ class SpotifyPlayer(threading.Thread):
             # we need to send a kill signal to the chrooted python script instead of the bash script that runs chroot to clean stuff up correctly
         if self._avahi_proc:
             self._avahi_proc.terminate()
-        threading.Thread.join(self, 10)
+        threading.Thread.join(self, 2)
 
     def command(self, cmd, cmd_data=None):
         ''' send command to player'''

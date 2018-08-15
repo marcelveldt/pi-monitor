@@ -25,7 +25,7 @@ class SystemState(threading.Thread):
         
     def stop(self):
         self._exit.set()
-        threading.Thread.join(self, 10)
+        threading.Thread.join(self, 2)
 
     def update_states(self):
         self.monitor.states["systemstate"]["cputemp"] = self._get_cputemp()

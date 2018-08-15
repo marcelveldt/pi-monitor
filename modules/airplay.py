@@ -56,7 +56,7 @@ class AirPlayPlayer(threading.Thread):
         if self._remote:
             del self._remote
             self._remote = None
-        threading.Thread.join(self, 10)
+        threading.Thread.join(self, 2)
 
     def command(self, cmd, cmd_data=None):
         ''' send command to airplay output/zone'''

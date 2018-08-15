@@ -37,7 +37,7 @@ class LCDDisplay(threading.Thread):
         self._exit.set()
         self.disable_lcd()
         self.monitor.deregister_state_callback(self.state_changed_event, "player")
-        threading.Thread.join(self, 10)
+        threading.Thread.join(self, 2)
 
     def run(self):
         while not self._exit.isSet():

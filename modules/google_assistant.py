@@ -201,7 +201,7 @@ class GoogleAssistantPlayer(threading.Thread):
         self._exit.set()
         if self._assistant:
             self._assistant.send_text_query("exit")
-        threading.Thread.join(self, 10)
+        threading.Thread.join(self, 2)
 
     def run(self):
         if not os.path.isfile(self.credentialsfile):

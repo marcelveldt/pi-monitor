@@ -34,7 +34,7 @@ class WebConfig(threading.Thread):
     def stop(self):
         self._exit.set()
         #run_proc("curl http://localhost/shutdown")
-        threading.Thread.join(self, 10)
+        threading.Thread.join(self, 2)
 
     def run(self):
         this_dir = os.path.dirname(os.path.abspath(__file__))

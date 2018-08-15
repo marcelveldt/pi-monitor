@@ -59,7 +59,7 @@ class RoonPlayer(threading.Thread):
             "publisher": "marcelveldt",
             "email": "marcelveldt@users.noreply.github.com"
         }
-        token = monitor.config.get("ROON_AUTH_TOKEN")
+        token = monitor.config.get("ROON_AUTH_TOKEN","")
         self._roonapi = RoonApi(token)
         monitor.config["ROON_AUTH_TOKEN"] = self._roonapi.token
         self._roonapi.register_state_callback(self._roon_state_callback, event_filter="zones_changed", id_filter=self.player_name)

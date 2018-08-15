@@ -294,6 +294,8 @@ class ConfigDict(OrderedDict):
     def get(self, key, defaultvalue=None):
         if not key in self and defaultvalue != None:
             super(ConfigDict, self).__setitem__(key, defaultvalue)
+        elif not key in self and defaultvalue == None:
+            return None
         return self.__getitem__(key)
 
     @property

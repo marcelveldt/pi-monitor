@@ -270,7 +270,7 @@ class Monitor():
         self._exit = True
 
         LOGGER.info("Exit requested!")
-        self._saveconfig(False)
+        self._saveconfig(False, True)
 
         #turn off power
         self._set_power(False)
@@ -285,9 +285,9 @@ class Monitor():
         LOGGER.info("Exiting on signal %d" % (signum))
         sys.exit(signum)
 
-    def _saveconfig(self, autoreload=True):
+    def _saveconfig(self, autoreload=True, force=False):
         config_changed = self._lastconfig != self.config["last_updated"]
-        if config_changed:
+        if config_changed or force:
             self._lastconfig = self.config
             with open(CONFIG_FILE, "w") as json_file:
                 json_file.write(self.config.json)

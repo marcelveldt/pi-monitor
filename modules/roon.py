@@ -5,7 +5,7 @@
 import os
 import time
 import threading
-from resources.lib.utils import PlayerMetaData, json, requests, PLATFORM, check_software, run_proc, subprocess, DEVNULL, PLAYING_STATE, VOLUME_CONTROL_DISABLED, import_or_install
+from resources.lib.utils import PlayerMetaData, json, requests, PLATFORM, check_software, run_proc, subprocess, DEVNULL, PLAYING_STATE, VOLUME_CONTROL_DISABLED, import_or_install, HOSTNAME
 
 
 LOOP_WAIT = 4
@@ -53,11 +53,12 @@ class RoonPlayer(threading.Thread):
         self.enable_squeezelite = enable_squeezelite
         self.monitor.states["roon"] = PlayerMetaData("Roon")
         appinfo = {
-            "extension_id": "pi_monitor",
-            "display_name": "Pi Monitor",
+            "extension_id": "pi_monitor_%s" % HOSTNAME,
+            "display_name": "Pi Monitor (%s)" % HOSTNAME,
             "display_version": "1.0.0",
             "publisher": "marcelveldt",
-            "email": "marcelveldt@users.noreply.github.com"
+            "email": "marcelveldt@users.noreply.github.com",
+            "website": "https://github.com/marcelveldt/pi-monitor"
         }
         token = monitor.config.get("ROON_AUTH_TOKEN","")
         self._roonapi = RoonApi(appinfo, token)

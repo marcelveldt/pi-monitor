@@ -31,18 +31,19 @@ cp -r "$THIS_DIR/." "$INSTALL_DIR/usr/src/app/"
 
 function cleanup {
     echo "cleaning up chroot mounts"
-    umount $INSTALL_DIR/dev
-    umount $INSTALL_DIR/dev/pts
-    umount $INSTALL_DIR/proc
-    umount $INSTALL_DIR/sys
+    umount -f $INSTALL_DIR/sys
+    umount -f $INSTALL_DIR/proc
+    umount -f $INSTALL_DIR/dev/pts
+    umount -f $INSTALL_DIR/dev
 }
 
 # run executable from chroot
 trap cleanup EXIT
 mount --bind /dev $INSTALL_DIR/dev
-mount -t sysfs none $INSTALL_DIR/sys
-mount -t proc none $INSTALL_DIR/proc
 mount --bind /dev/pts $INSTALL_DIR/dev/pts
+mount --bind /proc $INSTALL_DIR/proc
+mount --bind /sys $INSTALL_DIR/sys
+
 
 sudo cp /etc/resolv.conf $INSTALL_DIR/etc/
 sudo cp $THIS_DIR/spotify_appkey.key $INSTALL_DIR/usr/src/app

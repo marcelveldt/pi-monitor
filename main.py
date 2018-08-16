@@ -409,7 +409,7 @@ class StatesWatcher(threading.Thread):
             # free alsa by quickly restarting playback
             if flush_needed:
                 self.monitor.command(player_key, "pause")
-                time.sleep(1)
+                time.sleep(2)
                 self.monitor.command(player_key, "play")
         # handle notifications and alerts
         if player_key != cur_player and self.states[player_key]["state"] in INTERRUPT_STATES:

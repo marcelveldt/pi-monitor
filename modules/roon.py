@@ -61,8 +61,7 @@ class RoonPlayer(threading.Thread):
             "website": "https://github.com/marcelveldt/pi-monitor"
         }
         token = monitor.config.get("ROON_AUTH_TOKEN","")
-        self._roonapi = RoonApi(appinfo, token)
-        monitor.config["ROON_AUTH_TOKEN"] = self._roonapi.token
+        self._roonapi = RoonApi(appinfo, token, blocking_init=False)
         self._roonapi.register_state_callback(self._roon_state_callback, event_filter="zones_changed", id_filter=self.player_name)
         
 
@@ -77,6 +76,7 @@ class RoonPlayer(threading.Thread):
 
     def stop(self):
         self._exit.set()
+        monitor.config["ROON_AUTH_TOKEN"] = self._roonapi.token
         if self._squeezelite_proc:
             self._squeezelite_proc.terminate()
         if self._roonapi:
@@ -145,7 +145,7 @@ class RoonPlayer(threading.Thread):
     def _get_volume(self):
         ''' get current volume level of player'''
         vol_level = 0
-        output_details = self._roonapi.outputs[self.output_id]
+        output_details = self._roonapi.outputs.get(self.output_id)
         if output_details and output_details.get("volume"):
             if output_details["volume"]["type"] == "db":
                 vol_level = int(float(output_details['volume']['value']) / 80 * 100 + 100)

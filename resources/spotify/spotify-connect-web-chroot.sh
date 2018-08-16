@@ -31,6 +31,7 @@ cp -r "$THIS_DIR/." "$INSTALL_DIR/usr/src/app/"
 
 function cleanup {
     echo "cleaning up chroot mounts"
+    pkill -f spotify_connect.py # make sure that spotify connect is terminated
     umount -f $INSTALL_DIR/sys
     umount -f $INSTALL_DIR/proc
     umount -f $INSTALL_DIR/dev/pts

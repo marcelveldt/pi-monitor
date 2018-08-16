@@ -47,8 +47,7 @@ class SpotifyPlayer(threading.Thread):
     def stop(self):
         self._exit.set()
         if self._spotify_proc:
-            os.system("pkill -f spotify_connect.py")
-            # we need to send a kill signal to the chrooted python script instead of the bash script that runs chroot to clean stuff up correctly
+            self._spotify_proc.terminate()
         if self._avahi_proc:
             self._avahi_proc.terminate()
         threading.Thread.join(self, 2)
@@ -138,7 +137,7 @@ class SpotifyPlayer(threading.Thread):
         # currently always use the chroot version as it is the most stable (surpisingly enough)
         # the chroot version works on both armv6 and armv7
         exec_path = os.path.join(RESOURCES_FOLDER, "spotify", "spotify-connect-web-chroot.sh")
-        args = [exec_path, "--bitrate", "320", "--name", HOSTNAME]
+        args = [exec_path, "--bitrate", "320", "--name", '"%s"'%HOSTNAME.encode("utf-8")]
         if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:
             args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
@@ -150,7 +149,7 @@ class SpotifyPlayer(threading.Thread):
             self._spotify_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
 
         # launch avahi for auto discovery
-        args = ["/usr/bin/avahi-publish-service", HOSTNAME, 
+        args = ["/usr/bin/avahi-publish-service", HOSTNAME.encode("utf-8"), 
                 "_spotify-connect._tcp", "4000", "VERSION=1.0", "CPath=/login/_zeroconf"]
         self._avahi_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
 

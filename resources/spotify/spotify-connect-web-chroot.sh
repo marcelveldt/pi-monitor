@@ -46,3 +46,4 @@ mount -t dev/pts none $INSTALL_DIR/dev/pts
 sudo cp /etc/resolv.conf $INSTALL_DIR/etc/
 sudo cp $THIS_DIR/spotify_appkey.key $INSTALL_DIR/usr/src/app
 sudo chroot $INSTALL_DIR /bin/bash -c "cd /usr/src/app && python spotify_connect.py $*"
+cleanup

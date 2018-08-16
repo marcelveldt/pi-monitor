@@ -403,7 +403,7 @@ class StatesWatcher(threading.Thread):
             # signal any other players about this so they must stop playing
             flush_needed = False
             for player in self.states["player"]["players"]:
-                if player != player_key and self.states[player]["state"] in [PLAYING_STATES]:
+                if player != player_key and self.states[player]["state"] in PLAYING_STATES:
                     self.monitor.command(player, "stop")
                     flush_needed = True
             # free alsa by quickly restarting playback

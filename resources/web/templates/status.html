@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Status{% endblock %}
+{% block content %}
+<!-- Status page -->
+  <div class="card-deck" style="max-height: 100%%">
+    <div class="card" style="max-width: 50%; max-height: 80%">
+      <div class="card-header"><h3 class="card-title">Mediaplayer</h3></div>
+      <img class="card-img-top img-responsive" src="/player_image" alt="Card image cap" style="width: 100%; object-fit: cover" id="player_image"/>
+      <div class="card-body">
+        <h5 class="card-title" id="player_state"></h5>
+        <p class="card-text" id="player_artist"></p>
+        <p class="card-text" id="player_title"></p>
+        <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;" onClick="command('player', 'toggleplaypause');">Play</a><br><br>
+        <a href="#" class="btn btn-secondary" id="btn_next" style="width: 100%;" onClick="command('player', 'next');">Next</a>
+      </div>
+    </div>
+    <div class="card" style="max-width: 50%;">
+      <div class="card-header"><h3 class="card-title">Status</h3></div>
+      <div class="card-body">
+        <h5 class="card-title">Power state: </h5><h5 class="card-title" id="power_state"></h5>
+        <p class="card-text"></p>Last updated: <p class="card-text" id="last_updated"></p>
+<!--                 <p class="card-text" id="player_title"></p>
+        <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;">Play</a><br><br>
+        <a href="#" class="btn btn-secondary" id="btn_next" style="width: 100%;">Next</a> -->
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block scripts %}
+<script>
+  setInterval(function(){ // load the data from your endpoint into the div
+      var url = '/player_info.json';
+      var data = {
+        q: 'search',
+        text: 'my text'
+      };
+      $.getJSON(url, data, function (data, status) {
+        if (status === 'success') {
+          //only update if the timestamp changed
+          if ($("#last_updated").html() != data.last_updated) {
+              console.log("data changed!")
+              $("#player_state").html(data.playername + ' is ' + data.state);
+              $("#player_artist").html('Artist: ' + data.artist);
+              $("#player_title").html('Title: ' + data.title);
+              $("#player_image").attr( 'src', '/player_image?cache='+data.last_updated );
+              $("#last_updated").html(data.last_updated);
+              if (data.power)
+                $("#power_state").html("ON");
+              else
+                $("#power_state").html("OFF");
+              if (data.state == "playing"){
+                $("#btn_play").html("Pause");
+              }
+              else {
+                $("#btn_play").html("Play");
+              }
+            }
+        }
+      });
+  },500);
+</script>
+{% endblock %}

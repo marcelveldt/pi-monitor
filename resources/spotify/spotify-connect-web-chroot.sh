@@ -32,10 +32,11 @@ cp -r "$THIS_DIR/." "$INSTALL_DIR/usr/src/app/"
 function cleanup {
     echo "cleaning up chroot mounts"
     pkill -f spotify_connect.py # make sure that spotify connect is terminated
-    umount -f $INSTALL_DIR/sys
-    umount -f $INSTALL_DIR/proc
-    umount -f $INSTALL_DIR/dev/pts
-    umount -f $INSTALL_DIR/dev
+    umount -lf $INSTALL_DIR/dev/pts
+    umount -lf $INSTALL_DIR/dev
+    umount -lf $INSTALL_DIR/sys
+    umount -lf $INSTALL_DIR/proc
+    
 }
 
 # run executable from chroot
@@ -49,3 +50,4 @@ mount -t sysfs sys $INSTALL_DIR/sys
 sudo cp /etc/resolv.conf $INSTALL_DIR/etc/
 sudo cp $THIS_DIR/spotify_appkey.key $INSTALL_DIR/usr/src/app
 sudo chroot $INSTALL_DIR /bin/bash -c "cd /usr/src/app && python spotify_connect.py $*"
+exit

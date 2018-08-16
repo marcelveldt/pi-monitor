@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Pi Streamer - {% block title %}{% endblock %}</title>
+    {% endblock %}
+</head>
+<body>
+    <!-- navigation bar at top -->
+    <nav class="navbar navbar-expand-lg sticky-top navbar-light bg-light">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">Pi Streamer</a>
+        </div>
+        <ul class="nav nav-pills">
+          <li class="nav-item"><a class="nav-link" href="/" target="_self">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="/config.html" target="_self">Configuration</a></li>
+          <li class="nav-item"><a class="nav-link" href="/log.html" target="_self">Log</a></li>
+        </ul>
+      </div>
+    </nav>
+    <!-- content - inserted by templates -->
+    <!-- alert messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              {% for message in messages %}
+                  {% if "Error" not in message[1]: %}
+                      <div class="alert alert-success" data-auto-dismiss role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <strong>Success!</strong> {{ message[1] }}
+                      </div>
+                  {% endif %}
+                  {% if "Error" in message[1]: %}
+                      <div class="alert alert-warning" data-auto-dismiss role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        {{ message[1] }}
+                      </div>
+                  {% endif %}
+              {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <div id="container-fluid" style="padding-left: 15px; padding-right: 15px; padding-top: 30px; padding-bottom: 30px;">{% block content %}{% endblock %}</div>
+    <div id="footer">
+        {% block footer %}
+        &copy; Copyright 2018 by <a href="https://github.com/marcelveldt/pi-monitor">marcelveldt</a>.
+        {% endblock %}
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script src="static/js/bootstrap-auto-dismiss-alert.js"></script>
+    <script>
+      function command(target, command) {
+      $.getJSON('/command', {
+            command: command,
+            target: target,
+            format: "json"
+        }, function (data) {
+            alert(data);
+        });
+        return false;
+      }
+      function changePage(event) {
+          window.location.href = $(event.target).attr('href');
+      }
+      $(function () {
+          $('a.nav-link').click( changePage );
+      });
+    </script>
+    <!-- additional scripts needed by the template -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

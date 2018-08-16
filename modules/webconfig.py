@@ -77,12 +77,18 @@ class WebConfig(threading.Thread):
             else:
                 return "command is empty"
 
-        def get_logs():
+        @app.route("/log.html")
+        def log():
             with open('/tmp/pi-monitor.log') as f:
                 data = f.read()
-            return data
+            data = data.replace("\n", "<br>")
+            return render_template('log.html', data=data)
 
-        @app.route("/", methods=['GET', 'POST'])
+        @app.route("/")
+        def status():
+            return render_template('status.html', config=self.monitor.config, states=self.monitor.states)
+
+        @app.route("/config.html", methods=['GET', 'POST'])
         def config():
             class ConfigForm(FlaskForm):
                 for key, value in self.monitor.config.items():
@@ -139,7 +145,7 @@ class WebConfig(threading.Thread):
                         else:
                             self.monitor.config[key] = new_value
                     self.monitor.command("system", "saveconfig")               
-            return render_template('config.html', form=form)
+            return render_template('config.html', form=form, config=self.monitor.config)
 
         #app.run(host='0.0.0.0', port=80, debug=False, use_reloader=False)
         bjoern.run(app, '0.0.0.0', 80, reuse_port=True)

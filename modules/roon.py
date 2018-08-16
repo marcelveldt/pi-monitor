@@ -76,7 +76,7 @@ class RoonPlayer(threading.Thread):
 
     def stop(self):
         self._exit.set()
-        monitor.config["ROON_AUTH_TOKEN"] = self._roonapi.token
+        self.monitor.config["ROON_AUTH_TOKEN"] = self._roonapi.token
         if self._squeezelite_proc:
             self._squeezelite_proc.terminate()
         if self._roonapi:

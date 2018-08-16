@@ -29,18 +29,20 @@ fi
 # copy our customized code
 cp -r "$THIS_DIR/." "$INSTALL_DIR/usr/src/app/"
 
+function cleanup {
+    for i in dev/pts proc sys dev
+    do
+        umount -$INSTALL_DIR/$i
+    done
+}
+
 # run executable from chroot
-trap "sudo umount $INSTALL_DIR/dev $INSTALL_DIR/proc" EXIT
+trap cleanup EXIT
 mount -o bind /dev $INSTALL_DIR/dev
 mount -t sysfs none $INSTALL_DIR/sys
 mount -t proc none $INSTALL_DIR/proc
-mount -t devpts none $INSTALL_DIR/dev/pts
+mount -t dev/pts none $INSTALL_DIR/dev/pts
 
 sudo cp /etc/resolv.conf $INSTALL_DIR/etc/
 sudo cp $THIS_DIR/spotify_appkey.key $INSTALL_DIR/usr/src/app
 sudo chroot $INSTALL_DIR /bin/bash -c "cd /usr/src/app && python spotify_connect.py $*"
-
-for i in dev/pts proc sys dev
-do
-    umount -$INSTALL_DIR/$i
-done

@@ -41,8 +41,8 @@ function cleanup {
 trap cleanup EXIT
 mount --bind /dev $INSTALL_DIR/dev
 mount --bind /dev/pts $INSTALL_DIR/dev/pts
-mount --bind /proc $INSTALL_DIR/proc
-mount --bind /sys $INSTALL_DIR/sys
+mount -t proc proc $INSTALL_DIR/proc
+mount -t sysfs sys $INSTALL_DIR/sys
 
 
 sudo cp /etc/resolv.conf $INSTALL_DIR/etc/

@@ -145,7 +145,7 @@ class WebConfig(threading.Thread):
                         else:
                             self.monitor.config[key] = new_value
                     self.monitor.command("system", "saveconfig")               
-            return render_template('config.html', form=form, config=self.monitor.config)
+            return render_template('config.html', form=form, config=self.monitor.config, fields=[])
 
         #app.run(host='0.0.0.0', port=80, debug=False, use_reloader=False)
         bjoern.run(app, '0.0.0.0', 80, reuse_port=True)

@@ -111,7 +111,7 @@
               <br>
               <div class="form-group">
                   {% for field in form %}
-                  {% if not field.id.startswith("GPIO") and not field.id.startswith("MQTT") and not field.id.startswith("ROON") and not "ALSA" in field.id and not "VOLUME" in field.id and not "POWER" in field.id: and not "ENABLE_MODULE" in field.id and field.id != "last_updated" %}
+                  {% if not field.id.startswith("GPIO") and not field.id.startswith("MQTT") and not field.id.startswith("ROON") and not "ALSA" in field.id and not "VOLUME" in field.id and not "POWER" in field.id and not "ENABLE_MODULE" in field.id and field.id != "last_updated": %}
                   {% if field.id not in ["csrf_token", "last_updated"]: %}
                   <label for="{{ field.id }}">{{ field.label }}</label>
                   {% endif %}

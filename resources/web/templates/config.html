@@ -33,8 +33,7 @@
               <br>
               <div class="form-group">
                   {% for field in form %}
-                  {% if field.id.startswith("ENABLE_MODULE"):
-                        fields.append(field.id) %}
+                  {% if field.id.startswith("ENABLE_MODULE"): %}
                   <label for="{{ field.id }}">{{ field.label }}</label>
                   {{ field(class_="form-control") }}
                   <br>
@@ -47,8 +46,7 @@
               <br>
               <div class="form-group">
                   {% for field in form %}
-                  {% if field.id.startswith("MQTT"):
-                        fields.append(field.id) %}
+                  {% if field.id.startswith("MQTT"): %}
                   <label for="{{ field.id }}">{{ field.label }}</label>
                   {{ field(class_="form-control") }}
                   <br>
@@ -61,8 +59,7 @@
               <br>
               <div class="form-group">
                   {% for field in form %}
-                  {% if field.id.startswith("GPIO"):
-                        fields.append(field.id) %}
+                  {% if field.id.startswith("GPIO"): %}
                   <label for="{{ field.id }}">{{ field.label }}</label>
                   {{ field(class_="form-control") }}
                   <br>
@@ -75,8 +72,7 @@
               <br>
               <div class="form-group">
                   {% for field in form %}
-                  {% if field.id.startswith("ROON"):
-                        fields.append(field.id) %}
+                  {% if field.id.startswith("ROON"): %}
                   <label for="{{ field.id }}">{{ field.label }}</label>
                   {{ field(class_="form-control") }}
                   <br>
@@ -89,8 +85,7 @@
               <br>
               <div class="form-group">
                   {% for field in form %}
-                  {% if "ALSA" in field.id or "VOLUME" in field.id:
-                        fields.append(field.id) %}
+                  {% if "ALSA" in field.id or "VOLUME" in field.id: %}
                   <label for="{{ field.id }}">{{ field.label }}</label>
                   {{ field(class_="form-control") }}
                   <br>
@@ -104,7 +99,6 @@
               <div class="form-group">
                   {% for field in form %}
                   {% if "POWER" in field.id: %}
-                        fields.append(field.id) %}
                   <label for="{{ field.id }}">{{ field.label }}</label>
                   {{ field(class_="form-control") }}
                   <br>
@@ -117,7 +111,7 @@
               <br>
               <div class="form-group">
                   {% for field in form %}
-                  {% if field.id not in fields: %}
+                  {% if not field.id.startswith("GPIO") and not field.id.startswith("MQTT") and not field.id.startswith("ROON") and not "ALSA" in field.id and not "VOLUME" in field.id and not "POWER" in field.id: %}
                   {% if field.id not in ["csrf_token", "last_updated"]: %}
                   <label for="{{ field.id }}">{{ field.label }}</label>
                   {% endif %}

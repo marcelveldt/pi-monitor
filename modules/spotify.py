@@ -144,7 +144,7 @@ class SpotifyPlayer(threading.Thread):
         #     args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["--backend", "alsa", "--device", self.monitor.config["ALSA_SOUND_DEVICE"]]
-        if self.monitor.config["SPOTIFY_VOLUME_NORMALISATION"]:
+        if self.monitor.config.get("SPOTIFY_VOLUME_NORMALISATION", False):
             args += ["--enable-volume-normalisation"]
         if self.monitor.config["ENABLE_DEBUG"]:
             LOGGER.debug("Starting librespot: %s" % " ".join(args))

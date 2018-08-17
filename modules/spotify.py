@@ -7,7 +7,7 @@ import time
 import threading
 import thread
 import subprocess
-from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, RESOURCES_FOLDER, VOLUME_CONTROL_DISABLED
+from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, RESOURCES_FOLDER, VOLUME_CONTROL_DISABLED, PAUSED_STATE, PLAYING_STATE, STOPPED_STATE
 import socket 
 
 """
@@ -33,7 +33,8 @@ class SpotifyPlayer(threading.Thread):
     _exit = threading.Event()
     _last_state = None
     _spotify_proc = None
-    _avahi_proc = None
+    _spotify_socket = None
+    _token = None
 
     def __init__(self, monitor):
         self.monitor = monitor
@@ -46,6 +47,8 @@ class SpotifyPlayer(threading.Thread):
         self._exit.set()
         if self._spotify_proc:
             self._spotify_proc.terminate()
+        if self._spotify_socket:
+            self._spotify_socket.stop()
         threading.Thread.join(self, 2)
 
     def command(self, cmd, cmd_data=None):
@@ -62,22 +65,15 @@ class SpotifyPlayer(threading.Thread):
             return False
         elif cmd == "previous":
             cmd = "prev"
-        return self._api_execute("api/playback/%s" % cmd)
-
-    def _volume_get(self):
-        ''' get current volume level of player'''
-        vol_level = 0
-        output_details = self._api_request("api/playback/volume")
-        if output_details and output_details.get("volume"):
-            vol_level = int(float(output_details['volume'] / 655.35))
-        return vol_level
+        return self._api_post("api/playback/%s" % cmd)
 
     def _api_request(self, endpoint, params=None):
         '''get info from json api'''
         result = {}
-        url = "http://localhost:4000/%s" % endpoint
+        url = "https://api.spotify.com/v1/me/player/%s" % endpoint
         params = params if params else {}
         try:
+            headers = {"Authorization: Bearer": self._token["accessToken"]}
             response = requests.get(url, params=params, timeout=10)
             if response and response.content and response.status_code == 200:
                 if "{" in response.content:
@@ -92,50 +88,50 @@ class SpotifyPlayer(threading.Thread):
             result = None
         return result
 
-    def _api_execute(self, endpoint, params=None):
-        '''execute command on json api without waiting for result'''
-        url = "http://localhost:4000/%s" % endpoint
+    def _api_post(self, endpoint, params=None):
+        '''get info from json api'''
+        result = {}
+        url = "https://api.spotify.com/v1/me/player/%s" % endpoint
         params = params if params else {}
         try:
-            requests.get(url, params=params, timeout=0.5)
-            return True
-        except Exception as exc:
-            #LOGGER.debug(exc)
-            return False
-
-    def _update_metadata(self):
-        metadata = self._api_request("api/info/metadata")
-        self.monitor.states["spotify"]["state"] = self._get_state()
-        if metadata:
-            self.monitor.states["spotify"]["volume_level"] = self._volume_get()
-            self.monitor.states["spotify"]["artist"] = metadata["artist_name"]
-            self.monitor.states["spotify"]["album"] = metadata["album_name"]
-            self.monitor.states["spotify"]["title"] = metadata["track_name"]
-            self.monitor.states["spotify"]["duration"] = metadata["duration"]
-            if metadata["cover_uri"]:
-                self.monitor.states["spotify"]["cover_url"] = "http://localhost:4000/api/info/image_url/%s" % metadata["cover_uri"]
+            headers = {"Authorization: Bearer": self._token["accessToken"]}
+            response = requests.post(url, data=params, timeout=2)
+            if response and response.content and response.status_code == 200:
+                if "{" in response.content:
+                    result = json.loads(response.content.decode('utf-8', 'replace'))
+                else:
+                    result = response.content.decode('utf-8')
             else:
-                self.monitor.states["spotify"]["cover_url"] = ""
+                LOGGER.error("Invalid or empty reponse from server - endpoint: %s - server response: %s - %s" %
+                        (endpoint, response.status_code, response.content))
+        except Exception as exc:
+            #LOGGER.error(exc)
+            result = None
+        return result
 
-    def _get_state(self):
-        ''' current state of zone '''
-        cur_state = "stopped"
-        state_details = self._api_request("api/info/status")
-        if state_details:
-            if state_details["active"] and state_details["playing"]:
-                cur_state = "playing"
-            elif state_details["active"] and not state_details["playing"]:
-                cur_state = "paused"
-        return cur_state
-
-    def udp_server(self, host='127.0.0.1', port=5030):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        LOGGER.info("Listening on udp %s:%s" % (host, port))
-        s.bind((host, port))
-        while not self._exit.isSet():
-            (data, addr) = s.recvfrom(128*1024)
-            LOGGER.info("received from %s --> %s" %(addr, data))
+    def _event_callback(self, event, data):
+        ''' event received from socket to librespot'''
+        LOGGER.info("Got event from librespot: %s" % event)
+        if event == "metadata":
+            self.monitor.states["spotify"].update({
+                    "title": data["track_name"],
+                    "artist": data["artist_name"],
+                    "album": data["album_name"],
+                    "duration": data["duration_ms"]/1000,
+                    "cover_url": "https://i.scdn.co/image/%s" % data["albumartId"]
+                })
+        elif event == "token":
+            self._token = token
+        elif event == "SessionActive":
+            self.monitor.states["spotify"]["state"] = PAUSED_STATE
+        elif event == "DeviceActive":
+            self.monitor.states["spotify"]["state"] = PAUSED_STATE
+        elif event == "DeviceInactive":
+            self.monitor.states["spotify"]["state"] = STOPPED_STATE
+        elif event == "SinkActive":
+            self.monitor.states["spotify"]["state"] = PLAYING_STATE
+        elif event == "SinkInActive":
+            self.monitor.states["spotify"]["state"] = PAUSED_STATE
 
     def run(self):
         # finally start the librespot executable
@@ -152,14 +148,49 @@ class SpotifyPlayer(threading.Thread):
             self._spotify_proc = subprocess.Popen(args)
         else:
             self._spotify_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
+        # start socket connection to listen for events
+        self._spotify_socket = SpotifySocket(self._event_callback)
 
-
-        loop_wait = 120
+        loop_wait = 1200
         while not self._exit.isSet():
             if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:
                 # daemon crashed ? restart ?
                 LOGGER.error("librespot exited ?!")
                 break
-            thread.start_new_thread(self.udp_server, ())
             self._exit.wait(loop_wait) # we just wait as we'll be notified of updates through the socket
+
+
+class SpotifySocket(threading.Thread):
+    _exit = threading.Event()
+    _socket = None
+    def __init__(self, callback):
+        self.callback = callback
+        threading.Thread.__init__(self)
+        self.daemon = True
+
+    def stop(self):
+        self._exit.set()
+        if self._socket:
+            self._socket.close()
+        threading.Thread.join(self, 2)
+
+    def run(self, host='127.0.0.1', port=5030):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        LOGGER.info("Listening on udp %s:%s" % (host, port))
+        s.bind((host, port))
+        while not self._exit.isSet():
+            (data, addr) = s.recvfrom(128*1024)
+            LOGGER.debug("received from %s --> %s" %(addr, data))
+            event = ""
+            data = data.decode("utf-8")
+            if data.startswith("{"):
+                data = json.loads(data)
+                if "token" in data:
+                    event = "token"
+                elif "metadata" in data:
+                    event = "metadata"
+            else:
+                event = data
+            self.callback(event, data)
         

@@ -7,26 +7,23 @@ import time
 import threading
 import subprocess
 from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, RESOURCES_FOLDER, VOLUME_CONTROL_DISABLED
+import socket 
 
 """
     SpotifyPlayer
     player implementation for Spotify
-    for now still using spotify-connect-web (and not raspotify/librespot) because it has hardware volume control
+    we use librespot altough it doesn't support hardware volume control
 """
 
 
 def setup(monitor):
     '''setup the module'''
-    if not ("armv6" in PLATFORM or "armv7" in PLATFORM):
+    if not ("armv6hf" in PLATFORM or "armv7hf" in PLATFORM):
         LOGGER.error("unsupported platform! %s" % PLATFORM)
         return False
     if not monitor.config.get("ENABLE_MODULE_SPOTIFY", False):
         LOGGER.warning("Spotify module is not enabled!")
         return False
-    if not check_software(bin_path="/usr/bin/avahi-publish-service", installapt="avahi-utils"):
-        LOGGER.error("avahi-utils is not installed! Please install manually")
-        return False
-
     return SpotifyPlayer(monitor)
 
 
@@ -48,8 +45,6 @@ class SpotifyPlayer(threading.Thread):
         self._exit.set()
         if self._spotify_proc:
             self._spotify_proc.terminate()
-        if self._avahi_proc:
-            self._avahi_proc.terminate()
         threading.Thread.join(self, 2)
 
     def command(self, cmd, cmd_data=None):
@@ -132,43 +127,39 @@ class SpotifyPlayer(threading.Thread):
                 cur_state = "paused"
         return cur_state
 
+    def udp_server(self, host='', port=5030):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        LOGGER.info("Listening on udp %s:%s" % (host, port))
+        s.bind((host, port))
+        while not self._exit.isSet():
+            (data, addr) = s.recvfrom(128*1024)
+            yield data
+
     def run(self):
-        # finally start the spotify executable
-        # currently always use the chroot version as it is the most stable (surpisingly enough)
-        # the chroot version works on both armv6 and armv7
-        exec_path = os.path.join(RESOURCES_FOLDER, "spotify", "spotify-connect-web-chroot.sh")
-        args = [exec_path, "--bitrate", "320", "--name", '"%s"'%HOSTNAME.encode("utf-8")]
-        if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:
-            args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
+        # finally start the librespot executable
+        exec_path = os.path.join(RESOURCES_FOLDER, "spotify", "librespot")
+        args = [exec_path, "--bitrate", "320", "--name", HOSTNAME, "--initial-volume", "100"]
+        # if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:
+        #     args += ["--mixer", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
-            args += ["--playback_device", self.monitor.config["ALSA_SOUND_DEVICE"]]
+            args += ["--backend", "alsa", "--device", self.monitor.config["ALSA_SOUND_DEVICE"]]
+        if self.monitor.config["SPOTIFY_VOLUME_NORMALISATION"]:
+            args += ["--enable-volume-normalisation"]
         if self.monitor.config["ENABLE_DEBUG"]:
-            LOGGER.debug("Starting spotify-connect-web: %s" % " ".join(args))
+            LOGGER.debug("Starting librespot: %s" % " ".join(args))
             self._spotify_proc = subprocess.Popen(args)
         else:
             self._spotify_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
 
-        # launch avahi for auto discovery
-        args = ["/usr/bin/avahi-publish-service", HOSTNAME.encode("utf-8"), 
-                "_spotify-connect._tcp", "4000", "VERSION=1.0", "CPath=/login/_zeroconf"]
-        self._avahi_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
 
         loop_wait = 120
         while not self._exit.isSet():
             if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:
                 # daemon crashed ? restart ?
-                LOGGER.error("spotify-connect-web exited !")
+                LOGGER.error("librespot exited ?!")
                 break
-            if not self.monitor.config["ENABLE_MODULE_WEBCONFIG"]:
-                # if webinterface is disabled, we need to poll
-                cur_state = self._get_state()
-                if cur_state != self._last_state:
-                    self._last_state = cur_state
-                    self._update_metadata()
-                if cur_state == "playing":
-                    self._update_metadata()
-                    loop_wait = 1
-                else:
-                    loop_wait = 3
-            self._exit.wait(loop_wait) # we just wait as we'll be notified of updates through the webinterface
+            for data in udp_server():
+                LOGGER.info("%r" % (data,))
+            self._exit.wait(loop_wait) # we just wait as we'll be notified of updates through the socket
         

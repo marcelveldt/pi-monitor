@@ -18,7 +18,7 @@ import socket
 
 def setup(monitor):
     '''setup the module'''
-    if not ("armv6hf" in PLATFORM or "armv7hf" in PLATFORM):
+    if not ("armv6" in PLATFORM or "armv7" in PLATFORM):
         LOGGER.error("unsupported platform! %s" % PLATFORM)
         return False
     if not monitor.config.get("ENABLE_MODULE_SPOTIFY", False):

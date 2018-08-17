@@ -55,7 +55,7 @@ class SpotifyPlayer(threading.Thread):
         ''' send command to player'''
         if cmd == "stop":
             cmd = "pause"
-        elif cmd == "volume_up":
+        if cmd == "volume_up":
             return False
         elif cmd == "volume_down":
             return False
@@ -63,16 +63,23 @@ class SpotifyPlayer(threading.Thread):
             return False
         elif cmd == "previous":
             cmd = "prev"
-        return self._api_post("me/player/%s" % cmd)
+        elif cmd in ["play", "pause"]:
+            return self._api_request("me/player/%s" % cmd, method="put")
+        return self._api_request("me/player/%s" % cmd, method="post")
 
-    def _api_request(self, endpoint, params=None):
+    def _api_request(self, endpoint, params=None, method="get"):
         '''get info from json api'''
         result = {}
         url = "https://api.spotify.com/v1/%s" % endpoint
         params = params if params else {}
         try:
-            headers = {"Authorization: Bearer": self._token["accessToken"]}
-            response = requests.get(url, params=params, headers=headers, timeout=10)
+            headers = {"Authorization": "Bearer %s" % self._token["accessToken"]}
+            if method == "post":
+                response = requests.post(url, json=params, headers=headers, timeout=10)
+            elif method == "put":
+                response = requests.put(url, json=params, headers=headers, timeout=10)
+            else:
+                response = requests.get(url, params=params, headers=headers, timeout=10)
             if response and response.content and response.status_code == 200:
                 if "{" in response.content:
                     result = json.loads(response.content.decode('utf-8', 'replace'))
@@ -84,31 +91,6 @@ class SpotifyPlayer(threading.Thread):
         except Exception as exc:
             #LOGGER.error(exc)
             result = None
-        return result
-
-    def _api_post(self, endpoint, params=None):
-        '''get info from json api'''
-        result = {}
-        url = "https://api.spotify.com/v1/%s" % endpoint
-        params = params if params else {}
-        try:
-            headers = {"Authorization": "Bearer %s" % self._token["accessToken"]}
-            if params:
-                response = requests.post(url, json=params, headers=headers, timeout=10)
-            else:
-                response = requests.post(url, headers=headers, timeout=10)
-            if response and response.content and response.status_code == 200:
-                if "{" in response.content:
-                    result = json.loads(response.content.decode('utf-8', 'replace'))
-                else:
-                    result = response.content.decode('utf-8')
-            else:
-                LOGGER.error("Invalid or empty reponse from server - endpoint: %s - server response: %s - %s" %
-                        (endpoint, response.status_code, response.content))
-        except Exception as exc:
-            LOGGER.exception(exc)
-            result = None
-        LOGGER.debug("result for %s: %s" %(endpoint, result))
         return result
 
     def _event_callback(self, event, data):

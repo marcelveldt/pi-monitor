@@ -150,6 +150,7 @@ class SpotifyPlayer(threading.Thread):
             self._spotify_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
         # start socket connection to listen for events
         self._spotify_socket = SpotifySocket(self._event_callback)
+        self._spotify_socket.start()
 
         loop_wait = 1200
         while not self._exit.isSet():

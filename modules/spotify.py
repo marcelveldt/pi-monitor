@@ -93,7 +93,7 @@ class SpotifyPlayer(threading.Thread):
         params = params if params else {}
         try:
             headers = {"Authorization: Bearer": self._token["accessToken"]}
-            response = requests.post(url, data=params, headers=headers, timeout=2)
+            response = requests.post(url, json=params, headers=headers, timeout=10)
             if response and response.content and response.status_code == 200:
                 if "{" in response.content:
                     result = json.loads(response.content.decode('utf-8', 'replace'))
@@ -105,6 +105,7 @@ class SpotifyPlayer(threading.Thread):
         except Exception as exc:
             #LOGGER.error(exc)
             result = None
+        LOGGER.debug("result for %s: %s" %(endpoint, result))
         return result
 
     def _event_callback(self, event, data):

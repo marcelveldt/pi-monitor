@@ -92,7 +92,7 @@ class SpotifyPlayer(threading.Thread):
         url = "https://api.spotify.com/v1/%s" % endpoint
         params = params if params else {}
         try:
-            headers = {"Authorization: Bearer": self._token["accessToken"]}
+            headers = {"Authorization": "Bearer %s" % self._token["accessToken"]}
             if params:
                 response = requests.post(url, json=params, headers=headers, timeout=10)
             else:

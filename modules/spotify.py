@@ -53,8 +53,6 @@ class SpotifyPlayer(threading.Thread):
 
     def command(self, cmd, cmd_data=None):
         ''' send command to player'''
-        if cmd == "update":
-            return self._update_metadata()
         if cmd == "stop":
             cmd = "pause"
         elif cmd == "volume_up":
@@ -65,12 +63,12 @@ class SpotifyPlayer(threading.Thread):
             return False
         elif cmd == "previous":
             cmd = "prev"
-        return self._api_post("api/playback/%s" % cmd)
+        return self._api_post("me/player/%s" % cmd)
 
     def _api_request(self, endpoint, params=None):
         '''get info from json api'''
         result = {}
-        url = "https://api.spotify.com/v1/me/player/%s" % endpoint
+        url = "https://api.spotify.com/v1/%s" % endpoint
         params = params if params else {}
         try:
             headers = {"Authorization: Bearer": self._token["accessToken"]}
@@ -91,7 +89,7 @@ class SpotifyPlayer(threading.Thread):
     def _api_post(self, endpoint, params=None):
         '''get info from json api'''
         result = {}
-        url = "https://api.spotify.com/v1/me/player/%s" % endpoint
+        url = "https://api.spotify.com/v1/%s" % endpoint
         params = params if params else {}
         try:
             headers = {"Authorization: Bearer": self._token["accessToken"]}

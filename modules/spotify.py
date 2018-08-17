@@ -121,17 +121,19 @@ class SpotifyPlayer(threading.Thread):
                     "cover_url": "https://i.scdn.co/image/%s" % data["albumartId"]
                 })
         elif event == "token":
-            self._token = token
-        elif event == "SessionActive":
+            self._token = data
+        elif event == "kSpPlaybackNotifyBecameActive":
             self.monitor.states["spotify"]["state"] = PAUSED_STATE
-        elif event == "DeviceActive":
+        elif event == "kSpDeviceActive":
             self.monitor.states["spotify"]["state"] = PAUSED_STATE
-        elif event == "DeviceInactive":
+        elif event == "kSpDeviceInactive":
             self.monitor.states["spotify"]["state"] = STOPPED_STATE
-        elif event == "SinkActive":
+        elif event == "kSpSinkActive":
             self.monitor.states["spotify"]["state"] = PLAYING_STATE
-        elif event == "SinkInActive":
+        elif event == "kSpSinkInactive":
             self.monitor.states["spotify"]["state"] = PAUSED_STATE
+        elif event == "kSpPlaybackNotifyBecameInactive":
+            self.monitor.states["spotify"]["state"] = STOPPED_STATE
 
     def run(self):
         # finally start the librespot executable

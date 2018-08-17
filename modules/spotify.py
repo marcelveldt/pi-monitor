@@ -74,7 +74,7 @@ class SpotifyPlayer(threading.Thread):
         params = params if params else {}
         try:
             headers = {"Authorization: Bearer": self._token["accessToken"]}
-            response = requests.get(url, params=params, timeout=10)
+            response = requests.get(url, params=params, headers=headers, timeout=10)
             if response and response.content and response.status_code == 200:
                 if "{" in response.content:
                     result = json.loads(response.content.decode('utf-8', 'replace'))
@@ -95,7 +95,7 @@ class SpotifyPlayer(threading.Thread):
         params = params if params else {}
         try:
             headers = {"Authorization: Bearer": self._token["accessToken"]}
-            response = requests.post(url, data=params, timeout=2)
+            response = requests.post(url, data=params, headers=headers, timeout=2)
             if response and response.content and response.status_code == 200:
                 if "{" in response.content:
                     result = json.loads(response.content.decode('utf-8', 'replace'))
@@ -113,12 +113,13 @@ class SpotifyPlayer(threading.Thread):
         ''' event received from socket to librespot'''
         LOGGER.info("Got event from librespot: %s" % event)
         if event == "metadata":
+            albumartId = data["albumartId"][2] if len(data["albumartId"]) > 1 else data["albumartId"][0]
             self.monitor.states["spotify"].update({
                     "title": data["track_name"],
                     "artist": data["artist_name"],
                     "album": data["album_name"],
                     "duration": data["duration_ms"]/1000,
-                    "cover_url": "https://i.scdn.co/image/%s" % data["albumartId"]
+                    "cover_url": "https://i.scdn.co/image/%s" % albumartId
                 })
         elif event == "token":
             self._token = data

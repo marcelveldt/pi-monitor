@@ -5,6 +5,7 @@
 import os
 import time
 import threading
+import thread
 import subprocess
 from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, RESOURCES_FOLDER, VOLUME_CONTROL_DISABLED
 import socket 
@@ -127,14 +128,14 @@ class SpotifyPlayer(threading.Thread):
                 cur_state = "paused"
         return cur_state
 
-    def udp_server(self, host='', port=5030):
+    def udp_server(self, host='127.0.0.1', port=5030):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         LOGGER.info("Listening on udp %s:%s" % (host, port))
         s.bind((host, port))
         while not self._exit.isSet():
             (data, addr) = s.recvfrom(128*1024)
-            yield data
+            LOGGER.info("received from %s --> %s" %(addr, data))
 
     def run(self):
         # finally start the librespot executable
@@ -159,7 +160,6 @@ class SpotifyPlayer(threading.Thread):
                 # daemon crashed ? restart ?
                 LOGGER.error("librespot exited ?!")
                 break
-            for data in self.udp_server():
-                LOGGER.info("%r" % (data,))
+            thread.start_new_thread(self.udp_server, ())
             self._exit.wait(loop_wait) # we just wait as we'll be notified of updates through the socket
         

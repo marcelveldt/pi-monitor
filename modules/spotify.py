@@ -191,8 +191,10 @@ class SpotifySocket(threading.Thread):
                 data = json.loads(data)
                 if "token" in data:
                     event = "token"
+                    data = data["token"]
                 elif "metadata" in data:
                     event = "metadata"
+                    data = data["metadata"]
             else:
                 event = data
             self.callback(event, data)

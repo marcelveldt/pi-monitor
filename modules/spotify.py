@@ -159,7 +159,7 @@ class SpotifyPlayer(threading.Thread):
                 # daemon crashed ? restart ?
                 LOGGER.error("librespot exited ?!")
                 break
-            for data in udp_server():
+            for data in self.udp_server():
                 LOGGER.info("%r" % (data,))
             self._exit.wait(loop_wait) # we just wait as we'll be notified of updates through the socket
         

@@ -111,13 +111,12 @@ class SpotifyPlayer(threading.Thread):
         ''' event received from socket to librespot'''
         LOGGER.info("Got event from librespot: %s" % event)
         if event == "metadata":
-            albumartId = data["albumartId"][2] if len(data["albumartId"]) > 1 else data["albumartId"][0]
             self.monitor.states["spotify"].update({
                     "title": data["track_name"],
                     "artist": data["artist_name"],
                     "album": data["album_name"],
                     "duration": data["duration_ms"]/1000,
-                    "cover_url": "https://i.scdn.co/image/%s" % albumartId
+                    "cover_url": "https://i.scdn.co/image/%s" % data["albumartId"][0] # why do we receive multiple art id's ?
                 })
         elif event == "token":
             self._token = data

@@ -106,9 +106,9 @@ class SpotifyPlayer(threading.Thread):
                 LOGGER.error("Invalid or empty reponse from server - endpoint: %s - server response: %s - %s" %
                         (endpoint, response.status_code, response.content))
         except Exception as exc:
-            #LOGGER.error(exc)
+            LOGGER.exception(exc)
             result = None
-        LOGGER.debug("result for %s: (%s) %s" %(endpoint, response.status_code, result))
+        LOGGER.debug("result for %s: %s" %(endpoint, result))
         return result
 
     def _event_callback(self, event, data):

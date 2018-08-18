@@ -156,7 +156,7 @@ class Monitor():
                 LOGGER.info("Restart of service requested!\n")
                 self._cleanup(15, 15)
             elif cmd in ["ping", "beep", "buzz"]:
-                return self._beep()
+                return self._beep(cmd_data)
         elif target and cmd:
             # direct command to module
             try:
@@ -183,16 +183,19 @@ class Monitor():
             cmd = "play_media"
         elif cmd in ["ping", "beep", "buzz"]:
             return self._beep()
-        if "volume" in cmd and not self.is_playing:
-            # use alsa volume control directly
-            self.get_module("alsa").command(cmd, cmd_data)
         # redirect command to current player
+        cur_player = self.states["player"]["current_player"]
+        if not cur_player:
+            # just pick the first player that is in paused state
+            for player in self.states["players"]:
+                if player["state"] == PAUSED_STATE:
+                    cur_player = player
         success = False
-        if self.states["player"]["current_player"]:
-            player_mod = self.get_module(self.states["player"]["current_player"])
+        if cur_player:
+            player_mod = self.get_module(self.states["player"][cur_player])
             success = player_mod.command(cmd, cmd_data)
         if not success and "volume" in cmd:
-            # fallback to alsa again
+            # fallback to direct alsa control
             self.get_module("alsa").command(cmd, cmd_data)
 
     def _beep(self, alt_sound=False):

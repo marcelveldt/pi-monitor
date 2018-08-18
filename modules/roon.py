@@ -135,12 +135,7 @@ class RoonPlayer(threading.Thread):
 
     def _set_volume(self, volume_level):
         ''' set volume level '''
-        output_details = self._roonapi.outputs[self.output_id]
-        if output_details and output_details.get("volume"):
-            if output_details["volume"]["type"] == "db":
-                volume_level = int((float(volume_level) / 100) * 80) - 80
-            return self._roonapi.change_volume(self.output_id, volume_level)
-        return False
+        return self._roonapi.change_volume(self.output_id, volume_level)
 
     def _get_volume(self):
         ''' get current volume level of player'''

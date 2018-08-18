@@ -245,7 +245,7 @@ class StatesDict(dict):
 
     def update(self, new_values):
         is_changed = False
-        key = self.__name__
+        key = self.parent
         for key, value in new_values.items():
             if self.get(key) != value and key != "last_updated":
                 super(StatesDict, self).__setitem__(key, value)

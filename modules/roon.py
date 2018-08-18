@@ -106,8 +106,12 @@ class RoonPlayer(threading.Thread):
             "website": "https://github.com/marcelveldt/pi-monitor"
         }
         token = self.monitor.config.get("ROON_AUTH_TOKEN","")
-        self._roonapi = RoonApi(appinfo, token, blocking_init=False)
+        self._roonapi = RoonApi(appinfo, token, blocking_init=True)
         self._roonapi.register_state_callback(self._roon_state_callback, event_filter="zones_changed", id_filter=self.player_name)
+        if self.monitor.config.get("ROON_ENABLE_SOURCE_CONTROL", True):
+            # register this player as a source control in Roon
+            self._roonapi.register_source_control(HOSTNAME, HOSTNAME, self._roon_source_control_callback, "standby")
+        self.monitor.register_state_callback(self._monitor_state_changed_event, "player")
 
         # some players need to be unmuted when freshly started
         if self.output_id:
@@ -119,6 +123,25 @@ class RoonPlayer(threading.Thread):
 
 
     #### PRIVATE CLASS METHODS #######
+
+    def _monitor_state_changed_event(self, key, value=None, subkey=None):
+        ''' we registered to receive state changed events'''
+        if key == "player" and subkey == "power":
+            player_powered = self.monitor.states["player"]["power"]
+            if self.monitor.config["ROON_ENABLE_SOURCE_CONTROL"]:
+                state = "deselected"
+                if player_powered and self.monitor.states["player"]["current_player"]:
+                    state = "selected"
+                elif not player_powered:
+                    state = "standby"
+                self._roonapi.update_source_control(HOSTNAME, state)
+
+    def _roon_source_control_callback(self, control_key, event):
+        ''' called when the source control is toggled from Roon itself'''
+        if event == "convenience_switch":
+            self.monitor.command("power", "poweron")
+        if event == "standby":
+            self.monitor.command("power", "poweroff")
 
     def _roon_state_callback(self, event, changed_items):
         '''will be called when roon reports events for our player'''

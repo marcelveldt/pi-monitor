@@ -153,9 +153,10 @@ class Monitor():
                     os.system("reboot")
                 elif cmd == "reload":
                     LOGGER.info("Restart of service requested!\n")
-                    self._cleanup(15, 15)
+                    #self._cleanup(15, 15)
+                    os.kill(os.getpid(), 15)
                 elif cmd in ["ping", "beep", "buzz"]:
-                    return self._beep(cmd_data)
+                    self._beep(cmd_data)
             elif target and cmd:
                 # direct command to module
                 mod = self.get_module(target)
@@ -185,7 +186,11 @@ class Monitor():
         # redirect command to current player
         cur_player = self.states["player"]["current_player"]
         success = False
-        if cur_player:
+        if "volume" in cmd and cur_player and self.states[cur_player]["state"] != PLAYING_STATE:
+            # prefer direct alsa control of volume
+            self.get_module("alsa").command(cmd, cmd_data)
+        elif cur_player:
+            # all other commands will be forwarded to the player
             player_mod = self.get_module(cur_player)
             success = player_mod.command(cmd, cmd_data)
             LOGGER.debug("redirected command %s with data %s to player %s with result %s" %(cmd, str(cmd_data), cur_player, success))

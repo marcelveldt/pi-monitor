@@ -188,11 +188,11 @@ class Monitor():
         if not cur_player:
             # just pick the first player that is in paused state
             for player in self.states["player"]["players"]:
-                if player["state"] == PAUSED_STATE:
+                if self.states[player]["state"] == PAUSED_STATE:
                     cur_player = player
         success = False
         if cur_player:
-            player_mod = self.get_module(self.states["player"][cur_player])
+            player_mod = self.get_module(self.states[cur_player])
             success = player_mod.command(cmd, cmd_data)
         if not success and "volume" in cmd:
             # fallback to direct alsa control

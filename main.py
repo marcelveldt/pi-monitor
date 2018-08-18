@@ -132,6 +132,7 @@ class Monitor():
 
     def _process_command(self, target, cmd, cmd_data=None):
         ''' process command from the queue '''
+        LOGGER.debug("process command %s for target %s with data %s" %(cmd, target, str(cmd_data)))
         if target == "player":
             # redirect player commands
             self._player_command(cmd, cmd_data)
@@ -161,7 +162,8 @@ class Monitor():
             # direct command to module
             try:
                 mod = self.get_module(target)
-                mod.command(cmd, cmd_data)
+                result = mod.command(cmd, cmd_data)
+                LOGGER.debug("redirected command %s with data %s to module %s with result %s" %(cmd, str(cmd_data), target, result))
             except Exception:
                 LOGGER.exception("module %s does not accept commands or is not loaded!" % target)
     
@@ -189,6 +191,7 @@ class Monitor():
         if cur_player:
             player_mod = self.get_module(cur_player)
             success = player_mod.command(cmd, cmd_data)
+            LOGGER.debug("redirected command %s with data %s to player %s with result %s" %(cmd, str(cmd_data), cur_player, success))
         if not success and "volume" in cmd:
             # fallback to direct alsa control
             self.get_module("alsa").command(cmd, cmd_data)

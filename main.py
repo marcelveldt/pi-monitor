@@ -192,7 +192,7 @@ class Monitor():
                     cur_player = player
         success = False
         if cur_player:
-            player_mod = self.get_module(self.states[cur_player])
+            player_mod = self.get_module(cur_player)
             success = player_mod.command(cmd, cmd_data)
         if not success and "volume" in cmd:
             # fallback to direct alsa control

@@ -120,7 +120,8 @@ class Monitor():
                 data = self._cmd_queue.get()
                 try:
                     # fire each command in it's own seperate thread
-                    thread.start_new_thread(self._process_command, (*data))
+                    #data = *data
+                    thread.start_new_thread(self._process_command, (data))
                 except Exception:
                     LOGGER.exception("Error while processing command in Queue - %s" % str(data))
             # wait for events in the queue

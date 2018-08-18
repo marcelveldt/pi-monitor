@@ -43,7 +43,7 @@ class LocalPlayer(threading.Thread):
         self._exit.set()
         if self._proc:
             self._proc.terminate()
-        threading.Thread.join(self, 10)
+        threading.Thread.join(self, 2)
 
     def command(self, cmd, cmd_data=None):
         ''' send command to roon output/zone'''

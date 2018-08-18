@@ -52,17 +52,6 @@ class RoonPlayer(threading.Thread):
         self.monitor = monitor
         self.enable_squeezelite = enable_squeezelite
         self.monitor.states["roon"] = PlayerMetaData("Roon")
-        appinfo = {
-            "extension_id": "pi_monitor_%s" % HOSTNAME,
-            "display_name": "Pi Monitor (%s)" % HOSTNAME,
-            "display_version": "1.0.0",
-            "publisher": "marcelveldt",
-            "email": "marcelveldt@users.noreply.github.com",
-            "website": "https://github.com/marcelveldt/pi-monitor"
-        }
-        token = monitor.config.get("ROON_AUTH_TOKEN","")
-        self._roonapi = RoonApi(appinfo, token, blocking_init=False)
-        self._roonapi.register_state_callback(self._roon_state_callback, event_filter="zones_changed", id_filter=self.player_name)
         
 
     @property   
@@ -85,6 +74,8 @@ class RoonPlayer(threading.Thread):
 
     def command(self, cmd, cmd_data=None):
         ''' send command to roon output/zone'''
+        if not self._roonapi:
+            return False
         if cmd == "volume_up":
             return self._roonapi.change_volume(self.output_id, 2, "relative")
         elif cmd == "volume_down":
@@ -105,7 +96,18 @@ class RoonPlayer(threading.Thread):
             if self.monitor.config["ALSA_SOUND_DEVICE"]:
                 args += ["-o", self.monitor.config["ALSA_SOUND_DEVICE"]]
             self._squeezelite_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
-
+        # connect to the roon websockets api
+        appinfo = {
+            "extension_id": "pi_monitor_%s" % HOSTNAME,
+            "display_name": "Pi Monitor (%s)" % HOSTNAME,
+            "display_version": "1.0.0",
+            "publisher": "marcelveldt",
+            "email": "marcelveldt@users.noreply.github.com",
+            "website": "https://github.com/marcelveldt/pi-monitor"
+        }
+        token = monitor.config.get("ROON_AUTH_TOKEN","")
+        self._roonapi = RoonApi(appinfo, token, blocking_init=False)
+        self._roonapi.register_state_callback(self._roon_state_callback, event_filter="zones_changed", id_filter=self.player_name)
 
         # some players need to be unmuted when freshly started
         if self.output_id:

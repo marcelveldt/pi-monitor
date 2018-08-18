@@ -10,8 +10,8 @@ def setup(monitor):
     if not monitor.config.get("ENABLE_MODULE_POWERSAVE", True):
         LOGGER.debug("Powersave module is not enabled!")
         return False
-    cmd_on = monitor.config.get("POWERSAVE_COMMAND_ON", "cpufreq-set -g conservative")
-    cmd_off = monitor.config.get("POWERSAVE_COMMAND_OFF", "cpufreq-set -g performance")
+    cmd_on = monitor.config.get("POWERSAVE_COMMAND_ON", "/usr/bin/cpufreq-set -g conservative")
+    cmd_off = monitor.config.get("POWERSAVE_COMMAND_OFF", "/usr/bin/cpufreq-set -g performance")
     cmd_auto_off = monitor.config.get("AUTO_POWER_OFF_WHEN_IDLE_SECONDS", 5)
     # Check we have the necessary module
     if not check_software(bin_path="/usr/bin/cpufreq-set", installapt="cpufrequtils"):

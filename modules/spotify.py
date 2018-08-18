@@ -89,13 +89,14 @@ class SpotifyPlayer(threading.Thread):
                 LOGGER.error("Invalid or empty reponse from server - endpoint: %s - server response: %s - %s" %
                         (endpoint, response.status_code, response.content))
         except Exception as exc:
-            #LOGGER.error(exc)
+            if self.monitor.config["ENABLE_DEBUG"]:
+                LOGGER.error(exc)
             result = None
         return result
 
     def _event_callback(self, event, data):
         ''' event received from socket to librespot'''
-        LOGGER.info("Got event from librespot: %s" % event)
+        LOGGER.debug("Got event from librespot: %s" % event)
         if event == "metadata":
             self.monitor.states["spotify"].update({
                     "title": data["track_name"],
@@ -164,11 +165,10 @@ class SpotifySocket(threading.Thread):
     def run(self, host='127.0.0.1', port=5030):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        LOGGER.info("Listening on udp %s:%s" % (host, port))
+        LOGGER.debug("Listening on udp %s:%s" % (host, port))
         s.bind((host, port))
         while not self._exit.isSet():
             (data, addr) = s.recvfrom(128*1024)
-            LOGGER.debug("received from %s --> %s" %(addr, data))
             event = ""
             data = data.decode("utf-8")
             if data.startswith("{"):

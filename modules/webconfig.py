@@ -81,7 +81,6 @@ class WebConfig(threading.Thread):
         def log():
             with open('/tmp/pi-monitor.log') as f:
                 data = f.read()
-            data = data.replace("\n", "<br>")
             return render_template('log.html', data=data)
 
         @app.route("/")

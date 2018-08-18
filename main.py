@@ -187,7 +187,7 @@ class Monitor():
         cur_player = self.states["player"]["current_player"]
         if not cur_player:
             # just pick the first player that is in paused state
-            for player in self.states["players"]:
+            for player in self.states["player"]["players"]:
                 if player["state"] == PAUSED_STATE:
                     cur_player = player
         success = False

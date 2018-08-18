@@ -105,7 +105,7 @@ class RoonPlayer(threading.Thread):
             "email": "marcelveldt@users.noreply.github.com",
             "website": "https://github.com/marcelveldt/pi-monitor"
         }
-        token = monitor.config.get("ROON_AUTH_TOKEN","")
+        token = self.monitor.config.get("ROON_AUTH_TOKEN","")
         self._roonapi = RoonApi(appinfo, token, blocking_init=False)
         self._roonapi.register_state_callback(self._roon_state_callback, event_filter="zones_changed", id_filter=self.player_name)
 

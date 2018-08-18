@@ -185,11 +185,6 @@ class Monitor():
             return self._beep()
         # redirect command to current player
         cur_player = self.states["player"]["current_player"]
-        if not cur_player:
-            # just pick the first player that is in paused state
-            for player in self.states["player"]["players"]:
-                if self.states[player]["state"] == PAUSED_STATE:
-                    cur_player = player
         success = False
         if cur_player:
             player_mod = self.get_module(cur_player)

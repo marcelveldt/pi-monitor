@@ -244,21 +244,8 @@ class StatesDict(dict):
         self.state_changed_event(key)
 
     def update(self, new_values):
-        if not self.parent:
-            for key, value in new_values.items():
-                self.__setitem__(key, value)
-        else:
-            is_changed = False
-            changed_key = self.parent
-            for key, value in new_values.items():
-                if self.get(key) != value and key != "last_updated":
-                    super(StatesDict, self).__setitem__(key, value)
-                    is_changed = True
-                    if key == "state":
-                        changed_key = key
-            if is_changed:
-                super(StatesDict, self).__setitem__("last_updated", time.time())
-                self.state_changed_event(changed_key)
+        for key, value in new_values.items():
+            self.__setitem__(key, value)
 
     def __init__(self, *args, **kwargs):
         val = super(StatesDict, self).__init__(*args, **kwargs)

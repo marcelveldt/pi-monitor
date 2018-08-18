@@ -118,12 +118,9 @@ class Monitor():
             # process commands queue
             while not self._cmd_queue.empty() and not self._exit:
                 data = self._cmd_queue.get()
-                try:
-                    # fire each command in it's own seperate thread
-                    #data = *data
-                    thread.start_new_thread(self._process_command, (data))
-                except Exception:
-                    LOGGER.exception("Error while processing command in Queue - %s" % str(data))
+                # fire each command in it's own seperate thread
+                #data = *data
+                thread.start_new_thread(self._process_command, (data))
             # wait for events in the queue
             if self._exit:
                 break
@@ -132,40 +129,40 @@ class Monitor():
 
     def _process_command(self, target, cmd, cmd_data=None):
         ''' process command from the queue '''
-        LOGGER.debug("process command %s for target %s with data %s" %(cmd, target, str(cmd_data)))
-        if target == "player":
-            # redirect player commands
-            self._player_command(cmd, cmd_data)
-        elif target == "power":
-            # power commands
-            if cmd == "power":
-                self._set_power(cmd_data)
-            elif cmd == "poweron":
-                self._set_power(True, cmd_data)
-            elif cmd == "poweroff":
-                self._set_power(False, cmd_data)
-        elif target == "system":
-            # system commands
-            if cmd == "saveconfig":
-                self._saveconfig()
-            elif cmd == "run_proc" and cmd_data:
-                run_proc(cmd_data)
-            elif cmd == "restart":
-                LOGGER.warning("System will now reboot!")
-                os.system("reboot")
-            elif cmd == "reload":
-                LOGGER.info("Restart of service requested!\n")
-                self._cleanup(15, 15)
-            elif cmd in ["ping", "beep", "buzz"]:
-                return self._beep(cmd_data)
-        elif target and cmd:
-            # direct command to module
-            try:
+        try:
+            LOGGER.debug("process command %s for target %s with data %s" %(cmd, target, str(cmd_data)))
+            if target == "player":
+                # redirect player commands
+                self._player_command(cmd, cmd_data)
+            elif target == "power":
+                # power commands
+                if cmd == "power":
+                    self._set_power(cmd_data)
+                elif cmd == "poweron":
+                    self._set_power(True, cmd_data)
+                elif cmd == "poweroff":
+                    self._set_power(False, cmd_data)
+            elif target == "system":
+                # system commands
+                if cmd == "saveconfig":
+                    self._saveconfig()
+                elif cmd == "run_proc" and cmd_data:
+                    run_proc(cmd_data)
+                elif cmd == "restart":
+                    LOGGER.warning("System will now reboot!")
+                    os.system("reboot")
+                elif cmd == "reload":
+                    LOGGER.info("Restart of service requested!\n")
+                    self._cleanup(15, 15)
+                elif cmd in ["ping", "beep", "buzz"]:
+                    return self._beep(cmd_data)
+            elif target and cmd:
+                # direct command to module
                 mod = self.get_module(target)
                 result = mod.command(cmd, cmd_data)
                 LOGGER.debug("redirected command %s with data %s to module %s with result %s" %(cmd, str(cmd_data), target, result))
-            except Exception:
-                LOGGER.exception("module %s does not accept commands or is not loaded!" % target)
+        except Exception:
+            LOGGER.exception("error while executing command %s for target %s" %(cmd, target))
     
     def _player_command(self, cmd, cmd_data=None):
         ''' send command to player'''

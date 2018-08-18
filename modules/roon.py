@@ -159,18 +159,18 @@ class RoonPlayer(threading.Thread):
         self.monitor.states["roon"]["volume_level"] = self._get_volume()
         if zone_details and zone_details.get("now_playing"):
             zone_details = zone_details["now_playing"]
-            self.monitor.states["roon"]["artist"] = zone_details["three_line"]["line2"]
-            self.monitor.states["roon"]["album"] = zone_details["three_line"]["line3"]
-            self.monitor.states["roon"]["title"] = zone_details["three_line"]["line1"]
-            self.monitor.states["roon"]["duration"] = zone_details["length"]
-            if zone_details["image_key"]:
-                url = self._roonapi.get_image(zone_details["image_key"])
-                self.monitor.states["roon"]["cover_url"] = url
-            else:
-                self.monitor.states["roon"]["cover_url"] = ""
+            self.monitor.states["roon"].update({
+                    "artist": zone_details["three_line"]["line2"],
+                    "album": zone_details["three_line"]["line3"],
+                    "title": zone_details["three_line"]["line1"],
+                    "duration": zone_details["length"],
+                    "cover_url": self._roonapi.get_image(zone_details["image_key"])
+                })
         else:
-            self.monitor.states["roon"]["artist"] = ""
-            self.monitor.states["roon"]["album"] = ""
-            self.monitor.states["roon"]["title"] = ""
-            self.monitor.states["roon"]["duration"] = ""
-            self.monitor.states["roon"]["cover_url"] = ""
+            self.monitor.states["roon"].update({
+                    "artist": "",
+                    "album": "",
+                    "title": "",
+                    "duration": 0,
+                    "cover_url": ""
+                })

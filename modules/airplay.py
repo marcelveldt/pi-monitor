@@ -92,12 +92,14 @@ class AirPlayPlayer(threading.Thread):
             LOGGER.debug("event_type: %s" % event_type)
 
     def _update_metadata(self):
-        self.monitor.states["airplay"]["volume_level"] = self._processor.info.volume * 100 if self._processor.info.volume else 0
-        self.monitor.states["airplay"]["state"] = self._processor.info.playstate
-        self.monitor.states["airplay"]["artist"] = self._processor.info.songartist
-        self.monitor.states["airplay"]["album"] = self._processor.info.songalbum
-        self.monitor.states["airplay"]["title"] = self._processor.info.itemname
-        self.monitor.states["airplay"]["duration"] = self._processor.info.songtime/1000 if self._processor.info.songtime else 0
+        self.monitor.states["airplay"].update({
+                "state": self._processor.info.playstate,
+                "volume_level": self._processor.info.volume * 100 if self._processor.info.volume else 0,
+                "artist": self._processor.info.songartist,
+                "album": self._processor.info.songalbum,
+                "title": self._processor.info.itemname,
+                "duration": self._processor.info.songtime/1000 if self._processor.info.songtime else 0
+            })
         if self._processor.info.cover_file:
             self.monitor.states["airplay"]["cover_file"] = self._processor.info.cover_file
         elif self._processor.info.songcoverart.base64:

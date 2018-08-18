@@ -119,7 +119,8 @@ class Monitor():
             while not self._cmd_queue.empty() and not self._exit:
                 data = self._cmd_queue.get()
                 try:
-                    self._process_command(*data)
+                    # fire each command in it's own seperate thread
+                    thread.start_new_thread(self._process_command, (*data))
                 except Exception:
                     LOGGER.exception("Error while processing command in Queue - %s" % str(data))
             # wait for events in the queue

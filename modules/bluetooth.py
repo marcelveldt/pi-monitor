@@ -8,12 +8,7 @@ import threading
 import thread
 import subprocess
 from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, RESOURCES_FOLDER, VOLUME_CONTROL_DISABLED, PAUSED_STATE, PLAYING_STATE, STOPPED_STATE
-import socket 
-
-try:
-    from gi.repository import GObject
-except ImportError:
-    import gobject as GObject
+import socket
 
 """
     BluetoothPlayer
@@ -34,11 +29,11 @@ def setup(monitor):
         return False
 
     import_or_install("dbus", installapt="python-dbus")
+    import_or_install("gi.repository", "GObject", True, installpip="PyGObject")
 
     #import dbus.service
     #import dbus.mainloop.glib
     
-            
     return BluetoothPlayer(monitor)
 
 

@@ -107,7 +107,7 @@ def parse_version(versionstr):
     ''' try to parse version number out of a string'''
     version = 0
     try:
-        version =  int(versionstr.replace(".", "").replace(",",""))
+        version =  int(versionstr.replace("Version: ","").replace(".", "").replace(",",""))
     except Exception:
         LOGGER.debug("unable to parse version for %s" % versionstr)
     return version

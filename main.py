@@ -401,7 +401,7 @@ class StatesWatcher(threading.Thread):
         ''' handle state changed event for the mediaplayers'''
         cur_player = self.states["player"]["current_player"]
         if cur_player:
-            cur_player_state = self.states[cur_player_state]["state"]
+            cur_player_state = self.states[cur_player]["state"]
         else:
             cur_player_state = None
         if ((cur_player != player_key and self.states[player_key]["state"] in PLAYING_STATES) or 

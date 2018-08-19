@@ -28,7 +28,7 @@ def setup(monitor):
         LOGGER.warning("Bluez Alsa is not installed, please install manually.")
         return False
 
-    import_or_install("gobject", "GObject", installapt="python3-gi python-gobject")
+    import_or_install("gi.repository", "GObject", installapt="python-gi python-gi-cairo gir1.2-gtk-3.0")
     
     return BluetoothPlayer(monitor)
 

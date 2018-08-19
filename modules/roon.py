@@ -95,7 +95,6 @@ class RoonPlayer(threading.Thread):
                 args += ["-V", self.monitor.config["ALSA_VOLUME_CONTROL"]]
             if self.monitor.config["ALSA_SOUND_DEVICE"]:
                 args += ["-o", self.monitor.config["ALSA_SOUND_DEVICE"]]
-            args += ["-r", self.monitor.config.get("ROON_SQUEEZELITE_SAMPLE_RATES", "192000")]
             if self.monitor.config["ENABLE_DEBUG"]:
                 LOGGER.debug("Starting squeezelite: %s" % " ".join(args))
                 self._squeezelite_proc = subprocess.Popen(args)
@@ -135,7 +134,7 @@ class RoonPlayer(threading.Thread):
             player_powered = self.monitor.states["player"]["power"]
             if self.monitor.config["ROON_ENABLE_SOURCE_CONTROL"]:
                 state = "deselected"
-                if player_powered and self.monitor.states["player"]["current_player"]:
+                if player_powered and self.monitor.states["player"]["current_player"] == "roon":
                     state = "selected"
                 elif not player_powered:
                     state = "standby"
@@ -143,9 +142,9 @@ class RoonPlayer(threading.Thread):
 
     def _roon_source_control_callback(self, control_key, event):
         ''' called when the source control is toggled from Roon itself'''
-        if event == "convenience_switch":
+        if event == "convenience_switch" and not self.monitor.states["player"]["power"]:
             self.monitor.command("power", "poweron")
-        if event == "standby":
+        if event == "standby" and self.monitor.states["player"]["power"]:
             self.monitor.command("power", "poweroff")
 
     def _roon_state_callback(self, event, changed_items):

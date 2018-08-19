@@ -96,6 +96,7 @@ class RoonPlayer(threading.Thread):
             if self.monitor.config["ALSA_SOUND_DEVICE"]:
                 args += ["-o", self.monitor.config["ALSA_SOUND_DEVICE"]]
             if self.monitor.config["ENABLE_DEBUG"]:
+                LOGGER.debug("Starting squeezelite: %s" % " ".join(args))
                 self._squeezelite_proc = subprocess.Popen(args)
             else:
                 self._squeezelite_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)

@@ -28,10 +28,7 @@ def setup(monitor):
         LOGGER.warning("Bluez Alsa is not installed, please install manually.")
         return False
 
-    import_or_install("gi.repository", "GObject", True, installapt="python3-gi python-gobject")
-
-    #import dbus.service
-    #import dbus.mainloop.glib
+    import_or_install("gobject", "GObject", installapt="python3-gi python-gobject")
     
     return BluetoothPlayer(monitor)
 
@@ -82,7 +79,7 @@ class BluetoothPlayer(threading.Thread):
             os.system('hciconfig hci0 piscan')
             os.system('hciconfig hci0 sspmode 1')
 
-        args = ["/usr/bin/bluealsa-aplay", "-vv", "00:00:00:00:00:00"]
+        args = ["/usr/bin/bluealsa-aplay", "--a2dp-volume", "-vv", "00:00:00:00:00:00"]
         if self.monitor.config["ENABLE_DEBUG"]:
             LOGGER.debug("Starting bluealsa-aplay: %s" % " ".join(args))
             self._bluealsa_proc = subprocess.Popen(args)

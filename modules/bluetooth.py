@@ -85,7 +85,7 @@ class BluetoothPlayer(threading.Thread):
                 EOF
                 """)
 
-        args = ["/usr/bin/bluealsa-aplay", "--a2dp-volume", "-vv", "00:00:00:00:00:00"]
+        args = ["/usr/bin/bluealsa-aplay", "-d", self.monitor.config["ALSA_SOUND_DEVICE"],"-vv", "00:00:00:00:00:00"]
         if self.monitor.config["ENABLE_DEBUG"]:
             LOGGER.debug("Starting bluealsa-aplay: %s" % " ".join(args))
             self._bluealsa_proc = subprocess.Popen(args)
@@ -102,7 +102,10 @@ class BluetoothPlayer(threading.Thread):
         LOGGER.info("A2DP Agent Registered")
         manager.RequestDefaultAgent(AGENT_PATH)
         mainloop = GObject.MainLoop()
-        mainloop.run()
+        try:
+            mainloop.run()
+        except KeyboardInterrupt, SystemExit:
+            LOGGER.debug("dbus loop exited")
 
         # loop_wait = 1200
         # while not self._exit.isSet():

@@ -28,7 +28,7 @@ def setup(monitor):
         LOGGER.warning("Bluez Alsa is not installed, please install manually.")
         return False
 
-    import_or_install("gi.repository", "GObject", True, installapt="python-gi python-gi-cairo gir1.2-gtk-3.0")
+    import_or_install("gi.repository", "GObject", installapt="python-gobject")
     
     return BluetoothPlayer(monitor)
 
@@ -78,6 +78,12 @@ class BluetoothPlayer(threading.Thread):
             os.system('service bluetooth restart')
             os.system('hciconfig hci0 piscan')
             os.system('hciconfig hci0 sspmode 1')
+            os.system("""bluetoothctl <<EOF
+                power on
+                discoverable on
+                exit
+                EOF
+                """)
 
         args = ["/usr/bin/bluealsa-aplay", "--a2dp-volume", "-vv", "00:00:00:00:00:00"]
         if self.monitor.config["ENABLE_DEBUG"]:
@@ -86,6 +92,7 @@ class BluetoothPlayer(threading.Thread):
         else:
             self._bluealsa_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
         # start dbus connection to listen for events
+        from gi.repository import GObject
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         bus = dbus.SystemBus()
         agent = Agent(bus, AGENT_PATH)

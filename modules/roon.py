@@ -92,9 +92,10 @@ class RoonPlayer(threading.Thread):
             exec_path = "/usr/bin/squeezelite"
             args = [exec_path, "-C", "1", "-n", self.player_name, "-a", "4096:1024"]
             if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:
-                args += ["-V", self.monitor.config["ALSA_VOLUME_CONTROL"], "-X"]
+                args += ["-V", self.monitor.config["ALSA_VOLUME_CONTROL"]]
             if self.monitor.config["ALSA_SOUND_DEVICE"]:
                 args += ["-o", self.monitor.config["ALSA_SOUND_DEVICE"]]
+            args += ["-r", monitor.config.get("SQUEEZELITE_SAMPLE_RATES", "192000")]
             if self.monitor.config["ENABLE_DEBUG"]:
                 LOGGER.debug("Starting squeezelite: %s" % " ".join(args))
                 self._squeezelite_proc = subprocess.Popen(args)

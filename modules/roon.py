@@ -147,7 +147,7 @@ class RoonPlayer(threading.Thread):
             self._roonapi.update_source_control(HOSTNAME, "selected")
             if not self.monitor.states["player"]["power"]:
                 self.monitor.command("power", "poweron")
-        if event == "standby"
+        if event == "standby":
             self._roonapi.update_source_control(HOSTNAME, "standby")
             if self.monitor.states["player"]["power"] and self.monitor.states["player"]["current_player"] == "roon":
                 self.monitor.command("power", "poweroff")

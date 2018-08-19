@@ -133,19 +133,24 @@ class RoonPlayer(threading.Thread):
         if key == "player" and subkey == "power":
             player_powered = self.monitor.states["player"]["power"]
             if self.monitor.config["ROON_ENABLE_SOURCE_CONTROL"]:
-                state = "deselected"
                 if player_powered and self.monitor.states["player"]["current_player"] == "roon":
                     state = "selected"
-                elif not player_powered:
+                elif player_powered and self.monitor.states["player"]["current_player"] != "roon":
+                    state = "deselected"
+                else:
                     state = "standby"
                 self._roonapi.update_source_control(HOSTNAME, state)
 
     def _roon_source_control_callback(self, control_key, event):
         ''' called when the source control is toggled from Roon itself'''
-        if event == "convenience_switch" and not self.monitor.states["player"]["power"]:
-            self.monitor.command("power", "poweron")
-        if event == "standby" and self.monitor.states["player"]["power"]:
-            self.monitor.command("power", "poweroff")
+        if event == "convenience_switch":
+            self._roonapi.update_source_control(HOSTNAME, "selected")
+            if not self.monitor.states["player"]["power"]:
+                self.monitor.command("power", "poweron")
+        if event == "standby"
+            self._roonapi.update_source_control(HOSTNAME, "standby")
+            if self.monitor.states["player"]["power"] and self.monitor.states["player"]["current_player"] == "roon":
+                self.monitor.command("power", "poweroff")
 
     def _roon_state_callback(self, event, changed_items):
         '''will be called when roon reports events for our player'''

@@ -7,8 +7,8 @@ import time
 import threading
 import thread
 import subprocess
-from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, RESOURCES_FOLDER, VOLUME_CONTROL_DISABLED, PAUSED_STATE, PLAYING_STATE, STOPPED_STATE
-import socket
+from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, import_or_install, PAUSED_STATE, PLAYING_STATE, STOPPED_STATE
+import_or_install("dbus", installapt="python-dbus")
 
 """
     BluetoothPlayer
@@ -28,7 +28,6 @@ def setup(monitor):
         LOGGER.warning("Bluez Alsa is not installed, please install manually.")
         return False
 
-    import_or_install("dbus", installapt="python-dbus")
     import_or_install("gi.repository", "GObject", True, installpip="PyGObject")
 
     #import dbus.service

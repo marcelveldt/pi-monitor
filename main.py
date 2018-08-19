@@ -400,6 +400,10 @@ class StatesWatcher(threading.Thread):
     def _handle_player_state_change(self, player_key):
         ''' handle state changed event for the mediaplayers'''
         cur_player = self.states["player"]["current_player"]
+        if cur_player:
+            cur_player_state = self.states[cur_player_state]["state"]
+        else:
+            cur_player_state = None
         if ((cur_player != player_key and self.states[player_key]["state"] in PLAYING_STATES) or 
                 (not cur_player and self.states[player_key]["state"] in ["paused", "idle"])):
             # we have a new active player!
@@ -411,23 +415,27 @@ class StatesWatcher(threading.Thread):
                 if player != player_key and self.states[player]["state"] in PLAYING_STATES:
                     self.monitor.command(player, "stop")
                     flush_needed = True
+            # handle notifications and alerts
+            if self.states[player_key]["state"] in INTERRUPT_STATES:
+                # a notification or alert started, store previous player and set notification volume level
+                self.states["player"]["interrupted_player"] = cur_player
+                self.states["player"]["interrupted_volume"] = self.states["player"]["volume_level"]
+                self.states["player"]["interrupted_state"] = cur_player_state
+                if self.monitor.config["NOTIFY_VOLUME"]:
+                    self.monitor.command("player", "volume_set", self.monitor.config["NOTIFY_VOLUME"])
             # free alsa by quickly restarting playback
             if flush_needed:
                 self.monitor.command(player_key, "pause")
                 time.sleep(2)
                 self.monitor.command(player_key, "play")
-        # handle notifications and alerts
-        if player_key != cur_player and self.states[player_key]["state"] in INTERRUPT_STATES:
-            # a notification or alert started, store previous player and set notification volume level
-            self.states["player"]["interrupted_player"] = cur_player
-            self.states["player"]["interrupted_volume"] = self.states["player"]["volume_level"]
-            if self.monitor.config["NOTIFY_VOLUME"]:
-                self.monitor.command("player", "volume_set", self.monitor.config["NOTIFY_VOLUME"])
         elif self.states["player"]["interrupted_player"] and player_key == cur_player and self.states[player_key]["state"] in IDLE_STATES:
             # the notification/alert stopped, restore the previous state
             if self.states["player"]["interrupted_volume"]:
                 self.monitor.command("player", "volume_set", self.states["player"]["interrupted_volume"])
-            self.monitor.command(self.states["player"]["interrupted_player"], "play")
+            if self.states["player"]["interrupted_state"]:
+                self.monitor.command(self.states["player"]["interrupted_player"], "play")
+            else:
+                self.states["player"]["current_player"] = self.states["player"]["interrupted_player"]
             self.states["player"]["interrupted_volume"] = 0
             self.states["player"]["interrupted_player"] = ""
         # metadadata update of current player

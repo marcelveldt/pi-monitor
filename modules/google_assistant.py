@@ -18,7 +18,7 @@
 from __future__ import print_function
 
 import os.path
-from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM, PLAYING_STATES, PLAYING_STATE, LISTENING_STATE, IDLE_STATE, NOTIFY_STATE, ALERT_STATE
+from resources.lib.utils import import_or_install, json, PlayerMetaData, PLATFORM, PLAYING_STATES, PLAYING_STATE, LISTENING_STATE, IDLE_STATE, NOTIFY_STATE, ALERT_STATE, SPEAKING_STATE
 import threading
 import sys
 
@@ -96,9 +96,13 @@ class GoogleAssistantPlayer(threading.Thread):
             self.monitor.states["google_assistant"]["state"] = ALERT_STATE
             LOGGER.info("Google Assistant is now broadcasting an alert")
 
-        elif event.type in [EventType.ON_RESPONDING_STARTED, EventType.ON_MEDIA_TRACK_PLAY]:
-            self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
+        elif event.type in [EventType.ON_RESPONDING_STARTED]:
+            self.monitor.states["google_assistant"]["state"] = SPEAKING_STATE
             LOGGER.info("Google Assistant is playing (announcement or media)")
+
+        elif event.type in [EventType.ON_MEDIA_TRACK_PLAY]:
+            self.monitor.states["google_assistant"]["state"] = PLAYING_STATE
+            LOGGER.info("Google Assistant is playing media")
 
         elif event.type in [EventType.ON_ALERT_FINISHED, 
                                 EventType.ON_CONVERSATION_TURN_TIMEOUT, 

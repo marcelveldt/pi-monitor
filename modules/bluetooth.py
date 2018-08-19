@@ -1,14 +1,13 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-
+from __future__ import absolute_import, print_function, unicode_literals
 import os
 import time
 import threading
 import thread
 import subprocess
 from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, import_or_install, PAUSED_STATE, PLAYING_STATE, STOPPED_STATE
-import_or_install("dbus", installapt="python-dbus")
+import_or_install("dbus.service", installapt="python-dbus")
+import_or_install("dbus.mainloop.glib", installapt="python-dbus")
 
 """
     BluetoothPlayer

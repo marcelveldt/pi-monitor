@@ -135,10 +135,10 @@ class Agent(dbus.service.Object):
                     in_signature="os", out_signature="")
     def AuthorizeService(self, device, uuid):
         print("AuthorizeService (%s, %s)" % (device, uuid))
-                if uuid == "0000110d-0000-1000-8000-00805f9b34fb":
-                    print("Authorized A2DP Service")
-                    return
-                print("Rejecting non-A2DP Service")
+        if uuid == "0000110d-0000-1000-8000-00805f9b34fb":
+            print("Authorized A2DP Service")
+            return
+        print("Rejecting non-A2DP Service")
         raise Rejected("Connection rejected")
 
     @dbus.service.method(AGENT_INTERFACE,

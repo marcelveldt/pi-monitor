@@ -103,6 +103,31 @@ def run_proc(cmd_str, check_result=True, ignore_error=True):
             LOGGER.error(str(exc))
         return False
 
+def parse_version(versionstr):
+    ''' try to parse version number out of a string'''
+    version = 0
+    try:
+        version =  int(versionstr.replace(".", "").replace(",",""))
+    except Exception:
+        LOGGER.debug("unable to parse version for %s" % versionstr)
+    return version
+
+
+def check_package_version(packagename):
+    ''' check version number of a given package '''
+    cur_version = 0
+    if ">=" in packagename:
+        required_version = parse_version(packagename.split(">=")[1])
+        packagename = packagename.split(">=")[0]
+    elif ">" in packagename:
+        required_version = parse_version(packagename.split(">")[1]) + 1
+        packagename = packagename.split(">")[0]
+    elif "==" in packagename:
+        required_version = parse_version(packagename.split("==")[1])
+        packagename = packagename.split("==")[0]
+    cur_version = parse_version(subprocess.check_output("pip show %s | grep Version" % packagename, shell=True))
+    return cur_version >= required_version
+
 
 def import_or_install(modulename, shortname=None, asfunction=False, installpip="", installapt=""):
     '''try to import module and if that fails, try to install it with pip'''
@@ -110,6 +135,11 @@ def import_or_install(modulename, shortname=None, asfunction=False, installpip="
     frm = inspect.stack()[1]
     calling_module = inspect.getmodule(frm[0])
     try:
+        # check package version if needed
+        for package in installpip.split(" "):
+            if ">" in installpip or "=" in installpip:
+                if not check_package_version(package):
+                    raise ImportError("package version does not match for %s" % package)
         global_import(modulename, shortname, asfunction, calling_module)
     except ImportError, NameError:
         if not installapt and not installpip:

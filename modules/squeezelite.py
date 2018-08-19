@@ -86,7 +86,7 @@ class SqueezelitePlayer(threading.Thread):
             args += ["-V", self.monitor.config["ALSA_VOLUME_CONTROL"]]
         if self.monitor.config["ALSA_SOUND_DEVICE"]:
             args += ["-o", self.monitor.config["ALSA_SOUND_DEVICE"]]
-        args += ["-r", monitor.config.get("SQUEEZELITE_SAMPLE_RATES", "192000")]
+        args += ["-r", self.monitor.config.get("SQUEEZELITE_SAMPLE_RATES", "192000")]
         if self.monitor.config["ENABLE_DEBUG"]:
             LOGGER.debug("Starting squeezelite: %s" % " ".join(args))
             self._squeezelite_proc = subprocess.Popen(args)

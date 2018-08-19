@@ -6,8 +6,9 @@ import threading
 import thread
 import subprocess
 from resources.lib.utils import PlayerMetaData, json, DEVNULL, HOSTNAME, requests, PLATFORM, run_proc, check_software, import_or_install, PAUSED_STATE, PLAYING_STATE, STOPPED_STATE
-import_or_install("dbus.service", installapt="python-dbus")
-import_or_install("dbus.mainloop.glib", installapt="python-dbus")
+import_or_install("dbus", installapt="python-dbus")
+import dbus.service
+import dbus.mainloop.glib
 
 """
     BluetoothPlayer

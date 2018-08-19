@@ -28,7 +28,7 @@ def setup(monitor):
         LOGGER.warning("Bluez Alsa is not installed, please install manually.")
         return False
 
-    import_or_install("gi.repository", "GObject", True, installpip="PyGObject")
+    import_or_install("gi.repository", "GObject", True, installapt="python3-gi python-gobject")
 
     #import dbus.service
     #import dbus.mainloop.glib

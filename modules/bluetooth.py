@@ -75,16 +75,17 @@ class BluetoothPlayer(threading.Thread):
             cur_config = cur_config.replace('#AutoEnable=true', 'AutoEnable=true')
             cur_config = cur_config.replace('#AutoEnable=false', 'AutoEnable=true')
             cur_config = cur_config.replace('AutoEnable=false', 'AutoEnable=true')
+            with open('/etc/bluetooth/main.conf', 'w') as f:
+                f.write(cur_config)
             os.system('service bluetooth restart')
             os.system('hciconfig hci0 piscan')
             os.system('hciconfig hci0 sspmode 1')
-            os.system("""bluetoothctl <<EOF
-                power on
-                discoverable on
-                exit
-                EOF
-                """)
-
+        os.system("""bluetoothctl <<EOF
+            power on
+            discoverable on
+            exit
+            EOF
+            """)
         args = ["/usr/bin/bluealsa-aplay", "-d", self.monitor.config["ALSA_SOUND_DEVICE"],"-vv", "00:00:00:00:00:00"]
         if self.monitor.config["ENABLE_DEBUG"]:
             LOGGER.debug("Starting bluealsa-aplay: %s" % " ".join(args))
@@ -107,14 +108,6 @@ class BluetoothPlayer(threading.Thread):
         except KeyboardInterrupt, SystemExit:
             LOGGER.debug("dbus loop exited")
 
-        # loop_wait = 1200
-        # while not self._exit.isSet():
-        #     if self._spotify_proc.returncode and self._spotify_proc.returncode > 0 and not self._exit:
-        #         # daemon crashed ? restart ?
-        #         LOGGER.error("librespot exited ?!")
-        #         break
-        #     self._exit.wait(loop_wait) # we just wait as we'll be notified of updates through the socket
-
 
 class Rejected(dbus.DBusException):
     _dbus_error_name = "org.bluez.Error.Rejected"
@@ -128,56 +121,56 @@ class Agent(dbus.service.Object):
     @dbus.service.method(AGENT_INTERFACE,
                     in_signature="", out_signature="")
     def Release(self):
-        print("Release")
+        LOGGER.debug("Release")
         if self.exit_on_release:
             mainloop.quit()
 
     @dbus.service.method(AGENT_INTERFACE,
                     in_signature="os", out_signature="")
     def AuthorizeService(self, device, uuid):
-        print("AuthorizeService (%s, %s)" % (device, uuid))
+        LOGGER.debug("AuthorizeService (%s, %s)" % (device, uuid))
         if uuid == "0000110d-0000-1000-8000-00805f9b34fb":
-            print("Authorized A2DP Service")
+            LOGGER.debug("Authorized A2DP Service")
             return
-        print("Rejecting non-A2DP Service")
+        LOGGER.debug("Rejecting non-A2DP Service")
         raise Rejected("Connection rejected")
 
     @dbus.service.method(AGENT_INTERFACE,
                     in_signature="o", out_signature="s")
     def RequestPinCode(self, device):
-        print("RequestPinCode (%s)" % (device))
+        LOGGER.debug("RequestPinCode (%s)" % (device))
         return "0000"
 
     @dbus.service.method(AGENT_INTERFACE,
                     in_signature="o", out_signature="u")
     def RequestPasskey(self, device):
-        print("RequestPasskey (%s)" % (device))
+        LOGGER.debug("RequestPasskey (%s)" % (device))
         return dbus.UInt32("password")
 
     @dbus.service.method(AGENT_INTERFACE,
                     in_signature="ouq", out_signature="")
     def DisplayPasskey(self, device, passkey, entered):
-        print("DisplayPasskey (%s, %06u entered %u)" %
+        LOGGER.debug("DisplayPasskey (%s, %06u entered %u)" %
                         (device, passkey, entered))
 
     @dbus.service.method(AGENT_INTERFACE,
                     in_signature="os", out_signature="")
     def DisplayPinCode(self, device, pincode):
-        print("DisplayPinCode (%s, %s)" % (device, pincode))
+        LOGGER.debug("DisplayPinCode (%s, %s)" % (device, pincode))
 
     @dbus.service.method(AGENT_INTERFACE,
                     in_signature="ou", out_signature="")
     def RequestConfirmation(self, device, passkey):
-        print("RequestConfirmation (%s, %06d)" % (device, passkey))
+        LOGGER.debug("RequestConfirmation (%s, %06d)" % (device, passkey))
         return
 
     @dbus.service.method(AGENT_INTERFACE,
                     in_signature="o", out_signature="")
     def RequestAuthorization(self, device):
-        print("RequestAuthorization (%s)" % (device))
+        LOGGER.debug("RequestAuthorization (%s)" % (device))
         raise Rejected("Pairing rejected")
 
     @dbus.service.method(AGENT_INTERFACE,
                     in_signature="", out_signature="")
     def Cancel(self):
-        print("Cancel")
+        LOGGER.debug("Cancel")

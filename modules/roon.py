@@ -95,7 +95,10 @@ class RoonPlayer(threading.Thread):
                 args += ["-V", self.monitor.config["ALSA_VOLUME_CONTROL"], "-X"]
             if self.monitor.config["ALSA_SOUND_DEVICE"]:
                 args += ["-o", self.monitor.config["ALSA_SOUND_DEVICE"]]
-            self._squeezelite_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
+            if self.monitor.config["ENABLE_DEBUG"]:
+                self._squeezelite_proc = subprocess.Popen(args)
+            else:
+                self._squeezelite_proc = subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
         # connect to the roon websockets api
         appinfo = {
             "extension_id": "pi_monitor_%s" % HOSTNAME,

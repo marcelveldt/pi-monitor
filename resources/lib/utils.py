@@ -278,7 +278,7 @@ class StatesDict(dict):
         ''' if update is used we only broadcast an event for the state key '''
         if not "state" in new_values:
             for key, value in new_values.items():
-                self.__setitem__(key, value)powersave
+                self.__setitem__(key, value)
         else:
             key_changed = False
             for key, value in new_values.items():

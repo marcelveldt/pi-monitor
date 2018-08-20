@@ -12,7 +12,10 @@
         <p class="card-text" id="player_title"></p>
         <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;" onClick="command('player', 'toggleplaypause');">Play</a><br><br>
         <a href="#" class="btn btn-secondary" id="btn_next" style="width: 100%;" onClick="command('player', 'next');">Next</a>
-        <input type="range" id="volume_slider" name="Volume" min="0" max="100" value="50" step="2" class="form-control-range" />
+        <div class="form-group">
+          <label for="volume_slider">Volume</label>
+          <input type="range" class="form-control-range" id="volume_slider">
+        </div>
       </div>
     </div>
     <div class="card" style="max-width: 50%;">
@@ -44,7 +47,7 @@
                     $("#player_artist").html('Artist: ' + data.artist);
                     $("#player_title").html('Title: ' + data.title);
                     $("#player_image").attr( 'src', '/player_image?cache='+data.last_updated );
-                    $("#volume_slider").attr('value', data.volume_level );
+                    $("#volume_slider").value = data.volume_level;
                     $("#last_updated").html(data.last_updated);
                     if (data.power)
                         $("#power_state").html("ON");
@@ -63,7 +66,8 @@
 </script>
 <script>
   $('#volume_slider').change( function() {
-    var newValue = this.value;        
+    var newValue = this.value;
+    console.log("volume slider updated");     
     $.getJSON('/command', {
             command: "set_volume",
             target: "player",
@@ -72,7 +76,7 @@
         }, function (data) {
             alert(data);
         });
-    });
+    })
 </script>
 
 <script>

@@ -275,8 +275,15 @@ class StatesDict(dict):
         self.state_changed_event(key)
 
     def update(self, new_values):
+        ''' if update is used we only broadcast an event for one of the changed values'''
+        key_changed = ""
         for key, value in new_values.items():
-            self.__setitem__(key, value)
+            if not key in self or self.get(key) != value:
+                key_changed = key
+                super(StatesDict, self).__setitem__(key, value)
+        if key_changed:
+            super(StatesDict, self).__setitem__("last_updated", time.time())
+            self.state_changed_event(key)
 
     def __init__(self, *args, **kwargs):
         val = super(StatesDict, self).__init__(*args, **kwargs)
@@ -336,7 +343,7 @@ class ConfigDict(OrderedDict):
 class PlayerMetaData(StatesDict):
     def __init__(self, playername):
         super(PlayerMetaData, self).__init__()
-        self["state"] = ""
+        self["state"] = IDLE_STATE
         self["playername"] = playername
         self["artist"] = ""
         self["album"] = ""

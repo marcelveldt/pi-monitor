@@ -59,7 +59,6 @@ def setup(monitor):
 class GoogleAssistantPlayer(threading.Thread):
     _exit = threading.Event()
     _assistant = None
-    _init_done = False
 
     def command(self, cmd, cmd_data):
         if not self._assistant:
@@ -87,10 +86,10 @@ class GoogleAssistantPlayer(threading.Thread):
         """
         LOGGER.debug("Google received event: %s" % event)
 
-        if event.type == EventType.ON_CONVERSATION_TURN_STARTED and not self._init_done:
-            # the assistant fires this event once at startup (bug perhaps?)
-            self._init_done = True
+        if event.type == EventType.ON_START_FINISHED:
             LOGGER.info("Google Assistant is now ready for commands (waiting for hotword)")
+            # todo: set volume to max ?
+            #assistant.send_text_query("set volume to 100%")
 
         elif event.type in [EventType.ON_CONVERSATION_TURN_STARTED]:
             cur_player = self.monitor.states["player"]["current_player"]
@@ -226,7 +225,6 @@ class GoogleAssistantPlayer(threading.Thread):
         with Assistant(self.credentials, self.device_model_id) as assistant:
             events = assistant.start()
             assistant.set_mic_mute(self.mic_muted)
-            assistant.send_text_query("set volume to 100%")
             device_id = assistant.device_id
             LOGGER.info('device_model_id: %s' % self.device_model_id)
             LOGGER.info('device_id: %s' % device_id)

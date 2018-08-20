@@ -47,7 +47,9 @@ class MQTT(threading.Thread):
         # Connect to broker and keep thread alive
         self._connect()
         # register state changed events
-        self.monitor.register_state_callback(self.state_event)
+        for mod in self.monitor.config.get("MQTT_PUBLISH_STATES", ["gpio", "player", "systemstate"]):
+            self.monitor.register_state_callback(self.state_event, mod)
+
         while not self._exit.isSet():
             self._exit.wait(3600) # keep thread alive
 

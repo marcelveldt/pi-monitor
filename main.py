@@ -9,7 +9,7 @@ import thread
 import threading
 from Queue import Queue
 import datetime
-from resources.lib.utils import DEVNULL, PlayerMetaData, StatesDict, ConfigDict, HOSTNAME, APPNAME, json, import_or_install, run_proc, IS_DIETPI, PLAYING_STATES, VOLUME_CONTROL_SOFT, VOLUME_CONTROL_DISABLED, PLAYING_STATE, INTERRUPT_STATES, IDLE_STATES, PAUSED_STATE, IDLE_STATE, ALERT_STATE
+from resources.lib.utils import RESOURCES_FOLDER, DEVNULL, PlayerMetaData, StatesDict, ConfigDict, HOSTNAME, APPNAME, json, import_or_install, run_proc, IS_DIETPI, PLAYING_STATES, VOLUME_CONTROL_SOFT, VOLUME_CONTROL_DISABLED, PLAYING_STATE, INTERRUPT_STATES, IDLE_STATES, PAUSED_STATE, IDLE_STATE, ALERT_STATE
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -192,10 +192,11 @@ class Monitor():
         success = False
         if "volume" in cmd and self.states["player"]["state"] != PLAYING_STATE:
             # prefer direct alsa control of volume
+            LOGGER.debug("forward command %s to alsa" % cmd)
             self.get_module("alsa").command(cmd, cmd_data)
         elif cur_player:
             # all other commands will be forwarded to the current player
-            LOGGER.debug("redirected command %s with data %s to player %s" %(cmd, str(cmd_data), cur_player))
+            LOGGER.debug("forward command %s with data %s to player %s" %(cmd, str(cmd_data), cur_player))
             player_mod = self.get_module(cur_player)
             success = player_mod.command(cmd, cmd_data)
             if not success:
@@ -203,19 +204,22 @@ class Monitor():
         if not success:
             # fallback to direct alsa control for volume commands
             if "volume" in cmd:
+                LOGGER.debug("forward command %s to alsa" % cmd)
                 self.get_module("alsa").command(cmd, cmd_data)
             # fallback to local player for other commands
-            elif not self.get_module("localplayer").command(cmd, cmd_data):
-                LOGGER.warning("unable to process command %s on localplayer" % (cmd))
+            else:
+                LOGGER.debug("forward command %s to localplayer" % cmd)
+                elif not self.get_module("localplayer").command(cmd, cmd_data):
+                    LOGGER.warning("unable to process command %s on localplayer" % (cmd))
 
     def _beep(self, alt_sound=False):
         ''' play beep through gpio buzzer or speakers '''
         if "GPIO_BUZZER_PIN" in self.config and self.config["GPIO_BUZZER_PIN"]:
             self.get_module("gpio").command("beep", alt_sound)
         elif not self.player_info["state"] == PLAYING_STATE:
-            filename = os.path.join(BASE_DIR, 'resources', 'ding.wav')
+            filename = os.path.join(RESOURCES_FOLDER, 'ding.wav')
             if alt_sound:
-                filename = os.path.join(BASE_DIR, 'resources', 'dong.wav')
+                filename = os.path.join(RESOURCES_FOLDER, 'dong.wav')
             # play sound with sox (ignore if it fails)
             run_proc("/usr/bin/play %s" % filename, check_result=False, ignore_error=True)
 

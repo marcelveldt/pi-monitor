@@ -95,7 +95,7 @@ def run_proc(cmd_str, check_result=True, ignore_error=True):
             return subprocess.check_output(args)
         elif not check_result and ignore_error:
             # execute command without waiting or returning
-            thread.start_new_thread(subprocess.call,(args, stdout=DEVNULL, stderr=STDOUT))
+            subprocess.Popen(args)
         else:
             # execute command with waiting
             return subprocess.call(cmd, stdout=DEVNULL, stderr=STDOUT)

@@ -38,12 +38,14 @@ class LocalPlayer(object):
     def start(self):
         pass
 
-    def command(self, cmd, *args, **kwargs):
+    def command(self, cmd, cmd_data):
         ''' send command to roon output/zone'''
-        loop = kwargs.get("loop")
-        url = kwargs.get("url")
-        if not url:
-            url = args[0] if args else ""
+        if isinstance(cmd_data, dict):
+            loop = cmd_data.get("loop", False)
+            url = cmd_data.get("url")
+        else:
+            url = cmd_data
+            loop = False
         if cmd in ["stop", "pause"]:
             self._stop_playing()
             return True

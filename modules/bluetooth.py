@@ -53,17 +53,7 @@ class BluetoothPlayer(threading.Thread):
 
     def command(self, cmd, cmd_data=None):
         ''' send command to player'''
-        if cmd == "stop":
-            cmd = "pause"
-        if cmd == "volume_up":
-            return False
-        elif cmd == "volume_down":
-            return False
-        elif cmd == "volume_set":
-            return False
-        elif cmd == "previous":
-            cmd = "prev"
-        return False
+        return False # not possible atm
 
     def run(self):
         # check bluetooth config

@@ -73,7 +73,7 @@ class GPIO(object):
             value = 0
         else:
             value = int(opt_data)
-        self.set_gpio(pin, value)
+        return self.set_gpio(pin, value)
            
     def start(self):
         if self.config["GPIO_CUSTOM_LAYOUT"]:

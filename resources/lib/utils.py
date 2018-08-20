@@ -26,8 +26,8 @@ IS_DIETPI = os.path.isfile("/DietPi/dietpi/.hw_model")
 
 PAUSED_STATE = "paused"
 PLAYING_STATE = "playing"
-NOTIFY_STATE = "notification"
-ALERT_STATE = "alert"
+NOTIFY_STATE = "notifiying"
+ALERT_STATE = "alerting"
 LISTENING_STATE = "listening"
 SPEAKING_STATE = "speaking"
 LOADING_STATE = "loading"
@@ -97,7 +97,7 @@ def run_proc(cmd_str, check_result=True, ignore_error=True):
             # execute command without waiting or returning
             subprocess.Popen(args, creationflags=subprocess.DETACHED_PROCESS)
         else:
-            # execute command without waiting
+            # execute command with waiting
             return subprocess.call(cmd, stdout=DEVNULL, stderr=STDOUT)
     except Exception as exc:
         if not ignore_error:

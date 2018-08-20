@@ -62,19 +62,20 @@ class AirPlayPlayer(threading.Thread):
         ''' send command to airplay output/zone'''
         if not self._remote:
             return False
-        if cmd == "next":
-            cmd = "nextitem"
-        elif cmd == "previous":
-            cmd = "previtem"
-        elif cmd == "toggleplaypause":
-            cmd = "playpause"
-        elif cmd == "volume_up":
-            self._remote.volume_up()
-        elif cmd == "volume_down":
-            self._remote.volume_down()
-        elif cmd == "volume_set":
-            return False
-        return self._remote.do(cmd)
+        if cmd in ["next", "previous", "toggleplaypause", "play", "stop", "pause", "volume_up", "volume_down"]:
+            if cmd == "next":
+                cmd = "nextitem"
+            elif cmd == "previous":
+                cmd = "previtem"
+            elif cmd == "toggleplaypause":
+                cmd = "playpause"
+            elif cmd == "volume_up":
+                self._remote.volume_up()
+            elif cmd == "volume_down":
+                self._remote.volume_down()
+            return self._remote.do(cmd)
+        else:
+            return False # no other commands supported (for now)
 
     def _event_processor(self, event_type, info):
         assert(isinstance(info, Infos))

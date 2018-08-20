@@ -82,8 +82,10 @@ class RoonPlayer(threading.Thread):
             return self._roonapi.change_volume(self.output_id, -2, "relative")
         elif cmd == "volume_set":
             return self._set_volume(cmd_data)
-        else:
+        elif cmd in ["next", "previous", "stop", "pause", "play"]:
             return self._roonapi.playback_control(self.output_id, cmd)
+        else:
+            return False # no support for other commands (yet)
 
     def run(self):
         if self.enable_squeezelite:

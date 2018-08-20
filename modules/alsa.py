@@ -24,7 +24,11 @@ class AlsaVolume(object):
         self._mixer = alsaaudio.Mixer(self.monitor.config["ALSA_VOLUME_CONTROL"])
         self.monitor.states["player"]["volume_level"] = self._volume_get()
         LOGGER.info("current alsa volume level: %s" % self._volume_get())
-        
+
+    @property
+    def volume(self):
+        return self._volume_get()
+    
     def stop(self):
         self._exit = True
 

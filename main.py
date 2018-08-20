@@ -182,7 +182,7 @@ class Monitor():
         elif cmd in ["play_sound", "play_url", "play_media"]:
             cmd = "play_media"
         elif cmd in ["ping", "beep", "buzz"]:
-            return self._beep()
+            return self._beep(cmd_data)
         # redirect command to current player
         cur_player = self.states["player"]["current_player"]
         success = False
@@ -196,17 +196,22 @@ class Monitor():
             LOGGER.debug("redirected command %s with data %s to player %s with result %s" %(cmd, str(cmd_data), cur_player, success))
         if not success and "volume" in cmd:
             # fallback to direct alsa control
-            self.get_module("alsa").command(cmd, cmd_data)
+            success = self.get_module("alsa").command(cmd, cmd_data)
+        elif not success:
+            # redirect command to local player
+            if not self.get_module("localplayer").command(cmd, cmd_data):
+                LOGGER.warning("unable to process command %s on player %s or localplayer" % (cmd, cur_player))
 
     def _beep(self, alt_sound=False):
         ''' play beep through gpio buzzer or speakers '''
         if "GPIO_BUZZER_PIN" in self.config and self.config["GPIO_BUZZER_PIN"]:
-            self.command("gpio", "beep", alt_sound, True)
+            self.get_module("gpio").command("beep", alt_sound)
         elif not self.player_info["state"] == PLAYING_STATE:
             filename = os.path.join(BASE_DIR, 'resources', 'ding.wav')
             if alt_sound:
                 filename = os.path.join(BASE_DIR, 'resources', 'dong.wav')
-            self._player_command("play_media", filename)
+            # play sound with sox (ignore if it fails)
+            run_proc("/usr/bin/play %s" % filename, check_result=False, ignore_error=True)
 
     def _set_power(self, player_powered, stop_players=False):
         if isinstance(player_powered, (str, unicode)):
@@ -221,8 +226,8 @@ class Monitor():
 
     def _setup_modules(self):
         '''load all modules from the modules directory'''
-        # first load our required modules (they will be ignored if already imported later on)
-        for item in ["alsa", "webconfig"]:
+        for item in ["alsa", "localplayer", "webconfig"]:
+            # first load our required modules (they will be ignored if already imported later on)
             self._setup_module(item)
         # load all other modules
         for item in os.listdir(MODULES_PATH):
@@ -403,7 +408,7 @@ class StatesWatcher(threading.Thread):
         if cur_player:
             cur_player_state = self.states[cur_player]["state"]
         else:
-            cur_player_state = None
+            cur_player_state = ""
         if ((cur_player != player_key and self.states[player_key]["state"] in PLAYING_STATES) or 
                 (not cur_player and self.states[player_key]["state"] in ["paused", "idle"])):
             # we have a new active player!
@@ -419,7 +424,7 @@ class StatesWatcher(threading.Thread):
             if self.states[player_key]["state"] in INTERRUPT_STATES:
                 # a notification or alert started, store previous player and set notification volume level
                 self.states["player"]["interrupted_player"] = cur_player
-                self.states["player"]["interrupted_volume"] = self.states["player"]["volume_level"]
+                self.states["player"]["interrupted_volume"] = self.get_module("alsa").volume
                 self.states["player"]["interrupted_state"] = cur_player_state
                 if self.monitor.config["NOTIFY_VOLUME"]:
                     self.monitor.command("player", "volume_set", self.monitor.config["NOTIFY_VOLUME"])
@@ -428,16 +433,18 @@ class StatesWatcher(threading.Thread):
                 self.monitor.command(player_key, "pause")
                 time.sleep(2)
                 self.monitor.command(player_key, "play")
-        elif self.states["player"]["interrupted_player"] and player_key == cur_player and self.states[player_key]["state"] in IDLE_STATES:
+        elif (self.states["player"]["interrupted_player"] and 
+                    player_key == cur_player and self.states[player_key]["state"] in IDLE_STATES):
             # the notification/alert stopped, restore the previous state
             if self.states["player"]["interrupted_volume"]:
-                self.monitor.command("player", "volume_set", self.states["player"]["interrupted_volume"])
+                self.monitor.command("alsa", "volume_set", self.states["player"]["interrupted_volume"])
             if self.states["player"]["interrupted_state"]:
                 self.monitor.command(self.states["player"]["interrupted_player"], "play")
             else:
                 self.states["player"]["current_player"] = self.states["player"]["interrupted_player"]
             self.states["player"]["interrupted_volume"] = 0
             self.states["player"]["interrupted_player"] = ""
+            self.states["player"]["interrupted_state"] = ""
         # metadadata update of current player
         if player_key == self.states["player"]["current_player"]:
             self.states["player"].update(self.states[player_key])

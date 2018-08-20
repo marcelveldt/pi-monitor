@@ -53,19 +53,15 @@ class SpotifyPlayer(threading.Thread):
 
     def command(self, cmd, cmd_data=None):
         ''' send command to player'''
-        if cmd == "stop":
-            cmd = "pause"
-        if cmd == "volume_up":
-            return False
-        elif cmd == "volume_down":
-            return False
-        elif cmd == "volume_set":
-            return False
-        elif cmd == "previous":
-            cmd = "prev"
-        elif cmd in ["play", "pause"]:
+        if cmd == "previous":
+            return self._api_request("me/player/prev", method="post")
+        elif cmd in ["play", "pause", "stop", "next"]:
+            if cmd == "stop":
+                cmd = "pause"
             return self._api_request("me/player/%s" % cmd, method="put")
-        return self._api_request("me/player/%s" % cmd, method="post")
+        else:
+            return False # no support for other commands (yet)
+        
 
     def _api_request(self, endpoint, params=None, method="get"):
         '''get info from json api'''

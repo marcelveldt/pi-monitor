@@ -61,21 +61,17 @@ class SqueezelitePlayer(threading.Thread):
         elif cmd == "volume_set":
             return self._set_volume(cmd_data)
         elif cmd == "next":
-            self.send_request("playlist jump +1")
+            return self.send_request("playlist jump +1")
         elif cmd == "previous":
-            self.send_request("playlist jump -1")
+            return self.send_request("playlist jump -1")
         elif cmd == "stop":
-            self.send_request("stop")
+            return self.send_request("stop")
         elif cmd == "play":
-            self.send_request("play")
+            return self.send_request("play")
         elif cmd == "pause":
-            self.send_request("pause 1")
+            return self.send_request("pause 1")
         else:
-            params = {
-                "zone": self.output_id,
-                "control": cmd
-            }
-            return self._api_execute("control", params=params)
+            return False
 
     def run(self):
         # we start squuezelite manually with our optimal settings

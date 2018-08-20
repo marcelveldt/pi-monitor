@@ -66,8 +66,10 @@ class GoogleAssistantPlayer(threading.Thread):
         if self.monitor.states["google_assistant"]["state"] == PLAYING_STATE:
             if cmd == "pause":
                 self._assistant.send_text_query("pause")
+                return True
             elif cmd == "stop":
                 self._assistant.send_text_query("stop")
+                return True
             else:
                 return False
         else:
@@ -88,7 +90,7 @@ class GoogleAssistantPlayer(threading.Thread):
             cur_player = self.monitor.states["player"]["current_player"]
             self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
             self.monitor.command("system", "ping")
-            LOGGER.info("Google Assistant is now listening for a command (hotword detected)")
+            LOGGER.info("Google Assistant is now listening for a command (hotword detected) - %s" % str(event.args))
 
 
         elif event.type in [EventType.ON_ALERT_STARTED]:

@@ -57,13 +57,15 @@ class LocalPlayer(object):
 
     def play_media(self, url, loop=False, playback_state=PLAYING_STATE):
         ''' play media file with local sox player '''
+        LOGGER.debug("play_media: %s - loop: %s" %(url, loop))
         self._stop_playing()
         self._playing = True
         self.monitor.states["localplayer"]["state"] = playback_state
         self.monitor.states["localplayer"]["title"] = url # todo: extract metadata from playing file?
         args = ["/usr/bin/play", url]
         while self._playing and not self._exit.isSet():
-            self._sox_proc = subprocess.call(args)
+            self._sox_proc = subprocess.Popen(args)
+            self._sox_proc.wait()
             if not loop:
                 break
         self._playing = False

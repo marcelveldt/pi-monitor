@@ -190,7 +190,7 @@ class GoogleAssistantPlayer(threading.Thread):
                 device_model_id = device_config['model_id']
                 last_device_id = device_config.get('last_device_id', None)
         except FileNotFoundError:
-            pass
+            LOGGER.warning("device config file not found")
         if not model_id and not device_model_id:
             raise Exception('Missing --device-model-id option')
         # Re-register if "device_model_id" is given by the user and it differs

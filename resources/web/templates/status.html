@@ -47,7 +47,7 @@
                     $("#player_artist").html('Artist: ' + data.artist);
                     $("#player_title").html('Title: ' + data.title);
                     $("#player_image").attr( 'src', '/player_image?cache='+data.last_updated );
-                    $("#volume_slider").attr('value', data.volume_level);
+                    $("#volume_slider").val(data.volume_level);
                     $("#last_updated").html(data.last_updated);
                     if (data.power)
                         $("#power_state").html("ON");

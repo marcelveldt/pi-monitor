@@ -21,7 +21,6 @@ class AlsaVolume(object):
                 "mixers": []
             }
         self._setup_alsa_config()
-        self._mixer = alsaaudio.Mixer(self.monitor.config["ALSA_VOLUME_CONTROL"])
         self.monitor.states["player"]["volume_level"] = self._volume_get()
         LOGGER.info("current alsa volume level: %s" % self._volume_get())
 
@@ -60,13 +59,19 @@ class AlsaVolume(object):
         ''' set volume level '''
         if volume_level < 0 or volume_level > 100:
             return False
-        self._mixer.setvolume(int(volume_level), alsaaudio.PCM_PLAYBACK)
+        # we use amixer so we don't have to deal with the logic to calculate hardware values vs percentages
+        subprocess.call(["/usr/bin/amixer", "-q", "-M", "set", self.monitor.config["ALSA_VOLUME_CONTROL"], "%s%" % volume_level])
         self.monitor.states["player"]["volume_level"] = volume_level
         return True
 
     def _volume_get(self):
         ''' get current volume level of player'''
-        return self._mixer.getvolume(alsaaudio.PCM_PLAYBACK)[0]
+        volume = 0
+        # we use amixer so we don't have to deal with the logic to calculate hardware values vs percentages
+        result = subprocess.check_output("amixer sget %s -M | grep 'Left:' | awk -F'[][]' '{ print $2 }'" % self.monitor.config["ALSA_VOLUME_CONTROL"], shell=True)
+        if result:
+            volume = int(result.split("%")[0])
+        return volume
 
     def _setup_alsa_config(self):
         ''' get details about the alsa configuration'''

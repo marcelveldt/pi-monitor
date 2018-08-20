@@ -70,6 +70,7 @@ class LocalPlayer(object):
         while self._playing and not self._exit.isSet():
             self._sox_proc = subprocess.Popen(args)
             self._sox_proc.wait()
+            self._sox_proc = None
             if not loop:
                 break
         self._playing = False
@@ -79,5 +80,8 @@ class LocalPlayer(object):
         ''' make sure that any playing sox player stops playing '''
         self._playing = False
         if self._sox_proc:
-            self._sox_proc.terminate()
+            try:
+                self._sox_proc.terminate()
+            except OSError:
+                pass
         

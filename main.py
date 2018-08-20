@@ -133,7 +133,14 @@ class Monitor():
             LOGGER.debug("process command %s for target %s with data %s" %(cmd, target, str(cmd_data)))
             if target == "player":
                 # redirect player commands
-                self._player_command(cmd, cmd_data)
+                if cmd == "flush":
+                    # free the audio device by temporary stop playback
+                    # will be used when a player is playing and another one starts playing too
+                    self._player_command("pause")
+                    time.sleep(2)
+                    self._player_command("play")
+                else:
+                    self._player_command(cmd, cmd_data)
             elif target == "power":
                 # power commands
                 if cmd == "power":
@@ -408,37 +415,34 @@ class StatesWatcher(threading.Thread):
 
     def _handle_player_state_change(self, player_key):
         ''' handle state changed event for the mediaplayers'''
+        flush_needed = False
         cur_player = self.states["player"]["current_player"]
         if cur_player:
             cur_player_state = self.states[cur_player]["state"]
         else:
             cur_player_state = ""
-        if ((cur_player != player_key and self.states[player_key]["state"] in PLAYING_STATES) or 
-                (not cur_player and self.states[player_key]["state"] in ["paused", "idle"])):
+        new_player_state = self.states[player_key]["state"]
+        if ((cur_player != player_key and new_player_state in PLAYING_STATES) or 
+                (not cur_player and new_player_state == PAUSED_STATE)):
             # we have a new active player!
             self.states["player"]["current_player"] = player_key
             LOGGER.info("active player changed to %s" % player_key)
             # signal any other players about this so they must stop playing
-            flush_needed = False
-            for player in self.states["player"]["players"]:
-                if player != player_key and self.states[player]["state"] in PLAYING_STATES:
-                    self.monitor.command(player, "stop")
-                    flush_needed = True
+            if new_player_state in PLAYING_STATES:
+                for player in self.states["player"]["players"]:
+                    if player != player_key and self.states[player]["state"] in PLAYING_STATES:
+                        self.monitor.command(player, "stop")
+                        flush_needed = True
             # handle notifications and alerts
-            if self.states[player_key]["state"] in INTERRUPT_STATES:
+            if new_player_state in INTERRUPT_STATES:
                 # a notification or alert started, store previous player and set notification volume level
                 self.states["player"]["interrupted_player"] = cur_player
                 self.states["player"]["interrupted_volume"] = self.monitor.get_module("alsa").volume
                 self.states["player"]["interrupted_state"] = cur_player_state
                 if self.monitor.config["NOTIFY_VOLUME"]:
                     self.monitor.command("player", "volume_set", self.monitor.config["NOTIFY_VOLUME"])
-            # free alsa by quickly restarting playback
-            if flush_needed:
-                self.monitor.command(player_key, "pause")
-                time.sleep(2)
-                self.monitor.command(player_key, "play")
         elif (self.states["player"]["interrupted_player"] and 
-                    player_key == cur_player and self.states[player_key]["state"] in IDLE_STATES):
+                    player_key == cur_player and new_player_state in IDLE_STATES):
             # the notification/alert stopped, restore the previous state
             if self.states["player"]["interrupted_volume"]:
                 self.monitor.get_module("alsa").command("volume_set", self.states["player"]["interrupted_volume"])
@@ -450,11 +454,14 @@ class StatesWatcher(threading.Thread):
             self.states["player"]["interrupted_player"] = ""
             self.states["player"]["interrupted_state"] = ""
         # metadadata update of current player
-        if player_key == self.states["player"]["current_player"]:
+        if player_key == cur_player:
             self.states["player"].update(self.states[player_key])
         # turn player on if needed
         if not self.states["player"]["power"] and self.states["player"]["state"] in PLAYING_STATES:
             self.monitor.command("power", "poweron")
+        # free audio device by quickly restarting playback
+        if flush_needed:
+            self.monitor.command("player", "flush")
     
     def _handle_volume_limiter(self):
         ''' check if volume_level is higher than the allowed setting '''

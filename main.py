@@ -216,12 +216,11 @@ class Monitor():
         ''' play beep through gpio buzzer or speakers '''
         if "GPIO_BUZZER_PIN" in self.config and self.config["GPIO_BUZZER_PIN"]:
             self.get_module("gpio").command("beep", alt_sound)
-        elif not self.player_info["state"] == PLAYING_STATE:
+        elif self.player_info["state"] != PLAYING_STATE:
             filename = os.path.join(RESOURCES_FOLDER, 'ding.wav')
             if alt_sound:
                 filename = os.path.join(RESOURCES_FOLDER, 'dong.wav')
             # play sound with sox (ignore if it fails)
-            self._set_power(True)
             run_proc("/usr/bin/play %s" % filename, check_result=False, ignore_error=True)
 
     def _set_power(self, player_powered, stop_players=False):

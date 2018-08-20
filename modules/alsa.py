@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import subprocess
 from resources.lib.utils import import_or_install, VOLUME_CONTROL_DISABLED, VOLUME_CONTROL_SOFT
 
 

@@ -150,9 +150,11 @@ class Monitor():
                 elif cmd == "run_proc" and cmd_data:
                     run_proc(cmd_data)
                 elif cmd in ["restart", "reboot"]:
+                    self.states.messages.append("Reboot in progress!")
                     LOGGER.warning("System will now reboot!")
                     os.system("reboot")
                 elif cmd == "reload":
+                    self.states.messages.append("The service is reloading!")
                     LOGGER.info("Restart of service requested!\n")
                     os.kill(os.getpid(), 15)
                 elif cmd in ["ping", "beep", "buzz"]:

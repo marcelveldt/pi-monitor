@@ -428,7 +428,7 @@ class StatesWatcher(threading.Thread):
             if self.states[player_key]["state"] in INTERRUPT_STATES:
                 # a notification or alert started, store previous player and set notification volume level
                 self.states["player"]["interrupted_player"] = cur_player
-                self.states["player"]["interrupted_volume"] = self.get_module("alsa").volume
+                self.states["player"]["interrupted_volume"] = self.monitor.get_module("alsa").volume
                 self.states["player"]["interrupted_state"] = cur_player_state
                 if self.monitor.config["NOTIFY_VOLUME"]:
                     self.monitor.command("player", "volume_set", self.monitor.config["NOTIFY_VOLUME"])
@@ -441,7 +441,7 @@ class StatesWatcher(threading.Thread):
                     player_key == cur_player and self.states[player_key]["state"] in IDLE_STATES):
             # the notification/alert stopped, restore the previous state
             if self.states["player"]["interrupted_volume"]:
-                self.monitor.command("alsa", "volume_set", self.states["player"]["interrupted_volume"])
+                self.monitor.get_module("alsa").command("volume_set", self.states["player"]["interrupted_volume"])
             if self.states["player"]["interrupted_state"]:
                 self.monitor.command(self.states["player"]["interrupted_player"], "play")
             else:

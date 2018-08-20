@@ -30,7 +30,6 @@ class LocalPlayer(object):
     def __init__(self, monitor):
         self.monitor = monitor
         self.monitor.states["localplayer"] = PlayerMetaData("LocalPlayer")
-        threading.Thread.__init__(self)
         
     def stop(self):
         self._exit.set()

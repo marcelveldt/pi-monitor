@@ -171,7 +171,7 @@ class Monitor():
             cmd = "next"
         elif cmd in ["previous", "prev", "previous_track", "previoustrack"]:
             cmd = "next"
-        elif cmd in ["toggle", "toggleplaypause", "toggleplay", "togglepause"]:
+        elif cmd in ["toggle", "toggleplaypause", "toggleplay", "togglepause", "playpause"]:
             cmd = "pause" if self.is_playing else "play"
         elif cmd in ["volup", "volumeup", "volume_up"]:
             cmd = "volume_up"
@@ -179,8 +179,12 @@ class Monitor():
             cmd = "volume_down"
         elif cmd in ["volume", "setvolume", "volume_set", "set_volume"]:
             cmd = "volume_set"
-        elif cmd in ["play_sound", "play_url", "play_media"]:
+        elif cmd in ["play_sound", "play_url", "play_media", "media_play"]:
             cmd = "play_media"
+        elif cmd in ["play_notify", "notify", "play_notification"]:
+            cmd = "play_notification"
+        elif cmd in ["play_alert", "alert", "play_alarm", "alarm"]:
+            cmd = "play_alert"
         elif cmd in ["ping", "beep", "buzz"]:
             return self._beep(cmd_data)
         # redirect command to current player

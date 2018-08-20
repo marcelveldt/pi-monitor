@@ -38,21 +38,20 @@ class LocalPlayer(object):
     def start(self):
         pass
 
-    def command(self, cmd, cmd_data=None):
+    def command(self, cmd, *args, **kwargs):
         ''' send command to roon output/zone'''
-        loop = False
-        if cmd_data and isinstance(cmd_data, bool):
-            loop = cmd_data
-        elif cmd_data and isinstance(cmd_data, dict):
-            loop = cmd_data.get("loop")
+        loop = kwargs.get("loop")
+        url = kwargs.get("url")
+        if not url:
+            url = args[0] if args else ""
         if cmd in ["stop", "pause"]:
             self._stop_playing()
         elif cmd == "play_media":
-            self.play_media(loop, PLAYING_STATE)
+            self.play_media(url, loop, PLAYING_STATE)
         elif cmd == "play_notification":
-            self.play_media(loop, NOTIFY_STATE)
+            self.play_media(url, loop, NOTIFY_STATE)
         elif cmd == "play_alert":
-            self.play_media(loop, ALERT_STATE)
+            self.play_media(url, loop, ALERT_STATE)
         else:
             return False
 
@@ -64,7 +63,7 @@ class LocalPlayer(object):
         self.monitor.states["localplayer"]["title"] = url # todo: extract metadata from playing file?
         args = ["/usr/bin/play", url]
         while self._playing and not self._exit.isSet():
-            self._sox_proc = subprocess.check_output(args)
+            self._sox_proc = subprocess.call(args)
             if not loop:
                 break
         self._playing = False

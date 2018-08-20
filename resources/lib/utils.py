@@ -127,7 +127,8 @@ def check_package_version(packagename):
         packagename = packagename.split("==")[0]
     try:
         cur_version = parse_version(subprocess.check_output("pip show %s | grep Version" % packagename, shell=True))
-    except CalledProcessError:
+    except Exception as exc:
+        LOGGER.error(exc)
         # package is not installed
         cur_version = 0
     return cur_version >= required_version

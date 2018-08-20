@@ -37,13 +37,13 @@ class MQTT(threading.Thread):
     def __init__(self, monitor):
         self.monitor = monitor
         self.config = monitor.config
+        threading.Thread.__init__(self)
+
+    def run(self):
         LOGGER.info("Publish Stats to topic: %s/<target>" % self.config["MQTT_TOPIC_STAT"] )
         LOGGER.info("Listen for Commands on topic: %s/<target>/<command>" % self.config["MQTT_TOPIC_COMMAND"] )
         # Create the MQTT client
         self._mqttc = Client(self.config["MQTT_CLIENT_ID"], clean_session=self.config["MQTT_CLEAN_SESSION"])
-        threading.Thread.__init__(self)
-
-    def run(self):
         # Connect to broker and keep thread alive
         self._connect()
         # register state changed events
@@ -61,9 +61,10 @@ class MQTT(threading.Thread):
         
     def stop(self):
         self._exit.set()
-        self.publish(self.config["MQTT_TOPIC_AVAILABILITY"], "0", qos=0, retain=True)
-        self._mqttc.disconnect()
-        self._mqttc.loop_stop()
+        if self._mqttc:
+            self.publish(self.config["MQTT_TOPIC_AVAILABILITY"], "0", qos=0, retain=True)
+            self._mqttc.disconnect()
+            self._mqttc.loop_stop()
         threading.Thread.join(self, 2)
 
     def publish(self, topic, value, qos=None, retain=None):

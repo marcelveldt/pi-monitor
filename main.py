@@ -85,7 +85,7 @@ class Monitor():
         # start states watcher
         self._state_watcher = StatesWatcher(self)
         self.states["modules"] = []
-        self.stats["messages"] = []
+        self.states["messages"] = []
         self._state_watcher.start()
 
         # parse config from file

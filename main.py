@@ -221,7 +221,6 @@ class Monitor():
             if alt_sound:
                 filename = os.path.join(RESOURCES_FOLDER, 'dong.wav')
             # play sound with sox (ignore if it fails)
-            LOGGER.debug("play ping with sox: %s" % filename)
             run_proc("/usr/bin/play %s" % filename, check_result=False, ignore_error=True)
 
     def _set_power(self, player_powered, stop_players=False):

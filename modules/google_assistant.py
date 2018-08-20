@@ -92,13 +92,11 @@ class GoogleAssistantPlayer(threading.Thread):
             #assistant.send_text_query("set volume to 100%")
 
         elif event.type in [EventType.ON_CONVERSATION_TURN_STARTED]:
-            cur_player = self.monitor.states["player"]["current_player"]
             self.monitor.states["google_assistant"]["state"] = LISTENING_STATE
             self.monitor.command("system", "ping")
             LOGGER.info("Google Assistant is now listening for a command (hotword detected)")
 
         elif event.type in [EventType.ON_ALERT_STARTED]:
-            cur_player = self.monitor.states["player"]["current_player"]
             self.monitor.states["google_assistant"]["state"] = ALERT_STATE
             LOGGER.info("Google Assistant is now broadcasting an alert")
 

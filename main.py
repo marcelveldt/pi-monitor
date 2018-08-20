@@ -130,7 +130,7 @@ class Monitor():
     def _process_command(self, target, cmd, cmd_data=None):
         ''' process command from the queue '''
         try:
-            LOGGER.debug("process command %s for target %s with data %s" %(cmd, target, str(cmd_data)))
+            LOGGER.debug("processing command %s for target %s with data %s" %(cmd, target, str(cmd_data)))
             if target == "player":
                 # redirect player commands
                 self._player_command(cmd, cmd_data)
@@ -209,7 +209,7 @@ class Monitor():
             # fallback to local player for other commands
             else:
                 LOGGER.debug("forward command %s to localplayer" % cmd)
-                elif not self.get_module("localplayer").command(cmd, cmd_data):
+                if not self.get_module("localplayer").command(cmd, cmd_data):
                     LOGGER.warning("unable to process command %s on localplayer" % (cmd))
 
     def _beep(self, alt_sound=False):

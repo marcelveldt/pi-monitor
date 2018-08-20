@@ -71,18 +71,19 @@
     // polyfill: true,
 
     // // Default CSS classes
-    // rangeClass: 'rangeslider',
-    // disabledClass: 'rangeslider--disabled',
-    // horizontalClass: 'rangeslider--horizontal',
-    // verticalClass: 'rangeslider--vertical',
-    // fillClass: 'rangeslider__fill',
-    // handleClass: 'rangeslider__handle',
+    rangeClass: 'rangeslider',
+    disabledClass: 'rangeslider--disabled',
+    horizontalClass: 'rangeslider--horizontal',
+    verticalClass: 'rangeslider--vertical',
+    fillClass: 'rangeslider__fill',
+    handleClass: 'rangeslider__handle',
 
     // Callback function
     onInit: function() {},
 
     // Callback function
     onSlide: function(position, value) {
+      console.log("slider is sliding")
 
     },
 
@@ -91,7 +92,7 @@
       $.getJSON('/command', {
             command: "set_volume",
             target: "player",
-            data: value
+            data: value,
             format: "json"
         }, function (data) {
             alert(data);

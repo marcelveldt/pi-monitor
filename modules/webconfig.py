@@ -66,15 +66,25 @@ class WebConfig(threading.Thread):
         def player_info_json():
             return self.monitor.player_info.json
 
+        @app.route('/states')
+        @app.route('/states/subkey')
+        def get_states(subkey=None):
+            if subkey:
+                return self.monitor.states[subkey].json
+            else:
+                return self.monitor.states.json
+
         @app.route('/command')
         def command():
             target = request.args.get("target")
             cmd = request.args.get("command")
             cmd_data = request.args.get("data")
             if cmd and target:
-                self.monitor.command(target, cmd, cmd_data)   
+                self.monitor.command(target, cmd, cmd_data)
+                flash('Command executed successfully!')
                 return "success"
             else:
+                flash('Error while executing command')
                 return "command is empty"
 
         @app.route("/log.html")

@@ -19,9 +19,10 @@
       <div class="card-body">
         <h5 class="card-title">Power state: </h5><h5 class="card-title" id="power_state"></h5>
         <p class="card-text"></p>Last updated: <p class="card-text" id="last_updated"></p>
-<!--                 <p class="card-text" id="player_title"></p>
-        <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;">Play</a><br><br>
-        <a href="#" class="btn btn-secondary" id="btn_next" style="width: 100%;">Next</a> -->
+        <br><br>
+        <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;" onClick="command('system', 'reload');">Reload service</a><br><br>
+        <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;" onClick="command('system', 'restart');">Reboot</a><br><br>
+        <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;" onClick="command('system', 'ping');">Ping</a><br><br>
       </div>
     </div>
   </div>

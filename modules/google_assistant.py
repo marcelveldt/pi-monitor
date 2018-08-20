@@ -151,6 +151,7 @@ class GoogleAssistantPlayer(threading.Thread):
         LOGGER.info(' ')
         LOGGER.info("######################################################################################")
 
+        self.monitor.states["messages"].append("Google Assistant needs to be registered. See the log for details.")
         code = None
         while not code and not self._exit.is_set():
             code = self.monitor.config["GOOGLE_ASSISTANT_AUTH_CODE"]

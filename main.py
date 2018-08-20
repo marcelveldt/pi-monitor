@@ -85,6 +85,7 @@ class Monitor():
         # start states watcher
         self._state_watcher = StatesWatcher(self)
         self.states["modules"] = []
+        self.stats["messages"] = []
         self._state_watcher.start()
 
         # parse config from file
@@ -148,12 +149,11 @@ class Monitor():
                     self._saveconfig()
                 elif cmd == "run_proc" and cmd_data:
                     run_proc(cmd_data)
-                elif cmd == "restart":
+                elif cmd in ["restart", "reboot"]:
                     LOGGER.warning("System will now reboot!")
                     os.system("reboot")
                 elif cmd == "reload":
                     LOGGER.info("Restart of service requested!\n")
-                    #self._cleanup(15, 15)
                     os.kill(os.getpid(), 15)
                 elif cmd in ["ping", "beep", "buzz"]:
                     self._beep(cmd_data)
@@ -290,7 +290,7 @@ class Monitor():
         self._exit = True
 
         LOGGER.info("Exit requested!")
-        self._saveconfig(False, True)
+        self._saveconfig()
 
         #turn off power
         self._set_power(False)
@@ -307,13 +307,12 @@ class Monitor():
 
     def _saveconfig(self, autoreload=True, force=False):
         config_changed = self._lastconfig != self.config["last_updated"]
-        if config_changed or force:
+        with open(CONFIG_FILE, "w") as json_file:
+            json_file.write(self.config.json)
+        if config_changed:
             self._lastconfig = self.config
-            with open(CONFIG_FILE, "w") as json_file:
-                json_file.write(self.config.json)
-            if autoreload:
-                LOGGER.info("The configuration is changed! We need to reload.")
-                self.command("system", "reload")
+            LOGGER.info("The configuration is changed!")
+            self.states["messages"].append("Configuration change detected. It might be required to reload or restart.")
         else:
             LOGGER.info("Configuration did not change!")
 

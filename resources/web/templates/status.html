@@ -12,7 +12,7 @@
         <p class="card-text" id="player_title"></p>
         <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;" onClick="command('player', 'toggleplaypause');">Play</a><br><br>
         <a href="#" class="btn btn-secondary" id="btn_next" style="width: 100%;" onClick="command('player', 'next');">Next</a>
-        <input id="volume" data-slider-id='ex1Slider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0"/>
+        <input type="range" id="volume_slider" value="0/>
       </div>
     </div>
     <div class="card" style="max-width: 50%;">
@@ -44,7 +44,7 @@
                     $("#player_artist").html('Artist: ' + data.artist);
                     $("#player_title").html('Title: ' + data.title);
                     $("#player_image").attr( 'src', '/player_image?cache='+data.last_updated );
-                    $("#volume").attr( 'data-slider-value', data.volume_level );
+                    $("#volume_slider").attr( 'value', data.volume_level );
                     $("#last_updated").html(data.last_updated);
                     if (data.power)
                         $("#power_state").html("ON");
@@ -62,18 +62,41 @@
   },1000);
 </script>
 <script>
-  // volume slider
-  $('#volume').slider({
-  formatter: function(value) {
-    $.getJSON('/command', {
+  $('input[type="range"]').rangeslider({
+
+    // Feature detection the default is `true`.
+    // Set this to `false` if you want to use
+    // the polyfill also in Browsers which support
+    // the native <input type="range"> element.
+    // polyfill: true,
+
+    // // Default CSS classes
+    // rangeClass: 'rangeslider',
+    // disabledClass: 'rangeslider--disabled',
+    // horizontalClass: 'rangeslider--horizontal',
+    // verticalClass: 'rangeslider--vertical',
+    // fillClass: 'rangeslider__fill',
+    // handleClass: 'rangeslider__handle',
+
+    // Callback function
+    onInit: function() {},
+
+    // Callback function
+    onSlide: function(position, value) {
+
+    },
+
+    // Callback function
+    onSlideEnd: function(position, value) {
+      $.getJSON('/command', {
             command: "set_volume",
             target: "player",
-            format: "json",
             data: value
+            format: "json"
         }, function (data) {
             alert(data);
         });
-  }
+    }
 });
 </script>
 

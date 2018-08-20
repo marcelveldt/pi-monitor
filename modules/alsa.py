@@ -40,7 +40,7 @@ class AlsaVolume(object):
         if cmd == "volume_up":
             return self._volume_up()
         elif cmd == "volume_down":
-            return self._volume_down
+            return self._volume_down()
         elif cmd == "volume_set":
             return self._volume_set(cmd_data)
         else:

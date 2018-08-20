@@ -14,7 +14,7 @@
         <a href="#" class="btn btn-secondary" id="btn_next" style="width: 100%;" onClick="command('player', 'next');">Next</a>
         <div class="form-group">
           <label for="volume_slider">Volume</label>
-          <input type="range" class="form-control-range" id="volume_slider">
+          <input type="range" class="form-control-range" id="volume_slider" value="0" min="0" max="100">
         </div>
       </div>
     </div>
@@ -47,7 +47,7 @@
                     $("#player_artist").html('Artist: ' + data.artist);
                     $("#player_title").html('Title: ' + data.title);
                     $("#player_image").attr( 'src', '/player_image?cache='+data.last_updated );
-                    $("#volume_slider").attr('value',  data.volume_level.toString());
+                    $("#volume_slider").slider("option", "value", data.volume_level);
                     $("#last_updated").html(data.last_updated);
                     if (data.power)
                         $("#power_state").html("ON");

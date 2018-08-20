@@ -148,7 +148,12 @@ class WebConfig(threading.Thread):
                             else:
                                 temp_values = []
                                 for value in new_value.split(","):
-                                    temp_values.append(int(value.strip()))
+                                    value = value.strip()
+                                    try:
+                                        value = int(value)
+                                    except ValueError:
+                                        pass
+                                    temp_values.append(value)
                                 new_value = temp_values
                         elif isinstance(cur_value, dict):
                             new_value = eval(new_value)

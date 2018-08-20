@@ -61,7 +61,8 @@ class AlsaVolume(object):
         if volume_level < 0 or volume_level > 100:
             return False
         # we use amixer so we don't have to deal with the logic to calculate hardware values vs percentages
-        subprocess.call(["/usr/bin/amixer", "-q", "-M", "set", self.monitor.config["ALSA_VOLUME_CONTROL"], "%s%" % volume_level])
+        percent_str = str(volume_level) + "%"
+        subprocess.call(["/usr/bin/amixer", "-q", "-M", "set", self.monitor.config["ALSA_VOLUME_CONTROL"], percent_str])
         self.monitor.states["player"]["volume_level"] = volume_level
         return True
 

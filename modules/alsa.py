@@ -154,6 +154,8 @@ class AlsaVolume(object):
             # set default mixer as selected mixer
             selected_mixer = default_mixer
         self.monitor.states["alsa"]["mixers"] = alsa_mixers
+
+        mic_boost = self.monitor.config.get("ALSA_CAPTURE_MIC_BOOST", 3.0)
         
         # write default asound file - is needed for volume control and google assistant to work properly
         if selected_mixer == VOLUME_CONTROL_SOFT:
@@ -178,13 +180,16 @@ class AlsaVolume(object):
                  capture.pcm {
                    type plug
                    slave.pcm hw:%s
+                   route_policy sum
+                   ttable.0.0 %s
+
                  }
               }
               ctl.softvol { 
                   type hw 
                   card %s 
               }
-            ''' % (selected_audio_device.split(":")[-1], VOLUME_CONTROL_SOFT, selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1], selected_audio_device.split(":")[-1])
+            ''' % (selected_audio_device.split(":")[-1], VOLUME_CONTROL_SOFT, selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1], mic_boost, selected_audio_device.split(":")[-1])
             selected_audio_device = "softvol"
         else:
             # alsa conf without softvol
@@ -198,10 +203,11 @@ class AlsaVolume(object):
                  capture.pcm {
                    type plug
                    slave.pcm hw:%s
+                   ttable.0.0 %s
                  }
               }
               defaults.ctl.playback.device hw:%s
-            ''' % (selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1],selected_audio_device.split(":")[-1])
+            ''' % (selected_audio_device.split(":")[-1], selected_capture_device.split(":")[-1], mic_boost, selected_audio_device.split(":")[-1])
         # write file
         with open("/etc/asound.conf", "w") as f:
             f.write(alsa_conf)

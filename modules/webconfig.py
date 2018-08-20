@@ -67,7 +67,7 @@ class WebConfig(threading.Thread):
             return self.monitor.player_info.json
 
         @app.route('/states')
-        @app.route('/states/subkey')
+        @app.route('/states/<subkey>')
         def get_states(subkey=None):
             if subkey:
                 return self.monitor.states[subkey].json

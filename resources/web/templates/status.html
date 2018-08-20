@@ -24,40 +24,50 @@
         <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;" onClick="command('system', 'restart');">Reboot</a><br><br>
         <a href="#" class="btn btn-primary" id="btn_play" style="width: 100%;" onClick="command('system', 'ping');">Ping</a><br><br>
       </div>
+      <div class="card-body" id="messages">
+      </div>
     </div>
   </div>
 {% endblock %}
 {% block scripts %}
 <script>
-  setInterval(function(){ // load the data from your endpoint into the div
-      var url = '/player_info.json';
-      var data = {
-        q: 'search',
-        text: 'my text'
-      };
-      $.getJSON(url, data, function (data, status) {
+  setInterval(function(){ // refresh player data if changed
+      $.getJSON('/states/player/last_updated', function (last_updated, status) {
         if (status === 'success') {
           //only update if the timestamp changed
-          if ($("#last_updated").html() != data.last_updated) {
+          if ($("#last_updated").html() != last_updated) {
               console.log("data changed!")
-              $("#player_state").html(data.playername + ' is ' + data.state);
-              $("#player_artist").html('Artist: ' + data.artist);
-              $("#player_title").html('Title: ' + data.title);
-              $("#player_image").attr( 'src', '/player_image?cache='+data.last_updated );
-              $("#last_updated").html(data.last_updated);
-              if (data.power)
-                $("#power_state").html("ON");
-              else
-                $("#power_state").html("OFF");
-              if (data.state == "playing"){
-                $("#btn_play").html("Pause");
-              }
-              else {
-                $("#btn_play").html("Play");
-              }
-            }
+              $.getJSON('/states/player', function (last_updated, status) {
+                  if (status === 'success') {
+                    $("#player_state").html(data.playername + ' is ' + data.state);
+                    $("#player_artist").html('Artist: ' + data.artist);
+                    $("#player_title").html('Title: ' + data.title);
+                    $("#player_image").attr( 'src', '/player_image?cache='+data.last_updated );
+                    $("#last_updated").html(data.last_updated);
+                    if (data.power)
+                        $("#power_state").html("ON");
+                    else
+                        $("#power_state").html("OFF");
+                    if (data.state == "playing")
+                        $("#btn_play").html("Pause");
+                    else
+                      $("#btn_play").html("Play");
+                    }
+              });
+          }
         }
       });
-  },500);
+  },1000);
 </script>
+
+<script>
+  setInterval(function(){ // check for messages
+      $.getJSON('/states/messages', function (messages, status) {
+        if (status === 'success') {
+          $("#messages").html(messages);
+          }
+      });
+  },1000);
+</script>
+
 {% endblock %}

@@ -46,12 +46,16 @@ class LocalPlayer(object):
             url = args[0] if args else ""
         if cmd in ["stop", "pause"]:
             self._stop_playing()
+            return True
         elif cmd == "play_media":
             self.play_media(url, loop, PLAYING_STATE)
+            return True
         elif cmd == "play_notification":
             self.play_media(url, loop, NOTIFY_STATE)
+            return True
         elif cmd == "play_alert":
             self.play_media(url, loop, ALERT_STATE)
+            return True
         else:
             return False
 

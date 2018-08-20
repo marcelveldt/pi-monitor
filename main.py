@@ -450,7 +450,8 @@ class StatesWatcher(threading.Thread):
         
         # metadadata update of current player
         cur_player = self.states["player"]["current_player"]
-        self.states["player"].update(self.states[cur_player])
+        if cur_player:
+            self.states["player"].update(self.states[cur_player])
         
         # turn player on if needed
         if not self.states["player"]["power"] and self.states["player"]["state"] in PLAYING_STATES:

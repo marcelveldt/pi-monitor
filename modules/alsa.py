@@ -58,6 +58,7 @@ class AlsaVolume(object):
 
     def _volume_set(self, volume_level):
         ''' set volume level '''
+        volume_level = int(volume_level)
         if volume_level < 0 or volume_level > 100:
             return False
         # we use amixer so we don't have to deal with the logic to calculate hardware values vs percentages

@@ -181,6 +181,7 @@ class Monitor():
             cmd = "volume_down"
         elif cmd in ["volume", "setvolume", "volume_set", "set_volume"]:
             cmd = "volume_set"
+            cmd_data = int(cmd_data)
         elif cmd in ["play_sound", "play_url", "play_media", "media_play"]:
             cmd = "play_media"
         elif cmd in ["play_notify", "notify", "play_notification"]:

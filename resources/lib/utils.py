@@ -274,20 +274,20 @@ class StatesDict(dict):
         super(StatesDict, self).__delitem__(key)
         self.state_changed_event(key)
 
-    def update(self, new_values, all_events=False):
-        ''' if update is used we only broadcast an event for one of the changed values'''
-        if all_events:
+    def update(self, new_values):
+        ''' if update is used we only broadcast an event for the state key '''
+        if not "state" in new_values:
             for key, value in new_values.items():
-                self.__setitem__(key, value)
+                self.__setitem__(key, value)powersave
         else:
-            key_changed = ""
+            key_changed = False
             for key, value in new_values.items():
                 if not key in self or self.get(key) != value:
-                    key_changed = key
+                    key_changed = True
                     super(StatesDict, self).__setitem__(key, value)
             if key_changed:
                 super(StatesDict, self).__setitem__("last_updated", time.time())
-                self.state_changed_event(key)
+                self.state_changed_event("state")
 
     def __init__(self, *args, **kwargs):
         val = super(StatesDict, self).__init__(*args, **kwargs)

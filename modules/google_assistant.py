@@ -102,9 +102,13 @@ class GoogleAssistantPlayer(threading.Thread):
             self.monitor.states["google_assistant"]["state"] = ALERT_STATE
             LOGGER.info("Google Assistant is now broadcasting an alert")
 
+        elif event.type == EventType.ON_RENDER_RESPONSE:
+            self.monitor.states["google_assistant"]["title"] = event.args.get("text","")
+
+
         elif event.type in [EventType.ON_RESPONDING_STARTED]:
             self.monitor.states["google_assistant"]["state"] = SPEAKING_STATE
-            LOGGER.info("Google Assistant is playing (announcement or media)")
+            LOGGER.info("Google Assistant is talking a response")
 
         elif event.type in [EventType.ON_MEDIA_TRACK_PLAY]:
             self.monitor.states["google_assistant"]["state"] = PLAYING_STATE

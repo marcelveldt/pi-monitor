@@ -9,7 +9,7 @@ import thread
 import threading
 from Queue import Queue
 import datetime
-from resources.lib.utils import DEVNULL, PlayerMetaData, StatesDict, ConfigDict, HOSTNAME, APPNAME, json, import_or_install, run_proc, IS_DIETPI, PLAYING_STATES, VOLUME_CONTROL_SOFT, VOLUME_CONTROL_DISABLED, PLAYING_STATE, INTERRUPT_STATES, IDLE_STATES, PAUSED_STATE, IDLE_STATE
+from resources.lib.utils import DEVNULL, PlayerMetaData, StatesDict, ConfigDict, HOSTNAME, APPNAME, json, import_or_install, run_proc, IS_DIETPI, PLAYING_STATES, VOLUME_CONTROL_SOFT, VOLUME_CONTROL_DISABLED, PLAYING_STATE, INTERRUPT_STATES, IDLE_STATES, PAUSED_STATE, IDLE_STATE, ALERT_STATE
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -324,7 +324,8 @@ class Monitor():
             config = {}
         result = ConfigDict([
             ("STARTUP_VOLUME", config.get("STARTUP_VOLUME",0)),
-            ("NOTIFY_VOLUME", config.get("NOTIFY_VOLUME", 60)),
+            ("NOTIFY_VOLUME", config.get("NOTIFY_VOLUME", 40)),
+            ("ALERT_VOLUME", config.get("ALERT_VOLUME", 70)),
             ("VOLUME_LIMITER", config.get("VOLUME_LIMITER",0)),
             ("VOLUME_LIMITER_MORNING", config.get("VOLUME_LIMITER_MORNING",0)),            
             ("ENABLE_DEBUG", config.get("ENABLE_DEBUG", False)),
@@ -423,7 +424,7 @@ class StatesWatcher(threading.Thread):
             self.states["player"]["current_player"] = new_player
             LOGGER.info("active player changed to %s" % new_player)
             
-            # signal current about this so it must stop playing
+            # signal current player about this so it must stop playing
             if new_player_state in PLAYING_STATES and cur_player_state in PLAYING_STATES:
                 self.monitor.get_module(cur_player).command("stop")
                 # todo: handle flush of audio device if needed ?
@@ -434,7 +435,9 @@ class StatesWatcher(threading.Thread):
                 self.states["player"]["interrupted_player"] = cur_player
                 self.states["player"]["interrupted_volume"] = self.monitor.get_module("alsa").volume
                 self.states["player"]["interrupted_state"] = cur_player_state
-                if self.monitor.config["NOTIFY_VOLUME"]:
+                if new_player_state == ALERT_STATE and self.monitor.config["ALERT_VOLUME"]:
+                    self.monitor.get_module("alsa").command("volume_set", self.monitor.config["ALERT_VOLUME"])
+                elif self.monitor.config["NOTIFY_VOLUME"]:
                     self.monitor.get_module("alsa").command("volume_set", self.monitor.config["NOTIFY_VOLUME"])
         
         # the notification/alert stopped, restore the previous state

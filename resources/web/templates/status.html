@@ -68,9 +68,7 @@
   $('#volume_slider').change( function() {
     var newValue = this.value;
     console.log("volume slider updated");     
-    $.getJSON('/command', {
-            command: "set_volume",
-            target: "player",
+    $.getJSON('/command/player/set_volume', {
             data: newValue,
             format: "json"
         }, function (data) {

@@ -62,10 +62,6 @@ class WebConfig(threading.Thread):
             temp_img = os.path.join(base_dir, "..","resources", "web", "static", "default_cover.png")
             return send_file(temp_img, mimetype='image/png')
 
-        @app.route('/player_info.json')
-        def player_info_json():
-            return self.monitor.player_info.json
-
         @app.route('/states')
         @app.route('/states/<key>')
         @app.route('/states/<key>/<subkey>')
@@ -78,9 +74,13 @@ class WebConfig(threading.Thread):
                 return self.monitor.states.json
 
         @app.route('/command')
-        def command():
-            target = request.args.get("target")
-            cmd = request.args.get("command")
+        @app.route('/command/<target>')
+        @app.route('/command/<target>/<command>')
+        def command(target=None, cmd=None):
+            if not target:
+                target = request.args.get("target")
+            if not cmd:
+                cmd = request.args.get("command")
             cmd_data = request.args.get("data")
             if cmd and target:
                 self.monitor.command(target, cmd, cmd_data)

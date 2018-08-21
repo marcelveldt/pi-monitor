@@ -453,6 +453,7 @@ class StatesWatcher(threading.Thread):
             if self.states["player"]["interrupted_state"] == PLAYING_STATE:
                 self.monitor.command(self.states["player"]["interrupted_player"], "play")
             self.states["player"]["current_player"] = self.states["player"]["interrupted_player"]
+            LOGGER.info("active player restored to %s" % self.states["player"]["interrupted_player"])
             self.states["player"]["interrupted_volume"] = 0
             self.states["player"]["interrupted_player"] = ""
             self.states["player"]["interrupted_state"] = ""

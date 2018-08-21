@@ -88,8 +88,7 @@ class GoogleAssistantPlayer(threading.Thread):
 
         if event.type == EventType.ON_START_FINISHED:
             LOGGER.info("Google Assistant is now ready for commands (waiting for hotword)")
-            # todo: set volume to max ?
-            #assistant.send_text_query("set volume to 100%")
+            self._assistant.send_text_query("set volume to 100%")
 
         elif event.type in [EventType.ON_CONVERSATION_TURN_STARTED]:
             self.monitor.states["google_assistant"]["state"] = LISTENING_STATE

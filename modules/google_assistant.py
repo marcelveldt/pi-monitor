@@ -60,7 +60,7 @@ class GoogleAssistantPlayer(threading.Thread):
     _exit = threading.Event()
     _assistant = None
 
-    def command(self, cmd, cmd_data):
+    def command(self, cmd, cmd_data=None):
         if not self._assistant:
             return False
         if self.monitor.states["google_assistant"]["state"] == PLAYING_STATE:

@@ -38,7 +38,7 @@ class LocalPlayer(object):
     def start(self):
         pass
 
-    def command(self, cmd, cmd_data):
+    def command(self, cmd, cmd_data=None):
         ''' send command to roon output/zone'''
         if isinstance(cmd_data, dict):
             loop = cmd_data.get("loop", False)

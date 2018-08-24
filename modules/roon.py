@@ -34,7 +34,7 @@ def setup(monitor):
     if enable_squeezelite and monitor.config.get("ENABLE_MODULE_SQUEEZELITE", False):
         LOGGER.debug("Squeezelite module is enabled. You can not use Roon in squeezelite mode at the same time!")
         return False
-    import_or_install("roon", "RoonApi", True, installpip="roonapi>=0.0.11")
+    import_or_install("roon", "RoonApi", True, installpip="roonapi>=0.0.13")
     return RoonPlayer(monitor, player_name, enable_squeezelite)
 
 
@@ -112,7 +112,7 @@ class RoonPlayer(threading.Thread):
             "website": "https://github.com/marcelveldt/pi-monitor"
         }
         token = self.monitor.config.get("ROON_AUTH_TOKEN","")
-        self._roonapi = RoonApi(appinfo, token, blocking_init=True)
+        self._roonapi = RoonApi(appinfo, token, blocking_init=False)
         self.monitor.config["ROON_AUTH_TOKEN"] = self._roonapi.token
         self._roonapi.register_state_callback(self._roon_state_callback, event_filter="zones_changed", id_filter=self.player_name)
         if self.monitor.config.get("ROON_ENABLE_SOURCE_CONTROL", True):

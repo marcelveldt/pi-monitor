@@ -96,10 +96,10 @@ def run_proc(cmd_str, check_output=True, ignore_error=False):
             res = subprocess.check_output(args)
         elif not check_output and ignore_error:
             # execute command and ignore any errors
-            res = subprocess.call(cmd, stdout=DEVNULL, stderr=subprocess.STDOUT)
+            res = subprocess.call(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
         else:
             # execute command with waiting
-            res = subprocess.check_call(cmd, stdout=DEVNULL, stderr=subprocess.STDOUT)
+            res = subprocess.check_call(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
     except Exception as exc:
         if not ignore_error:
             LOGGER.error(str(exc))

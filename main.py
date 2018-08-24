@@ -228,7 +228,7 @@ class Monitor():
             self._set_power(True)
             if not cur_pwr:
                 time.sleep(0.1)
-            run_proc("/usr/bin/play %s" % filename, check_result=False)
+            run_proc("/usr/bin/play %s" % filename, check_result=True)
             if not cur_pwr:
                 self._set_power(False)
 

@@ -83,26 +83,27 @@ def is_installed(dietpi_id="", bin_path=""):
     return is_installed
 
 
-def run_proc(cmd_str, check_result=True, ignore_error=True):
+def run_proc(cmd_str, check_output=True, ignore_error=False):
     ''' execute command with optional waiting for the results'''
+    res = None
     if isinstance(cmd_str, list):
         args = cmd_str
     else:
         args = cmd_str.split(" ")
     try:
-        if check_result:
-            # execute command and wait for result
-            return subprocess.check_output(args)
-        elif not check_result and ignore_error:
-            # execute command without waiting or returning
-            subprocess.Popen(args, stdout=DEVNULL, stderr=subprocess.STDOUT)
+        if check_output:
+            # execute command and return output
+            res = subprocess.check_output(args)
+        elif not check_output and ignore_error:
+            # execute command and ignore any errors
+            res = subprocess.call(cmd, stdout=DEVNULL, stderr=subprocess.STDOUT)
         else:
             # execute command with waiting
-            return subprocess.call(cmd, stdout=DEVNULL, stderr=subprocess.STDOUT)
+            res = subprocess.check_call(cmd, stdout=DEVNULL, stderr=subprocess.STDOUT)
     except Exception as exc:
         if not ignore_error:
             LOGGER.error(str(exc))
-        return False
+    return res
 
 def parse_version(versionstr):
     ''' try to parse version number out of a string'''

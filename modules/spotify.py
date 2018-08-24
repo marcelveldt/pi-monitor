@@ -39,8 +39,8 @@ class SpotifyPlayer(threading.Thread):
     def __init__(self, monitor):
         self.monitor = monitor
         self.monitor.states["spotify"] = PlayerMetaData("Spotify")
-        run_proc("service spotify-connect-web stop", check_result=False, ignore_error=True) # make sure that the original service is stopped
-        run_proc("service raspotify stop", check_result=False, ignore_error=True) # make sure that the original service is stopped
+        run_proc("service spotify-connect-web stop", ignore_error=True) # make sure that the original service is stopped
+        run_proc("service raspotify stop", ignore_error=True) # make sure that the original service is stopped
         threading.Thread.__init__(self)
         
     def stop(self):

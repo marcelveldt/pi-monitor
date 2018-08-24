@@ -75,7 +75,7 @@ class SqueezelitePlayer(threading.Thread):
 
     def run(self):
         # we start squuezelite manually with our optimal settings
-        run_proc("service squeezelite stop", check_result=True, ignore_error=True)
+        run_proc("service squeezelite stop", ignore_error=True)
         exec_path = "/usr/bin/squeezelite"
         args = [exec_path, "-C", "1", "-n", HOSTNAME, "-a", "4096:1024", "-m", self._playerid]
         if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:

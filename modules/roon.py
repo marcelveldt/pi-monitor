@@ -90,7 +90,7 @@ class RoonPlayer(threading.Thread):
     def run(self):
         if self.enable_squeezelite:
             # we start squuezelite manually with our optimal settings
-            run_proc("service squeezelite stop", check_result=True, ignore_error=True)
+            run_proc("service squeezelite stop", ignore_error=True)
             exec_path = "/usr/bin/squeezelite"
             args = [exec_path, "-C", "1", "-n", self.player_name, "-a", "4096:1024"]
             if self.monitor.config["ALSA_VOLUME_CONTROL"] and self.monitor.config["ALSA_VOLUME_CONTROL"] != VOLUME_CONTROL_DISABLED:

@@ -224,8 +224,13 @@ class Monitor():
             if alt_sound:
                 filename = os.path.join(RESOURCES_FOLDER, 'dong.wav')
             # play sound with sox (ignore if it fails)
+            cur_pwr = self.states["player"]["power"]
             self._set_power(True)
+            if not cur_pwr:
+                time.sleep(0.1)
             run_proc("/usr/bin/play %s" % filename, check_result=False)
+            if not cur_pwr:
+                self._set_power(False)
 
     def _set_power(self, player_powered, stop_players=False):
         if isinstance(player_powered, (str, unicode)):

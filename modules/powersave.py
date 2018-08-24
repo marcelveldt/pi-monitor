@@ -47,7 +47,7 @@ class PowerSave(object):
             else:
                 # player is not powered, enable powersave
                 self._enable_powersave()
-        elif key == "player" and self.monitor.config["AUTO_POWER_OFF_WHEN_IDLE_SECONDS"]:
+        elif key == "player" and subkey == "state" and self.monitor.config["AUTO_POWER_OFF_WHEN_IDLE_SECONDS"]:
             if self.monitor.states["player"]["state"] in IDLE_STATES and self.monitor.states["player"]["power"]:
                 self._interrupted = False
                 thread.start_new_thread(self.watch_paused_state,())

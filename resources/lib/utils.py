@@ -52,7 +52,7 @@ def check_software(dietpi_id="", bin_path="", installapt=""):
     success = is_installed(dietpi_id, bin_path)
     if not success and dietpi_id:
         success = dietpi_install(dietpi_id)
-    elif not success and installapt:
+    if not success and installapt:
         LOGGER.info("Installing %s with apt-get..." % installapt)
         os.system("apt-get install -y %s" % installapt)
         success = is_installed(dietpi_id, bin_path)

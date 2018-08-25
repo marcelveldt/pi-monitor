@@ -71,15 +71,14 @@ def dietpi_install(dietpi_id):
 def is_installed(dietpi_id="", bin_path=""):
     ''' check if specified package is installed '''
     is_installed = False
-    if IS_DIETPI and dietpi_id:
+    is_installed = os.path.exists(bin_path)
+    if not is_installed and IS_DIETPI and dietpi_id:
         sw_status = run_proc('/DietPi/dietpi/dietpi-software list', True)
         if sw_status and isinstance(sw_status, (str, unicode)):
             for line in sw_status.split('\n'):
                 if ("| =2 |" in line and dietpi_id in line):
                     is_installed = True
                     break
-    elif bin_path:
-        is_installed = os.path.exists(bin_path)
     return is_installed
 
 

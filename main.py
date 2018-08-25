@@ -9,7 +9,7 @@ import thread
 import threading
 from Queue import Queue
 import datetime
-from resources.lib.utils import RESOURCES_FOLDER, DEVNULL, PlayerMetaData, StatesDict, ConfigDict, HOSTNAME, APPNAME, json, import_or_install, run_proc, IS_DIETPI, PLAYING_STATES, VOLUME_CONTROL_SOFT, VOLUME_CONTROL_DISABLED, PLAYING_STATE, INTERRUPT_STATES, IDLE_STATES, PAUSED_STATE, IDLE_STATE, ALERT_STATE
+from resources.lib.utils import RESOURCES_FOLDER, DEVNULL, PlayerMetaData, StatesDict, ConfigDict, HOSTNAME, APPNAME, json, check_software, run_proc, IS_DIETPI, PLAYING_STATES, VOLUME_CONTROL_SOFT, VOLUME_CONTROL_DISABLED, PLAYING_STATE, INTERRUPT_STATES, IDLE_STATES, PAUSED_STATE, IDLE_STATE, ALERT_STATE
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -94,6 +94,8 @@ class Monitor():
         if self.config["ENABLE_DEBUG"]:
             LOGGER.setLevel(logging.DEBUG)
             LOGGER.debug("using config: %s" % self.config)
+        if self.config["AUTO_UPDATE_ON_STARTUP"]:
+            check_software("17", "/usr/bin/git", "git")
         self.states["player"] = PlayerMetaData("")
         self.states["player"].update({
                 "power": False, 

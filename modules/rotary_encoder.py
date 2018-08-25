@@ -69,7 +69,7 @@ class RotaryEncoder():
         elif event == 2:
             # rotary turned counter clockwise
             cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_COUNTER_CLOCKWISE", "volume_down")
-            LOGGER.debug("rotary encoder is turned clockwise")
+            LOGGER.debug("rotary encoder is turned counter-clockwise")
             self.monitor.command("player", cmd)
         elif event == 3:
             # fired when button is pressed shortly

@@ -53,9 +53,9 @@ class RotaryEncoder():
         self.gpio.setup(self.pin_a, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
         self.gpio.setup(self.pin_b, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
         self.gpio.setup(self.pin_button, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
-        self.gpio.add_event_detect(self.pin_a, self.gpio.BOTH, self._callback)
-        self.gpio.add_event_detect(self.pin_b, self.gpio.BOTH, self._callback)
-        self.gpio.add_event_detect(self.pin_button, self.gpio.FALLING, self._btn_callback, bouncetime=500)
+        self.gpio.add_event_detect(self.pin_a, self.gpio.BOTH, self._callback, bouncetime=50)
+        self.gpio.add_event_detect(self.pin_b, self.gpio.BOTH, self._callback, bouncetime=50)
+        self.gpio.add_event_detect(self.pin_button, self.gpio.FALLING, self._btn_callback, bouncetime=50)
         LOGGER.debug("RotaryEncoder is now listening for events")
 
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from time import sleep
+import threading
 
 
 def setup(monitor):
@@ -22,10 +23,11 @@ def setup(monitor):
 
 
 
-class RotaryEncoder():
+class RotaryEncoder(threading.Thread):
     """
     A class to decode mechanical rotary encoder pulses.
     """
+    _exit = threading.Event()
     
     def __init__(self, monitor, gpio):
         self.gpio = gpio.gpio_mod
@@ -37,9 +39,11 @@ class RotaryEncoder():
         self.lev_a = 0
         self.lev_b = 0
         self.callback_busy = False
+        threading.Thread.__init__(self)
 
         
     def stop(self):
+        self._exit.set()
         try:
             self.gpio.remove_event_detect(self.pin_a)
             self.gpio.remove_event_detect(self.pin_b)
@@ -49,40 +53,49 @@ class RotaryEncoder():
             pass
 
 
-    def start(self):
+    def run(self):
         self.gpio.setup(self.pin_a, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
         self.gpio.setup(self.pin_b, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
         self.gpio.setup(self.pin_button, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
-        self.gpio.add_event_detect(self.pin_a, self.gpio.BOTH, self._callback, bouncetime=50)
-        self.gpio.add_event_detect(self.pin_b, self.gpio.BOTH, self._callback, bouncetime=50)
-        self.gpio.add_event_detect(self.pin_button, self.gpio.FALLING, self._btn_callback, bouncetime=50)
+        self.gpio.add_event_detect(self.pin_a, self.gpio.BOTH, self._callback)
+        self.gpio.add_event_detect(self.pin_b, self.gpio.BOTH, self._callback)
+        self.gpio.add_event_detect(self.pin_button, self.gpio.FALLING, self._btn_callback, bouncetime=500)
         LOGGER.debug("RotaryEncoder is now listening for events")
+        # mainloop: just keep the thread alive
+        while not self._exit.isSet():
+            self._exit.wait(1200)
 
 
     def rotary_event(self, event):
         ''' rotary encoder event callback puts events in queue'''
         if event == 1:
-            # rotary turned clockwise
-            cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_CLOCKWISE", "volume_up")
             LOGGER.debug("rotary encoder is turned clockwise")
-            self.monitor.command("player", cmd)
+            # rotary turned clockwise
+            # cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_CLOCKWISE", "volume_up")
+            # self.monitor.command("player", cmd)
+            self.monitor.command("player", "volume_up")
         elif event == 2:
-            # rotary turned counter clockwise
-            cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_COUNTER_CLOCKWISE", "volume_down")
             LOGGER.debug("rotary encoder is turned counter-clockwise")
-            self.monitor.command("player", cmd)
+            # rotary turned counter clockwise
+            # cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_COUNTER_CLOCKWISE", "volume_down")
+            # self.monitor.command("player", cmd)
+            self.monitor.command("player", "volume_down")
         elif event == 3:
             # fired when button is pressed shortly
             LOGGER.debug("rotary encoder button is pushed")
-            cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_PRESS", "play")
+            # cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_PRESS", "play")
+            # if self.monitor.is_playing:
+            #     cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_PRESS_PLAYING", "next")
+            # self.monitor.command("player", cmd)
             if self.monitor.is_playing:
-                cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_PRESS_PLAYING", "next")
-            self.monitor.command("player", cmd)
+                self.monitor.command("player", "next")
+            else:
+                self.monitor.command("player", "play")
         elif event == 4:
-            # fired when button is held for 1 second
-            cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_HOLD", "stop")
             LOGGER.debug("rotary encoder button is pressed for more than 1 second")
-            self.monitor.command("player", cmd)
+            # fired when button is held for 1 second
+            #cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_HOLD", "stop")
+            self.monitor.command("player", "stop")
 
         
     def _btn_callback(self, channel):

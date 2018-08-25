@@ -65,7 +65,8 @@ class RoonPlayer(threading.Thread):
 
     def stop(self):
         self._exit.set()
-        self.monitor.config["ROON_AUTH_TOKEN"] = self._roonapi.token
+        if self._roonapi.token:
+            self.monitor.config["ROON_AUTH_TOKEN"] = self._roonapi.token
         if self._squeezelite_proc:
             self._squeezelite_proc.terminate()
         if self._roonapi:
@@ -112,7 +113,7 @@ class RoonPlayer(threading.Thread):
             "website": "https://github.com/marcelveldt/pi-monitor"
         }
         token = self.monitor.config.get("ROON_AUTH_TOKEN","")
-        self._roonapi = RoonApi(appinfo, token, blocking_init=False)
+        self._roonapi = RoonApi(appinfo, token, blocking_init=True)
         self.monitor.config["ROON_AUTH_TOKEN"] = self._roonapi.token
         self._roonapi.register_state_callback(self._roon_state_callback, event_filter="zones_changed", id_filter=self.player_name)
         if self.monitor.config.get("ROON_ENABLE_SOURCE_CONTROL", True):
@@ -123,6 +124,10 @@ class RoonPlayer(threading.Thread):
         # some players need to be unmuted when freshly started
         if self.output_id:
             self._roonapi.mute(self.output_id, False)
+
+        # store token
+        if self._roonapi.token:
+            self.monitor.config["ROON_AUTH_TOKEN"] = self._roonapi.token
 
         # mainloop: just keep the thread alive
         while not self._exit.isSet():

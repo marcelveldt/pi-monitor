@@ -63,25 +63,26 @@ class RotaryEncoder():
         ''' rotary encoder event callback puts events in queue'''
         if event == 1:
             # rotary turned clockwise
-            if not self.monitor.config["ALSA_VOLUME_CONTROL"]:
-                self.monitor.command("player", "next")
-            else:
-                self.monitor.command("player", "volup")
+            cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_CLOCKWISE", "volume_up")
+            LOGGER.debug("rotary encoder is turned clockwise")
+            self.monitor.command("player", cmd)
         elif event == 2:
             # rotary turned counter clockwise
-            if not self.monitor.config["ALSA_VOLUME_CONTROL"]:
-                self.monitor.command("player", "previous")
-            else:
-                self.monitor.command("player", "voldown")
+            cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_COUNTER_CLOCKWISE", "volume_down")
+            LOGGER.debug("rotary encoder is turned clockwise")
+            self.monitor.command("player", cmd)
         elif event == 3:
             # fired when button is pressed shortly
+            LOGGER.debug("rotary encoder button is pushed")
+            cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_PRESS", "play")
             if self.monitor.is_playing:
-                self.monitor.command("player", "next")
-            else:
-                self.monitor.command("player", "play")
+                cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_PRESS_PLAYING", "next")
+            self.monitor.command("player", cmd)
         elif event == 4:
             # fired when button is held for 1 second
-            self.monitor.command("player", "stop")
+            cmd = self.monitor.config.get("GPIO_ROTARY_ENCODER_CMD_HOLD", "stop")
+            LOGGER.debug("rotary encoder button is pressed for more than 1 second")
+            self.monitor.command("player", cmd)
 
         
     def _btn_callback(self, channel):

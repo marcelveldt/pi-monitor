@@ -34,7 +34,7 @@ def setup(monitor):
     if enable_squeezelite and monitor.config.get("ENABLE_MODULE_SQUEEZELITE", False):
         LOGGER.debug("Squeezelite module is enabled. You can not use Roon in squeezelite mode at the same time!")
         return False
-    import_or_install("roon", "RoonApi", True, installpip="roonapi>=0.0.13")
+    import_or_install("roon", "RoonApi", True, installpip="roonapi>=0.0.14")
     return RoonPlayer(monitor, player_name, enable_squeezelite)
 
 

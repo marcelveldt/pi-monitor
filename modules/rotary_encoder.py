@@ -12,7 +12,7 @@ def setup(monitor):
     pin_a = monitor.config.get("GPIO_ROTARY_ENCODER_UP_PIN",0)
     pin_b = monitor.config.get("GPIO_ROTARY_ENCODER_DOWN_PIN",0)
     pin_button = monitor.config.get("GPIO_ROTARY_ENCODER_SWITCH_PIN",0)
-    if not pin_a or not pin_b or not pin_button:
+    if not pin_a or not pin_b 
         LOGGER.debug("Rotary encoder module is not setup!")
         return False
     gpio = monitor.get_module("gpio")
@@ -56,10 +56,11 @@ class RotaryEncoder(threading.Thread):
     def run(self):
         self.gpio.setup(self.pin_a, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
         self.gpio.setup(self.pin_b, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
-        self.gpio.setup(self.pin_button, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
         self.gpio.add_event_detect(self.pin_a, self.gpio.BOTH, self._callback)
         self.gpio.add_event_detect(self.pin_b, self.gpio.BOTH, self._callback)
-        self.gpio.add_event_detect(self.pin_button, self.gpio.FALLING, self._btn_callback, bouncetime=500)
+        if self.pin_button:
+            self.gpio.setup(self.pin_button, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
+            self.gpio.add_event_detect(self.pin_button, self.gpio.FALLING, self._btn_callback, bouncetime=500)
         LOGGER.debug("RotaryEncoder is now listening for events")
         # mainloop: just keep the thread alive
         while not self._exit.isSet():

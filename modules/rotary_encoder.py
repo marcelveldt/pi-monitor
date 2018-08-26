@@ -54,12 +54,12 @@ class RotaryEncoder(threading.Thread):
 
 
     def run(self):
-        self.gpio.setup(self.pin_a, self.gpio.IN)
-        self.gpio.setup(self.pin_b, self.gpio.IN)
+        self.gpio.setup(self.pin_a, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
+        self.gpio.setup(self.pin_b, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
         self.gpio.add_event_detect(self.pin_a, self.gpio.BOTH, self._callback)
         self.gpio.add_event_detect(self.pin_b, self.gpio.BOTH, self._callback)
         if self.pin_button:
-            self.gpio.setup(self.pin_button, self.gpio.IN)
+            self.gpio.setup(self.pin_button, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
             self.gpio.add_event_detect(self.pin_button, self.gpio.FALLING, self._btn_callback, bouncetime=500)
         LOGGER.debug("RotaryEncoder is now listening for events")
         # mainloop: just keep the thread alive

@@ -12,7 +12,7 @@ def setup(monitor):
     pin_a = monitor.config.get("GPIO_ROTARY_ENCODER_UP_PIN",0)
     pin_b = monitor.config.get("GPIO_ROTARY_ENCODER_DOWN_PIN",0)
     pin_button = monitor.config.get("GPIO_ROTARY_ENCODER_SWITCH_PIN",0)
-    if not pin_a or not pin_b 
+    if not pin_a or not pin_b:
         LOGGER.debug("Rotary encoder module is not setup!")
         return False
     gpio = monitor.get_module("gpio")

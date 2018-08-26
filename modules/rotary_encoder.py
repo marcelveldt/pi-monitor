@@ -2,6 +2,7 @@
 
 import time
 import threading
+import thread
 
 
 def setup(monitor):
@@ -114,7 +115,7 @@ class RotaryEncoder(threading.Thread):
 
         
     def _rotary_callback(self, channel):
-        self._debouncer()
+        thread.start_new_thread(self._debouncer, ())
         level = self.gpio.input(channel)
         if channel == self.pin_a:
             self.lev_a = level

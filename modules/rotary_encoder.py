@@ -145,7 +145,7 @@ class KY040RotaryEncoder(threading.Thread):
         self.data_pin = data_pin
         self.switch_pin = switch_pin
         self.monitor = monitor
-        self.gpio = gpio
+        self.gpio = gpio.gpio_mod
         self.callback_busy = False
 
     def run(self):

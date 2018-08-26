@@ -198,7 +198,7 @@ class Monitor():
         if "volume" in cmd and self.states["player"]["state"] != PLAYING_STATE:
             # prefer direct alsa control of volume
             LOGGER.debug("forward command %s to alsa" % cmd)
-            self.get_module("alsa").command(cmd, cmd_data)
+           success = self.get_module("alsa").command(cmd, cmd_data)
         elif cur_player:
             # all other commands will be forwarded to the current player
             LOGGER.debug("forward command %s with data %s to player %s" %(cmd, str(cmd_data), cur_player))

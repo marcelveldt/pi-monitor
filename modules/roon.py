@@ -192,16 +192,16 @@ class RoonPlayer(threading.Thread):
 
     def _update_metadata(self):
         zone_details = self._roonapi.zone_by_output_name(self.player_name)
-        self.monitor.states["roon"]["state"] = zone_details.get("state")
-        self.monitor.states["roon"]["volume_level"] = self._get_volume()
         if zone_details and zone_details.get("now_playing"):
             zone_details = zone_details["now_playing"]
             self.monitor.states["roon"].update({
+                    "state": zone_details["state"],
+                    "volume_level": self._get_volume(),
                     "artist": zone_details["three_line"]["line2"],
                     "album": zone_details["three_line"]["line3"],
                     "title": zone_details["three_line"]["line1"],
                     "duration": zone_details["length"],
-                    "cover_url": self._roonapi.get_image(zone_details["image_key"])
+                    "cover_url": self._roonapi.get_image(zone_details["image_key"]) if "image_key" in zone_details else ""
                 })
         else:
             self.monitor.states["roon"].update({
@@ -209,5 +209,7 @@ class RoonPlayer(threading.Thread):
                     "album": "",
                     "title": "",
                     "duration": 0,
-                    "cover_url": ""
+                    "cover_url": "",
+                    "state": zone_details["state"],
+                    "volume_level": self._get_volume()
                 })

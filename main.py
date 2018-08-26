@@ -198,24 +198,23 @@ class Monitor():
         if "volume" in cmd and self.states["player"]["state"] != PLAYING_STATE:
             # prefer direct alsa control of volume
             LOGGER.debug("forward command %s to alsa" % cmd)
-           success = self.get_module("alsa").command(cmd, cmd_data)
+            self.get_module("alsa").command(cmd, cmd_data)
         elif cur_player:
             # all other commands will be forwarded to the current player
             LOGGER.debug("forward command %s with data %s to player %s" %(cmd, str(cmd_data), cur_player))
             player_mod = self.get_module(cur_player)
             success = player_mod.command(cmd, cmd_data)
             if not success:
-                LOGGER.warning("unable to process command %s on player %s" % (cmd, cur_player))
-        if not success:
-            # fallback to direct alsa control for volume commands
-            if "volume" in cmd:
-                LOGGER.debug("forward command %s to alsa" % cmd)
-                self.get_module("alsa").command(cmd, cmd_data)
-            # fallback to local player for other commands
-            else:
-                LOGGER.debug("forward command %s to localplayer" % cmd)
-                if not self.get_module("localplayer").command(cmd, cmd_data):
-                    LOGGER.warning("unable to process command %s on localplayer" % (cmd))
+                LOGGER.warning("unable to process command %s on player %s (not supported?)" % (cmd, cur_player))
+                if "volume" in cmd:
+                    # fallback to direct alsa control for volume commands
+                    LOGGER.debug("forward command %s to alsa" % cmd)
+                    self.get_module("alsa").command(cmd, cmd_data)
+                else:
+                    # fallback to local player for other commands
+                    LOGGER.debug("forward command %s to localplayer" % cmd)
+                    if not self.get_module("localplayer").command(cmd, cmd_data):
+                        LOGGER.warning("unable to process command %s on localplayer" % (cmd))
 
     def _beep(self, alt_sound=False):
         ''' play beep through gpio buzzer or speakers '''

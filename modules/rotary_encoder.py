@@ -114,6 +114,7 @@ class RotaryEncoder(threading.Thread):
 
         
     def _rotary_callback(self, channel):
+        self._debouncer()
         level = self.gpio.input(channel)
         if channel == self.pin_a:
             self.lev_a = level

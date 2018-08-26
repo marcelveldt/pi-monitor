@@ -210,6 +210,6 @@ class RoonPlayer(threading.Thread):
                     "title": "",
                     "duration": 0,
                     "cover_url": "",
-                    "state": zone_details["state"],
+                    "state": zone_details["state"] if zone_details else "off",
                     "volume_level": self._get_volume()
                 })

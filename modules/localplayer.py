@@ -69,10 +69,15 @@ class LocalPlayer(object):
         self.monitor.states["localplayer"]["state"] = playback_state
         self.monitor.states["localplayer"]["title"] = url # todo: extract metadata from playing file?
         args = ["/usr/bin/play", url]
+        retries = 10
         while self._playing and not self._exit.isSet():
             self._sox_proc = subprocess.Popen(args)
-            self._sox_proc.wait()
+            result = self._sox_proc.wait()
             self._sox_proc = None
+            if result > 0 and retries >= 0:
+                retries -= 1
+                time.sleep(0.2)
+                continue
             if not loop:
                 break
         self._playing = False

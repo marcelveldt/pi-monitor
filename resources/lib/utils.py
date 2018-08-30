@@ -26,7 +26,7 @@ IS_DIETPI = os.path.isfile("/DietPi/dietpi/.hw_model")
 
 PAUSED_STATE = "paused"
 PLAYING_STATE = "playing"
-NOTIFY_STATE = "notifiying"
+NOTIFY_STATE = "notifying"
 ALERT_STATE = "alerting"
 LISTENING_STATE = "listening"
 SPEAKING_STATE = "speaking"

@@ -72,6 +72,9 @@ class GoogleAssistantPlayer(threading.Thread):
                 return True
             else:
                 return False
+        elif cmd == "broadcast":
+            self._assistant.send_text_query("broadcast %s" % cmd_data)
+            return True
         else:
             return False
 
